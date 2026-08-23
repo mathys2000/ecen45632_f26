@@ -1,0 +1,2550 @@
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.3
+#   kernelspec:
+#     display_name: Python [conda env:ecen45632]
+#     language: python
+#     name: conda-env-ecen45632-py
+# ---
+
+# %% [markdown]
+# # Week 3 easier
+#
+# **Week 3: Transform Analysis.** The z-transform, pole-zero mapping, and frequency response of LTI systems.
+
+# %% [markdown]
+# Week 3 easier
+#
+# Gemini Pro:
+#
+# Here is the detailed breakdown for the two 75-minute lectures in Week 3.
+#
+# This week introduces the z-transform, which acts as the cornerstone for analyzing and designing digital filters. The goal here is to move students from abstract mathematical convergence into highly visual geometric intuition (pole-zero plots), which directly dictates how an audio filter will sound.
+#
+
+# %% [markdown]
+# ## Lecture 5: The z-Transform and the Region of Convergence
+#
+# **Objective:** Generalize the DTFT to the z-transform to handle signals that do not absolutely converge, define the Region of Convergence (ROC), and perform the inverse z-transform using partial fractions.
+#
+# | Time Block | Topic & Mathematical Focus | Teaching Strategy & Audio Connection |
+# | --- | --- | --- |
+# | **00 - 15 min** | **Beyond the DTFT** | Motivation: The DTFT of an exponentially growing signal like $x[n] = 2^n u[n]$ does not exist. Show how multiplying by a damping factor $r^{-n}$ forces convergence. |
+# | **15 - 35 min** | **Defining the z-Transform** | Introduce $X(z)$ and the complex variable $z = re^{j\omega}$. Emphasize the critical concept: evaluating the z-transform on the unit circle ($r=1$) yields the DTFT. |
+# | **35 - 55 min** | **The Region of Convergence (ROC)** | Work through the transforms of $a^n u[n]$ and $-a^n u[-n-1]$. Show that they have the exact same algebraic formula but completely different ROCs. List the geometrical properties of the ROC (annular rings, bounded by poles). |
+# | **55 - 75 min** | **The Inverse z-Transform** | Skip contour integration (rarely used in applied CE/EE) and focus entirely on Partial Fraction Expansion. Walk through splitting a rational polynomial into first-order terms and using the ROC to map them back to $x[n]$. |
+#
+# ### Key Equations to Board
+#
+# * **The Bilateral z-Transform:**
+#
+# $$X(z) = \sum_{n=-\infty}^{\infty} x[n] z^{-n}$$
+#
+#
+# * **Relationship to the DTFT:**
+#
+# $$X(z)\Big\vert{}_{z=e^{j\omega}} = X(e^{j\omega}) = \sum_{n=-\infty}^{\infty} x[n] e^{-j\omega n}$$
+#
+#
+# * **Standard Transform Pair:**
+#
+# $$a^n u[n] \longleftrightarrow \frac{1}{1 - az^{-1}}, \quad \vert{}z\vert{} > \vert{}a\vert{}$$
+#
+#
+#
+# ---
+#
+
+# %% [markdown]
+# ## Lecture 6: Transfer Functions, Stability, and Pole-Zero Plots
+#
+# **Objective:** Connect z-domain transfer functions $H(z)$ to LTI system behavior (causality and stability), and geometrically evaluate the frequency response from a pole-zero plot.
+#
+# | Time Block | Topic & Mathematical Focus | Teaching Strategy & Audio Connection |
+# | --- | --- | --- |
+# | **00 - 20 min** | **Transfer Functions $H(z)$** | Convert a standard difference equation into $H(z)$. Show how to factor the numerator polynomial into zeros (roots) and the denominator into poles. |
+# | **20 - 40 min** | **Causality & Stability in the z-Domain** | The golden rules: Causal = ROC outside the outermost pole. Stable = ROC includes the unit circle. Combine them: **A causal and stable LTI system must have all poles strictly inside the unit circle.** |
+# | **40 - 60 min** | **Geometric Frequency Response** | Explain how to sketch $H(e^{j\omega})$ without doing math. Draw vectors from poles and zeros to a point $e^{j\omega}$ moving around the unit circle. Zeros pull the magnitude down; poles push it up. |
+# | **60 - 75 min** | **Pole-Zero Sandbox Activity** | Use a Python/MATLAB visualizer on the projector. *Audio connection:* Place a zero exactly on the unit circle to demonstrate a perfect notch filter (used to kill 60Hz powerline hum). Place a pole close to the unit circle to demonstrate a resonant peaking filter (used in synthesizer design). |
+#
+# ### Key Equations to Board
+#
+# * **System Transfer Function:**
+#
+# $$H(z) = \frac{Y(z)}{X(z)} = \frac{\sum_{k=0}^{M} b_k z^{-k}}{\sum_{k=0}^{N} a_k z^{-k}}$$
+#
+#
+# * **Geometric Evaluation of Magnitude:**
+#
+# $$\vert{}H(e^{j\omega})\vert{} = \vert{}b_0\vert{} \frac{\prod_{k=1}^{M} \vert{}e^{j\omega} - c_k\vert{}}{\prod_{k=1}^{N} \vert{}e^{j\omega} - d_k\vert{}} = \text{Gain} \times \frac{\text{Product of zero vector lengths}}{\text{Product of pole vector lengths}}$$
+#
+# ---
+
+# %% [markdown]
+# Prompt: Can you create slides and python code for these two 75 minute classes of a DSP and ML course for a combined senior and first year Electrical and Computer Engineering class? The DSP textbook is Discrete-Time Signal Processing by Oppenheim and Schafer. Add some homework problems with solutions and a weekly quiz with solutions as well.
+#
+# Chat GPT:
+#
+# Done. I built the complete **Week 3 DSP + ML teaching package** around the z-transform, ROC, transfer functions, stability, and pole-zero geometry.
+#
+# ### Complete package
+#
+# [Download the complete Week 3 package](sandbox:/mnt/data/week3_dsp_ml/Week3_DSP_ML_Complete_Package.zip)
+#
+# ### Individual files
+#
+# * [Lecture 5 — The z-Transform and the Region of Convergence](sandbox:/mnt/data/week3_dsp_ml/Week3_Lecture5_zTransform_ROC.pptx) — 22 slides.
+# * [Lecture 6 — Transfer Functions, Stability, and Pole-Zero Plots](sandbox:/mnt/data/week3_dsp_ml/Week3_Lecture6_Transfer_Functions_PoleZero.pptx) — 23 slides.
+# * [Week 3 Jupyter Notebook](sandbox:/mnt/data/week3_dsp_ml/Week3_DSP_ML_Code.ipynb) — executed notebook with numerical and interactive-style pole-zero experiments.
+# * [Standalone Python Script](sandbox:/mnt/data/week3_dsp_ml/Week3_DSP_ML_Code.py)
+# * [Homework + Weekly Quiz + Complete Solutions](sandbox:/mnt/data/week3_dsp_ml/Week3_Homework_Quiz_Solutions.docx)
+#
+# ### Audio files for the pole-zero/notch-filter demo
+#
+# * [Voice-like signal with 60-Hz hum](sandbox:/mnt/data/week3_dsp_ml/audio/01_voice_with_60Hz_hum.wav)
+# * [Same signal after 60-Hz notch filtering](sandbox:/mnt/data/week3_dsp_ml/audio/02_voice_after_60Hz_notch.wav)
+#
+# A few teaching choices are built into the package deliberately.
+#
+# **Lecture 5 makes the ROC part of the transform rather than an afterthought.** Students see that
+#
+# $\displaystyle
+# \frac{1}{1-az^{-1}}
+# $
+#
+# does **not** uniquely determine (x[n]). The two possibilities
+#
+# $
+# a^n u[n],\qquad |z|>|a|
+# $
+#
+# and
+#
+# $
+# -a^n u[-n-1],\qquad |z|<|a|
+# $
+#
+# have the same rational expression but different ROCs and completely different time support. The partial-fraction examples reinforce that students must carry the ROC through the inverse transform.
+#
+# The lecture also develops the useful geometric interpretation
+#
+# $
+# z=re^{j\omega},
+# $
+#
+# so that changing (r) controls exponential weighting/convergence while changing (\omega) probes sinusoidal frequency. The DTFT then appears naturally as the special case
+#
+# $
+# z=e^{j\omega},
+# $
+#
+# provided the unit circle belongs to the ROC.
+#
+# **Lecture 6 turns the z-plane into a filter-design picture.** It repeatedly connects
+#
+# $$
+# \text{difference equation}
+# \rightarrow H(z)
+# \rightarrow \text{poles/zeros}
+# \rightarrow \text{ROC}
+# \rightarrow \text{causality/stability}
+# \rightarrow H(e^{j\omega}).
+# $$
+#
+# The geometric-frequency-response material emphasizes
+#
+# $$
+# |H(e^{j\omega})|=
+# K
+# \frac{\prod_k |e^{j\omega}-z_k|}
+# {\prod_k |e^{j\omega}-p_k|},
+# $$
+#
+# so students can reason that **zeros close to the unit circle pull the response down**, while **poles close to the unit circle push it up** before doing any algebra or plotting.
+#
+# The 60-Hz example places conjugate zeros at
+#
+# $
+# z=e^{\pm j\omega_0}
+# $
+#
+# to create a notch and poles slightly inside the unit circle to control notch sharpness. The included audio files let students hear the result as well as see it.
+#
+# The homework contains **8 core problems plus a graduate-level stretch problem**, with full solutions. The weekly quiz is **20 points and designed for roughly 15 minutes**, including ROC reasoning, causality/stability, pole-zero interpretation, and one short calculation.
+#
+# The Python script and notebook were executed successfully. Both slide decks were rendered and passed overflow checks, and the homework/quiz document was rendered and checked page-by-page for layout.
+#
+#
+# ----------------------------------------------
+#
+
+# %% [markdown]
+# # Week 3, Lecture 5, LaTeX math
+#
+# Can you convert the math expressions to LaTeX
+#
+# Gemini Pro:
+#
+# This lecture is really about **why the z-transform is more than just “the DTFT with a $z$”**.
+#
+# The deeper idea is:
+#
+# $$\boxed{\text{DTFT asks: what happens on the unit circle?}}$$
+#
+# while the z-transform asks:
+#
+# $$\boxed{\text{For which radii and angles does the transform actually converge?}}$$
+#
+# That is why the lecture subtitle says “convergence becomes geometry,” and why the learning goals emphasize reasoning from both the algebraic expression and the Region of Convergence (ROC).
+#
+# The whole intellectual progression is
+#
+# $$\boxed{\text{DTFT fails} \rightarrow \text{introduce } z=re^{j\omega} \rightarrow \text{radial damping} \rightarrow}$$
+# $$\boxed{\rightarrow \text{ROC} \rightarrow \text{same rational formula, different sequences} \rightarrow \text{inverse z-transform requires ROC}}$$
+#
+# and that is the part I would keep returning to throughout the lecture.
+#
+# ---
+#
+# # 1. Why do we need the z-transform at all?
+#
+# The deck starts with
+#
+# $$x[n]=2^n u[n].$$
+#
+# Its DTFT would be
+#
+# $$X(e^{j\omega}) = \sum_{n=0}^{\infty} 2^n e^{-j\omega n}.$$
+#
+# The magnitude of each term is
+#
+# $$\vert{}2^n e^{-j\omega n}\vert{}=2^n.$$
+#
+# Those terms do not even approach zero, so the series cannot converge in the ordinary sense.
+#
+# That is the key motivation on the early slides.
+#
+# A good classroom question is:
+#
+# > “What exactly is failing here: the algebra or the convergence?”
+#
+# Good answer:
+#
+# > The algebraic idea is fine, but the series does not converge on the unit circle because the sequence grows too fast.
+#
+# That distinction matters.
+#
+# ---
+#
+# # 2. How does $z=re^{j\omega}$ fix this?
+#
+# Now write
+#
+# $$z=re^{j\omega}.$$
+#
+# Then
+#
+# $$z^{-n} = r^{-n}e^{-j\omega n}.$$
+#
+# So the z-transform becomes
+#
+# $$X(z) = \sum_n x[n]r^{-n}e^{-j\omega n}.$$
+#
+# For
+#
+# $$x[n]=2^n u[n],$$
+#
+# we get
+#
+# $$X(z) = \sum_{n=0}^{\infty} 2^n r^{-n}e^{-j\omega n} = \sum_{n=0}^{\infty} \left(\frac{2}{r}e^{-j\omega}\right)^n.$$
+#
+# This geometric series converges if
+#
+# $$\left\vert{}\frac{2}{r}\right\vert{}<1$$
+#
+# so
+#
+# $$\boxed{r>2.}$$
+#
+# That is exactly the damping interpretation emphasized by the lecture: radius controls convergence, while angle probes frequency.
+#
+# A good verbal explanation is:
+#
+# > “The z-transform lets us move radially away from the unit circle until the exponential weighting $r^{-n}$ damps the sequence enough to make the sum converge.”
+#
+# ---
+#
+# # 3. What does the radius mean physically or mathematically?
+#
+# This is a very useful distinction:
+#
+# $$z=re^{j\omega}.$$
+#
+# The angle $\omega$ gives the familiar sinusoidal oscillation:
+#
+# $$e^{-j\omega n}.$$
+#
+# The radius contributes the factor:
+#
+# $$r^{-n}.$$
+#
+# So:
+#
+# * large $r$ damps positive-time samples more strongly,
+# * small $r$ behaves differently and becomes important for left-sided sequences,
+# * $r=1$ gives no radial damping.
+#
+# At
+#
+# $$r=1,$$
+#
+# $$z=e^{j\omega},$$
+#
+# and therefore:
+#
+# $$\boxed{X(z)\big\vert{}_{z=e^{j\omega}} = X(e^{j\omega})}$$
+#
+# if the sum converges there.
+#
+# This is why the deck says the DTFT is the z-transform evaluated on the unit circle when the unit circle is included in the ROC.
+#
+# ---
+#
+# # 4. The bilateral z-transform
+#
+# The definition is
+#
+# $$\boxed{X(z) = \sum_{n=-\infty}^{\infty} x[n]z^{-n}}$$
+#
+# and the important point is not merely the formula.
+#
+# The important point is:
+#
+# $$\boxed{\text{A value of } X(z) \text{ only exists where that infinite sum converges}.}$$
+#
+# That is why the lecture says:
+#
+# > A rational formula without its ROC is incomplete information.
+#
+# That statement is probably the single most important conceptual sentence in the whole lecture.
+#
+# ---
+#
+# # 5. First standard pair: right-sided exponential
+#
+# Take
+#
+# $$x[n]=a^n u[n].$$
+#
+# Then
+#
+# $$X(z) = \sum_{n=0}^{\infty} a^n z^{-n}.$$
+#
+# Factor:
+#
+# $$\sum_{n=0}^{\infty} (az^{-1})^n.$$
+#
+# This is a geometric series:
+#
+# $$\sum_{n=0}^{\infty}q^n = \frac{1}{1-q}, \qquad \vert{}q\vert{}<1.$$
+#
+# So:
+#
+# $$X(z) = \frac{1}{1-az^{-1}}$$
+#
+# provided
+#
+# $$\vert{}az^{-1}\vert{}<1.$$
+#
+# Therefore:
+#
+# $$\boxed{X(z) = \frac{1}{1-az^{-1}}, \qquad \vert{}z\vert{}>\vert{}a\vert{}.}$$
+#
+# This derivation and interpretation are laid out directly in the slides.
+#
+# A good answer to:
+#
+# > “Why is the ROC outside the pole?”
+#
+# is:
+#
+# > Because the geometric ratio must have magnitude less than one, which requires $\vert{}z\vert{}>\vert{}a\vert{}$.
+#
+# ---
+#
+# # 6. Why does a right-sided sequence produce an exterior ROC?
+#
+# For positive $n$, the term
+#
+# $$z^{-n}$$
+#
+# contains
+#
+# $$r^{-n}.$$
+#
+# If $r$ gets large, positive-time terms are increasingly suppressed.
+#
+# So for a right-sided sequence, convergence often occurs for sufficiently large radius.
+#
+# That creates an exterior region:
+#
+# $$\boxed{\vert{}z\vert{}>R.}$$
+#
+# That is the geometric intuition behind the rule, not just a convention to memorize.
+#
+# ---
+#
+# # 7. Same algebraic expression, different sequence
+#
+# This is the conceptual centerpiece of the lecture.
+#
+# Consider:
+#
+# $$\boxed{X(z) = \frac{1}{1-az^{-1}}.}$$
+#
+# A student may be tempted to say:
+#
+# $$x[n]=a^n u[n].$$
+#
+# But that is only true if
+#
+# $$\vert{}z\vert{}>\vert{}a\vert{}.$$
+#
+# If the ROC instead is
+#
+# $$\vert{}z\vert{}<\vert{}a\vert{},$$
+#
+# the inverse sequence is completely different.
+#
+# The deck explicitly states that the rational expression alone does not uniquely determine the sequence; the ROC is part of the transform.
+#
+# This is probably the most important exam concept.
+#
+# ---
+#
+# # 8. Deriving the left-sided version
+#
+# Starting with
+#
+# $$\frac{1}{1-az^{-1}} = \frac{z}{z-a}.$$
+#
+# For an interior ROC, we want a geometric expansion in powers of $(z/a)$, not $(a/z)$.
+#
+# Rewrite:
+#
+# $$\frac{z}{z-a} = -\frac{z/a}{1-z/a}.$$
+#
+# Now use
+#
+# $$\frac{1}{1-q} = \sum_{k=0}^{\infty}q^k, \qquad \vert{}q\vert{}<1.$$
+#
+# Thus:
+#
+# $$-\frac{z/a}{1-z/a} = -\sum_{k=1}^{\infty} \left(\frac{z}{a}\right)^k.$$
+#
+# This corresponds to
+#
+# $$\boxed{x[n] = -a^n u[-n-1].}$$
+#
+# The deck explicitly walks through why the minus sign appears.
+#
+# ---
+#
+# # 9. Why does the left-sided sequence start at $n=-1$?
+#
+# Because
+#
+# $$u[-n-1]$$
+#
+# is nonzero when
+#
+# $$-n-1\ge0$$
+#
+# which means
+#
+# $$n\le-1.$$
+#
+# So the sequence is
+#
+# $$\ldots, -a^{-3}, -a^{-2}, -a^{-1}, 0, 0, \ldots$$
+#
+# with the last nonzero sample at $n=-1$.
+#
+# A good quick-check question:
+#
+# > “Is $n=0$ included?”
+#
+# No.
+#
+# Because
+#
+# $$u[-0-1]=u[-1]=0.$$
+#
+# ---
+#
+# # 10. Why can the same pole correspond to two different time supports?
+#
+# The pole location comes from the algebraic denominator:
+#
+# $$1-az^{-1}=0$$
+#
+# so
+#
+# $$z=a.$$
+#
+# That pole is present in both cases.
+#
+# But the power-series expansion changes depending on where the series is required to converge.
+#
+# So:
+#
+# $$\boxed{\text{pole location tells us algebraic singularity}}$$
+#
+# while
+#
+# $$\boxed{\text{ROC tells us which time-sided expansion is valid}.}$$
+#
+# This distinction is subtle but fundamental.
+#
+# ---
+#
+# # 11. ROC geometry
+#
+# For rational z-transforms, the deck gives the main rules:
+#
+# * ROC cannot contain poles.
+# * right-sided $\rightarrow$ outside outermost pole,
+# * left-sided $\rightarrow$ inside innermost pole,
+# * two-sided $\rightarrow$ between pole radii.
+#
+# The reason an ROC looks like an annulus is that convergence depends on $\vert{}z\vert{}$, not on angle alone.
+#
+# So possible ROCs look like:
+#
+# $$\vert{}z\vert{}>R_1$$
+#
+# or
+#
+#
+# $$|z|<R_2$$
+#
+# or
+#
+# $$R_1<|z|<R_2.$$
+#
+# ---
+#
+# # 12. Why can the ROC never contain a pole?
+#
+# At a pole, the rational expression diverges.
+#
+# For example:
+#
+# $$X(z)=\frac{1}{1-0.5z^{-1}}$$
+#
+# has a pole at
+#
+# $$z=0.5.$$
+#
+# At that point the denominator is zero.
+#
+# So $X(z)$ cannot be finite there.
+#
+# Therefore:
+#
+# $$\boxed{\text{poles always lie outside the ROC}.}$$
+#
+# The deck makes this one of the explicit ROC rules. 
+#
+# ---
+#
+# # 13. The unit circle is the bridge back to the DTFT
+#
+# This is one of the most useful rules:
+#
+# $$\boxed{
+# \text{DTFT exists}
+# \iff
+# |z|=1\text{ lies in the ROC}.
+# }$$
+#
+# That is stated directly in the deck. 
+#
+# For
+#
+# $$x[n]=a^n u[n]$$
+#
+# with ROC
+#
+# $$|z|>|a|,$$
+#
+# the DTFT exists if
+#
+# $$1>|a|.$$
+#
+# So:
+#
+# $$\boxed{|a|<1.}$$
+#
+# That matches what students already learned from the geometric-series DTFT in Week 1.
+#
+# This is a nice moment to show that z-transform theory is not replacing DTFT theory; it generalizes it.
+#
+# ---
+#
+# # 14. Quick classification A
+#
+# The slide gives
+#
+# $$X(z) = \frac{1}{1-0.7z^{-1}}, \qquad \vert{}z\vert{}>0.7.$$
+#
+# Good answer:
+#
+# * right-sided,
+# * pole at 0.7,
+# * unit circle is inside ROC,
+# * DTFT exists.
+#
+# The corresponding sequence is
+#
+# $$\boxed{x[n] = (0.7)^n u[n].}$$
+#
+# This is exactly the classification listed in the deck.
+#
+# ---
+#
+# # 15. Quick classification B
+#
+# $$X(z) = \frac{1}{1-1.2z^{-1}}, \qquad \vert{}z\vert{}>1.2.$$
+#
+# Good answer:
+#
+# * right-sided,
+# * sequence
+#
+# $$x[n]=(1.2)^n u[n],$$
+#
+# * unit circle ($\vert{}z\vert{}=1$) is **not** in the ROC,
+# * DTFT does not exist.
+#
+# This is a great example because the z-transform exists even though the DTFT does not.
+#
+# ---
+#
+# # 16. Quick classification C
+#
+# $$X(z) = \frac{1}{1-1.2z^{-1}}, \qquad \vert{}z\vert{}<1.2.$$
+#
+# Good answer:
+#
+# * left-sided,
+# * sequence
+#
+# $$x[n] = -(1.2)^n u[-n-1],$$
+#
+# * unit circle satisfies
+#
+# $$1<1.2,$$
+#
+# so the unit circle lies inside the ROC,
+#
+# * DTFT exists.
+#
+# That surprises students.
+#
+# The coefficient magnitude ($1.2 > 1$) does **not** automatically imply the DTFT fails.
+#
+# The time support and ROC matter.
+#
+# ---
+#
+# # 17. Quick classification D
+#
+# Poles at
+#
+# $$0.5,\quad0.9$$
+#
+# with ROC
+#
+# $$0.5<\vert{}z\vert{}<0.9.$$
+#
+# Good answer:
+#
+# * two-sided,
+# * one part right-sided,
+# * one part left-sided,
+# * unit circle is not in the ROC,
+# * DTFT does not exist.
+#
+# That example is also given explicitly in the slides.
+#
+# ---
+#
+# # 18. Why does a two-sided sequence produce an annular ROC?
+#
+# Imagine a sum of two components:
+#
+# $$x[n] = x_R[n]+x_L[n].$$
+#
+# The right-sided piece may require
+#
+# $$\vert{}z\vert{}>R_1.$$
+#
+# The left-sided piece may require
+#
+# $$\vert{}z\vert{}<R_2.$$
+#
+# Both must converge simultaneously.
+#
+# So the combined ROC is
+#
+# $$\boxed{R_1<|z|<R_2}.$$
+#
+# That gives an annulus.
+#
+# This is the cleanest intuitive explanation of two-sided ROCs.
+#
+# ---
+#
+# # 19. Inverse z-transform: what is the practical goal?
+#
+# For rational expressions, the deck recommends a workflow based on partial fractions. 
+#
+# The steps are:
+#
+# 1. express in powers of $z^{-1}$,
+# 2. factor denominator,
+# 3. compute residues,
+# 4. use ROC to decide right- or left-sided interpretation,
+# 5. check.
+#
+# The crucial step is 4.
+#
+# Partial fractions give algebra.
+#
+# ROC gives time support.
+#
+# ---
+#
+# # 20. Worked example
+#
+# The deck uses:
+#
+#
+# $$X(z) = \frac{1}{
+# (1-0.5z^{-1})(1-0.8z^{-1})
+# }.$$
+#
+# Partial-fraction expansion gives:
+#
+#
+# $$X(z) = -\frac53\frac{1}{1-0.5z^{-1}} +
+# \frac83\frac{1}{1-0.8z^{-1}}.$$
+#
+# This appears directly in the slides. 
+#
+# Now the answer depends on the ROC.
+#
+# ---
+#
+# # 21. Case 1: ROC $|z|>0.8$
+#
+# Both poles lie inside the inner boundary.
+#
+# Each term must be interpreted as right-sided.
+#
+# So:
+#
+#
+# $$\boxed{x[n] = -\frac53(0.5)^n u[n] +
+# \frac83(0.8)^n u[n].}$$
+#
+# This is a causal/right-sided sequence.
+#
+# ---
+#
+# # 22. Case 2: ROC $0.5<\vert{}z\vert{}<0.8$
+#
+# Now:
+#
+# * the 0.5 term must converge outside its pole $\rightarrow$ right-sided,
+# * the 0.8 term must converge inside its pole $\rightarrow$ left-sided.
+#
+# Thus:
+#
+# $$\boxed{x[n] = -\frac{5}{3}(0.5)^n u[n] - \frac{8}{3}(0.8)^n u[-n-1].}$$
+#
+# Same poles.
+#
+# Same residues.
+#
+# Different time-domain sequence.
+#
+# That is exactly the point the next slide emphasizes: the same poles and residues do not imply the same sequence.
+#
+# ---
+#
+# # 23. What about ROC $\vert{}z\vert{}<0.5$?
+#
+# This is a good additional exercise.
+#
+# Now both terms are left-sided.
+#
+# So:
+#
+# $$-\frac{5}{3}\frac{1}{1-0.5z^{-1}}$$
+#
+# becomes
+#
+# $$+\frac{5}{3}(0.5)^n u[-n-1]$$
+#
+# because the standard left-sided inverse contributes an additional minus sign.
+#
+# The second term:
+#
+# $$\frac{8}{3}\frac{1}{1-0.8z^{-1}}$$
+#
+# becomes
+#
+# $$-\frac{8}{3}(0.8)^n u[-n-1].$$
+#
+# Therefore:
+#
+# $$\boxed{x[n] = \frac{5}{3}(0.5)^n u[-n-1] - \frac{8}{3}(0.8)^n u[-n-1].}$$
+#
+# This makes a great “third ROC” extension for the graduate students.
+#
+# ---
+#
+# # 24. A good way to teach partial fractions
+#
+# Students often become so focused on residue arithmetic that they miss the deeper structure.
+#
+# I would tell them:
+#
+# > Partial fractions reduce a complicated transform to a sum of standard one-pole pieces.
+#
+# Each term has the form
+#
+# $$\frac{A}{1-pz^{-1}}.$$
+#
+# Then there are only two questions:
+#
+# 1. what is the pole $p$?
+# 2. is that term right-sided or left-sided according to the ROC?
+#
+# That makes inverse z-transform much more manageable.
+#
+# ---
+#
+# # 25. What SciPy can and cannot tell you
+#
+# The deck includes:
+#
+# ```python id="slzroc"
+# r, p, k = signal.residuez(b, a)
+#
+# ```
+#
+# and notes that SciPy can identify:
+#
+# * poles,
+# * residues,
+# * rational structure.
+#
+# But it cannot infer whether each component is right-sided or left-sided without ROC/support information.
+#
+# That is an excellent conceptual lesson.
+#
+# A computer algebra package can return
+#
+# $$-\frac{5}{3},\quad \frac{8}{3}$$
+#
+# and poles
+#
+# $$0.5,\quad0.8.$$
+#
+# But that is not yet a unique time-domain answer.
+#
+# ---
+#
+# # 26. Great classroom question
+#
+# Suppose Python gives you:
+#
+# ```text id="9m3ty3"
+# poles = [0.5, 0.8]
+# residues = [-5/3, 8/3]
+#
+# ```
+#
+# Can you uniquely reconstruct $x[n]$?
+#
+# Good answer:
+#
+# > No. I still need the ROC or equivalent information such as causality/right-sidedness.
+#
+# That is a very high-value question.
+#
+# ---
+#
+# # 27. Audio connection: poles and decay
+#
+# The deck previews Lecture 6 by connecting pole magnitude and angle to time-domain behavior.
+#
+# For a pole
+#
+# $$p=re^{j\theta},$$
+#
+# a causal impulse-response term has the form roughly
+#
+# $$r^n e^{j\theta n}u[n].$$
+#
+# So:
+#
+# * $r$ controls how quickly it decays,
+# * $\theta$ controls oscillation frequency.
+#
+# For a conjugate pair,
+#
+# $$re^{\pm j\theta},$$
+#
+# the real impulse response contains a damped sinusoid:
+#
+# $$r^n\cos(\theta n+\phi)u[n].$$
+#
+# ---
+#
+# # 28. Pole radius intuition
+#
+# Compare
+#
+# $$(0.5)^n u[n]$$
+#
+# and
+#
+# $$(0.95)^n u[n].$$
+#
+# The first decays rapidly.
+#
+# The second decays slowly.
+#
+# So a pole at radius 0.95 produces longer memory/ringing than one at radius 0.5.
+#
+# A nice audio analogy:
+#
+# > Moving a resonant pole closer to the unit circle is like making a bell ring longer.
+#
+# That prepares students perfectly for the next lecture.
+#
+# ---
+#
+# # 29. Pole angle intuition
+#
+# Suppose a pole pair has angle
+#
+# $$\theta=\frac{\pi}{4}.$$
+#
+# Then the associated oscillation is centered around normalized frequency
+#
+# $$\omega=\frac{\pi}{4}.$$
+#
+# At sampling rate $f_s$,
+#
+# $$f = \frac{\theta}{2\pi}f_s.$$
+#
+# For
+#
+# $$f_s=48\text{ kHz}, \qquad \theta=\frac{\pi}{4},$$
+#
+# $$f = \frac{1}{8}(48000) = 6000\text{ Hz}.$$
+#
+# So pole angle maps directly to an oscillatory frequency.
+#
+# ---
+#
+# # 30. The concept check with 1.1
+#
+# The deck asks:
+#
+# $$X(z)=\frac{1}{1-1.1z^{-1}}$$
+#
+# which ROC gives a DTFT?
+#
+# Options include:
+#
+# $$\vert{}z\vert{}>1.1$$
+#
+# and
+#
+# $$\vert{}z\vert{}<1.1.$$
+#
+# The correct answer is:
+#
+# $$\boxed{\vert{}z\vert{}<1.1.}$$
+#
+# Why?
+#
+# Because the unit circle satisfies
+#
+# $$\vert{}z\vert{}=1<1.1.$$
+#
+# So it lies in the ROC.
+#
+# For
+#
+# $$\vert{}z\vert{}>1.1,$$
+#
+# the unit circle is excluded.
+#
+# This is a very nice check that students understand ROC geometry rather than memorizing “greater than is causal.”
+#
+# ---
+#
+# # 31. Common mistake: “The rational formula determines $x[n]$”
+#
+# Wrong.
+#
+# The deck explicitly calls this out.
+#
+# For example:
+#
+# $$\frac{1}{1-0.8z^{-1}}$$
+#
+# could mean
+#
+# $$(0.8)^n u[n]$$
+#
+# or
+#
+# $$-(0.8)^n u[-n-1],$$
+#
+# depending on the ROC.
+#
+# So the full transform is really:
+#
+# $$\boxed{\{X(z),\text{ ROC}\}.}$$
+#
+# ---
+#
+# # 32. Common mistake: “The z-transform always exists”
+#
+# Also false.
+#
+# There are sequences for which no nonempty annular region makes the sum converge.
+#
+# The deck says the ROC can be empty.
+#
+# A useful example is a two-sided sequence that grows too quickly in both directions such that the interior and exterior convergence requirements do not overlap.
+#
+# For example, conceptually:
+#
+# * positive-time side may require $\vert{}z\vert{}>2$,
+# * negative-time side may require $\vert{}z\vert{}<0.5$.
+#
+# There is no radius satisfying both.
+#
+# So ROC is empty.
+#
+# ---
+#
+# # 33. Common mistake: “DTFT and z-transform are separate transforms”
+#
+# They are not separate ideas.
+#
+# The DTFT is the special case
+#
+# $$z=e^{j\omega}.$$
+#
+# So:
+#
+# $$\boxed{\text{DTFT} = \text{z-transform evaluated on the unit circle}}$$
+#
+# provided the unit circle lies in the ROC.
+#
+# The deck explicitly uses this as a wrap-up correction.
+#
+# ---
+#
+# # 34. Finite-duration sequence example
+#
+# The reserve slide gives:
+#
+# $$x[n] = 2\delta[n+1] - \delta[n] + 3\delta[n-2].$$
+#
+# Then
+#
+# $$X(z) = 2z - 1 + 3z^{-2}.$$
+#
+# This is a very useful easy ROC example because the sum is finite.
+#
+# The positive power $z$ creates a potential problem at
+#
+# $$z=\infty.$$
+#
+# The negative power $z^{-2}$ creates a problem at
+#
+# $$z=0.$$
+#
+# So:
+#
+# $$\boxed{0<\vert{}z\vert{}<\infty.}$$
+#
+# This is a good anchor before the harder rational cases.
+#
+# ---
+#
+# # 35. Good question: what if the finite sequence is causal only?
+#
+# Suppose
+#
+# $$x[n]=\delta[n]+2\delta[n-1].$$
+#
+# Then
+#
+# $$X(z)=1+2z^{-1}.$$
+#
+# There are only negative powers.
+#
+# So the only problematic point is
+#
+# $$z=0.$$
+#
+# Thus the ROC is
+#
+# $$\boxed{0<\vert{}z\vert{}\le\infty}$$
+#
+# often summarized as the entire z-plane except $z=0$.
+#
+# This is useful because it connects support direction to singular behavior.
+#
+# ---
+#
+# # 36. Good question: what if the finite sequence is left-sided only?
+#
+# Suppose
+#
+# $$x[n]=\delta[n]+\delta[n+1].$$
+#
+# Then
+#
+# $$X(z)=1+z.$$
+#
+# There are only nonnegative powers of $z$.
+#
+# So the only problematic point is at infinity.
+#
+# Again, a nice geometric support connection.
+#
+# ---
+#
+# # 37. What I would want seniors to know
+#
+# For senior undergraduates, I would want them to be able to:
+#
+# * compute simple bilateral z-transforms,
+# * derive the ROC from convergence,
+# * distinguish right/left/two-sided support,
+# * decide whether the DTFT exists,
+# * invert rational transforms using partial fractions,
+# * explain why ROC is necessary.
+#
+# ---
+#
+# # 38. What I would additionally want graduate students to know
+#
+# Graduate students should also be able to:
+#
+# * derive ROC rules instead of memorizing them,
+# * explain the power-series interpretation,
+# * reason about why annular ROCs occur,
+# * connect pole magnitude/angle to sequence behavior,
+# * discuss when the ROC may be empty,
+# * explain how causality/stability will emerge from ROC in Lecture 6.
+#
+# ---
+#
+# # 39. Additional clicker questions I would use
+#
+# ### Question 1
+#
+# $$X(z)=\frac{1}{1-0.6z^{-1}}, \qquad \vert{}z\vert{}>0.6.$$
+#
+# Which is correct?
+#
+# A. left-sided
+# B. right-sided
+# C. two-sided
+# D. finite duration
+#
+# Answer:
+#
+# **B**
+#
+# ---
+#
+# ### Question 2
+#
+# Same rational function, but
+#
+# $$\vert{}z\vert{}<0.6.$$
+#
+# Which sequence?
+#
+# A.
+#
+# $$(0.6)^n u[n]$$
+#
+# B.
+#
+# $$-(0.6)^n u[-n-1]$$
+#
+# C.
+#
+# $$(0.6)^n$$
+#
+# D. no sequence exists
+#
+# Answer:
+#
+# **B**
+#
+# ---
+#
+# ### Question 3
+#
+# If the ROC is
+#
+# $$0.4<\vert{}z\vert{}<1.3,$$
+#
+# does the DTFT exist?
+#
+# Yes, because 1 lies between 0.4 and 1.3.
+#
+# ---
+#
+# ### Question 4
+#
+# If the ROC is
+#
+# $$1.1<\vert{}z\vert{}<2,$$
+#
+# does the DTFT exist?
+#
+# No.
+#
+# The unit circle lies outside the ROC.
+#
+# ---
+#
+# ### Question 5
+#
+# Can a pole lie inside the ROC?
+#
+# **No**.
+#
+# ---
+#
+# # 40. A strong answer to the exit ticket
+#
+# The deck ends with:
+#
+# > “Why can the same rational $X(z)$ correspond to different sequences?”
+#
+# A weak answer:
+#
+# > Because the ROC changes.
+#
+# A good answer:
+#
+# > Because the same rational expression can be expanded as different power series in different radial regions, and those expansions correspond to different time supports.
+#
+# An excellent answer:
+#
+# > The algebraic poles and residues determine the rational function, but the ROC determines which Laurent-series expansion is valid. An exterior expansion produces right-sided terms, an interior expansion produces left-sided terms, and an annular ROC can produce a two-sided sequence.
+#
+# That is exactly the conceptual understanding you want.
+#
+# ---
+#
+# # 41. The deepest idea in the lecture
+#
+# I would summarize the whole lecture for students this way:
+#
+# $$\boxed{\text{The z-transform is not just an algebraic function. It is an algebraic function plus a statement about convergence.}}$$
+#
+# And the most important chain is:
+#
+# $$\boxed{x[n] \rightarrow X(z) \rightarrow \text{ROC} \rightarrow \text{support / DTFT existence} \rightarrow \text{inverse sequence}}$$
+#
+# The bridge to the next lecture is then immediate:
+#
+# $$\boxed{\text{poles + ROC} \rightarrow \text{causality and stability}}$$
+#
+# and
+#
+# $$\boxed{\text{unit-circle geometry} \rightarrow \text{frequency response}}$$
+#
+# which is exactly how the deck previews Lecture 6: difference equations become rational $H(z)$, poles plus ROC determine causality and stability, zeros suppress nearby frequencies, and poles enhance them.
+#
+# That is the real pedagogical payoff of this lecture: students move from thinking of transforms as formulas to thinking of the **z-plane as a geometric map of convergence and system behavior**.
+#
+# ------------------------
+
+# %% [markdown]
+# # Week 3, Lecture 6, LaTeX math
+#
+# Can you convert the math expressions to LaTeX
+#
+# Gemini Pro:
+#
+# This lecture is where the z-transform becomes a **design and intuition tool** rather than mainly a convergence tool.
+#
+# Lecture 5 established:
+#
+# $$X(z)+\text{ROC}$$
+#
+# as the complete transform description. Lecture 6 now turns that into a system-analysis chain:
+#
+# $$\boxed{\text{difference equation} \rightarrow H(z) \rightarrow \text{poles and zeros} \rightarrow \text{ROC} \rightarrow \text{causality/stability} \rightarrow H(e^{j\omega}) \rightarrow \text{what the filter sounds like}}$$
+#
+# That is exactly the goal stated in the deck: students should eventually be able to **predict filter behavior before plotting it**.
+#
+# ---
+#
+# # 1. Difference equation ($\rightarrow H(z)$)
+#
+# The first example is
+#
+# $$y[n]-1.2y[n-1]+0.32y[n-2] = x[n]+0.3x[n-1]$$
+#
+# Under zero initial conditions, the z-transform shift property gives
+#
+# $$y[n-k] \longleftrightarrow z^{-k}Y(z)$$
+#
+# So:
+#
+# $$Y(z) - 1.2z^{-1}Y(z) + 0.32z^{-2}Y(z) = X(z)+0.3z^{-1}X(z)$$
+#
+# Factor:
+#
+# $$Y(z)\left(1-1.2z^{-1}+0.32z^{-2}\right) = X(z)\left(1+0.3z^{-1}\right)$$
+#
+# Therefore
+#
+# $$\boxed{H(z)=\frac{Y(z)}{X(z)} = \frac{1+0.3z^{-1}}{1-1.2z^{-1}+0.32z^{-2}}}$$
+#
+# That is the transformation shown in the slides.
+#
+# A good student answer to
+#
+# > “Why do we assume zero initial conditions?”
+#
+# is:
+#
+# > Because then the z-transform describes the input-output behavior of the LTI system itself, without extra terms caused by stored initial energy.
+#
+# ---
+#
+# # 2. Why factor the numerator and denominator?
+#
+# Because the roots expose the system behavior much more clearly than the raw coefficients.
+#
+# For the denominator:
+#
+# $$1-1.2z^{-1}+0.32z^{-2}$$
+#
+# factor as
+#
+# $$(1-0.8z^{-1})(1-0.4z^{-1})$$
+#
+# Therefore the poles are
+#
+# $$\boxed{z=0.8,\quad z=0.4}$$
+#
+# The numerator:
+#
+# $$1+0.3z^{-1} = 1-(-0.3)z^{-1}$$
+#
+# gives a zero at
+#
+# $$\boxed{z=-0.3}$$
+#
+# The slides explicitly identify these landmarks and recommend the engineering habit “factor before you sketch.”
+#
+# ---
+#
+# # 3. What is a pole physically telling us?
+#
+# A pole is a location where the rational transfer function becomes unbounded.
+#
+# But for filter intuition, a more useful interpretation is:
+#
+# > A pole represents a natural mode of the system.
+#
+# For a causal real pole at
+#
+# $$p=0.8$$
+#
+# the corresponding impulse-response term behaves roughly like
+#
+# $$(0.8)^n u[n]$$
+#
+# So the pole radius controls decay.
+#
+# Compare:
+#
+# $$(0.4)^n$$
+#
+# versus
+#
+# $$(0.8)^n$$
+#
+# The 0.8 component persists much longer.
+#
+# So even before doing partial fractions, you can predict that the 0.8 pole will dominate the long-term transient behavior.
+#
+# ---
+#
+# # 4. What does a zero tell us?
+#
+# A zero is a point where
+#
+# $$H(z)=0$$
+#
+# That means the numerator vanishes.
+#
+# For frequency-response interpretation, if a zero lies on or near the unit circle, frequencies near the zero's angle are suppressed.
+#
+# So the deck's shorthand is very useful:
+#
+# $$\boxed{\text{zeros pull the magnitude down}}$$
+#
+# $$\boxed{\text{poles push the magnitude up}}$$
+#
+# That phrase appears right at the beginning of the lecture and becomes the organizing geometric idea.
+#
+# ---
+#
+# # 5. Causality in the z-plane
+#
+# For a rational LTI system, a causal impulse response is right-sided.
+#
+# From Lecture 5:
+#
+# $$\text{right-sided} \Rightarrow \text{ROC outside outermost pole}$$
+#
+# Therefore, if the poles are at radii
+#
+# $$0.4,\quad 0.8$$
+#
+# then causal interpretation means
+#
+# $$\boxed{\vert{}z\vert{}>0.8}$$
+#
+# That is exactly the causality rule developed in the slides.
+#
+# A good explanation is:
+#
+# > Causality does not come merely from where the poles are. It comes from choosing the exterior ROC, which corresponds to a right-sided impulse response.
+#
+# That distinction matters.
+#
+# ---
+#
+# # 6. Why don't poles alone tell us causality?
+#
+# Suppose
+#
+# $$H(z)=\frac{1}{1-1.1z^{-1}}$$
+#
+# The pole is at 1.1.
+#
+# You could choose:
+#
+# $$\vert{}z\vert{}>1.1$$
+#
+# which gives a right-sided/causal impulse response,
+#
+# or
+#
+# $$\vert{}z\vert{}<1.1$$
+#
+# which gives a left-sided/anti-causal impulse response.
+#
+# Same pole.
+#
+# Different ROC.
+#
+# Different causality.
+#
+# That is the Lecture 5 lesson being reused.
+#
+# ---
+#
+# # 7. Stability in the z-domain
+#
+# For an LTI system,
+#
+# $$\text{BIBO stable} \iff \sum_n \vert{}h[n]\vert{}<\infty$$
+#
+# If $h[n]$ is absolutely summable, then
+#
+# $$H(e^{j\omega}) = \sum_n h[n]e^{-j\omega n}$$
+#
+# exists for every $\omega$.
+#
+# Since the DTFT is the z-transform on
+#
+# $$\vert{}z\vert{}=1$$
+#
+# the geometric stability criterion is:
+#
+# $$\boxed{\text{unit circle must lie in the ROC}}$$
+#
+# That is the exact connection made by the deck.
+#
+# ---
+#
+# # 8. Causal + stable gives the famous pole rule
+#
+# Now combine:
+#
+# $$\text{causal} \Rightarrow \text{ROC outside outermost pole}$$
+#
+# with
+#
+# $$\text{stable} \Rightarrow \vert{}z\vert{}=1 \text{ lies in ROC}$$
+#
+# For both to be true, the outermost pole must have radius $<1$.
+#
+# Therefore:
+#
+# $$\boxed{\text{causal rational + BIBO stable} \Rightarrow \vert{}p_k\vert{}<1 \text{ for every pole}}$$
+#
+# The lecture correctly adds an important nuance: “all poles inside the unit circle” is a **causal-and-stable rule**, not a stand-alone stability rule if the ROC/support is unspecified.
+#
+# That nuance is worth emphasizing strongly.
+#
+# ---
+#
+# # 9. A very important counterexample
+#
+# Consider a pole at 1.1.
+#
+# If ROC is
+#
+# $$\vert{}z\vert{}>1.1$$
+#
+# then:
+#
+# * right-sided,
+# * causal,
+# * unit circle excluded,
+# * unstable.
+#
+# But if ROC is
+#
+# $$\vert{}z\vert{}<1.1$$
+#
+# then:
+#
+# * left-sided,
+# * anti-causal,
+# * unit circle included,
+# * stable.
+#
+# That is one of the classification examples in the deck.
+#
+# So a strong student answer to
+#
+# > “A pole is outside the unit circle. Is the system unstable?”
+#
+# should be:
+#
+# > Not enough information. If the system is assumed causal, then yes. Without the ROC or support assumption, stability cannot be determined from pole location alone.
+#
+# That is an excellent exam answer.
+#
+# ---
+#
+# # 10. Classification examples
+#
+# The slide gives three.
+#
+# ### A
+#
+# Poles:
+#
+# $$0.3,\quad 0.8$$
+#
+# ROC:
+#
+# $$\vert{}z\vert{}>0.8$$
+#
+# Answer:
+#
+# $$\boxed{\text{causal and stable}}$$
+#
+# because the ROC is exterior and includes the unit circle.
+#
+# ---
+#
+# ### B
+#
+# Pole:
+#
+# 1.1
+#
+# ROC:
+#
+# $$\vert{}z\vert{}>1.1$$
+#
+# Answer:
+#
+# $$\boxed{\text{causal but unstable}}$$
+#
+# because $\vert{}z\vert{}=1$ is excluded.
+#
+# ---
+#
+# ### C
+#
+# Pole:
+#
+# 1.1
+#
+# ROC:
+#
+# $$\vert{}z\vert{}<1.1$$
+#
+# Answer:
+#
+# $$\boxed{\text{anti-causal but stable}}$$
+#
+# because the unit circle lies inside the ROC.
+#
+# A good classroom requirement is exactly what the slide suggests:
+#
+# > Give one sentence of justification, not just the labels.
+#
+# ---
+#
+# # 11. Now comes the most visual part: frequency response from geometry
+#
+# To compute frequency response:
+#
+# $$z=e^{j\omega}$$
+#
+# So imagine a point traveling around the unit circle.
+#
+# If the transfer function is written as
+#
+# $$H(z) = K \frac{\prod_k(z-z_k)}{\prod_m(z-p_m)}$$
+#
+# then at
+#
+# $$z=e^{j\omega}$$
+#
+# the magnitude is
+#
+# $$\boxed{\vert{}H(e^{j\omega})\vert{} = \vert{}K\vert{} \frac{\prod_k\vert{}e^{j\omega}-z_k\vert{}}{\prod_m\vert{}e^{j\omega}-p_m\vert{}}}$$
+#
+# The slides describe exactly this distance interpretation.
+#
+# So frequency response can literally be read as:
+#
+# $$\boxed{\frac{\text{product of distances to zeros}}{\text{product of distances to poles}}}$$
+#
+# ---
+#
+# # 12. Why does a zero nearby pull the response down?
+#
+# Suppose a zero is close to the unit-circle evaluation point.
+#
+# Then one numerator distance
+#
+# $$\vert{}e^{j\omega}-z_0\vert{}$$
+#
+# is small.
+#
+# Therefore the numerator product is small.
+#
+# Hence:
+#
+# $$\vert{}H(e^{j\omega})\vert{}$$
+#
+# is small.
+#
+# The closer the evaluation point gets to the zero, the more the response is suppressed.
+#
+# ---
+#
+# # 13. Zero exactly on the unit circle
+#
+# Suppose
+#
+# $$z_0=e^{j\omega_0}$$
+#
+# Evaluate the response at
+#
+# $$\omega=\omega_0$$
+#
+# Then
+#
+# $$e^{j\omega_0}-z_0 = 0$$
+#
+# So one factor in the numerator is zero:
+#
+# $$\boxed{\vert{}H(e^{j\omega_0})\vert{}=0}$$
+#
+# That produces a perfect notch.
+#
+# The deck walks through precisely this geometric reasoning.
+#
+# A good exit-ticket-quality answer is:
+#
+# > A zero on the unit circle creates a notch because the frequency-response evaluation point coincides with that zero, making one numerator vector length exactly zero.
+#
+# ---
+#
+# # 14. Why does a pole nearby increase the response?
+#
+# A pole contributes a denominator distance:
+#
+# $$\vert{}e^{j\omega}-p\vert{}$$
+#
+# If the pole is close to the unit circle at that angle, this distance gets small.
+#
+# Then:
+#
+# $$\frac{1}{\text{small number}}$$
+#
+# becomes large.
+#
+# Therefore:
+#
+# $$\boxed{\text{pole close to unit circle} \rightarrow \text{resonant peak}}$$
+#
+# The slides also connect a closer pole to a longer-lived time-domain response.
+#
+# ---
+#
+# # 15. First-order example
+#
+# The lecture uses
+#
+# $$H(z)=\frac{1}{1-0.8z^{-1}}$$
+#
+# Pole:
+#
+# $$z=0.8$$
+#
+# That pole lies on the positive real axis.
+#
+# Now consider two evaluation points.
+#
+# At DC:
+#
+# $$\omega=0 \Rightarrow z=1$$
+#
+# Distance to pole:
+#
+# $$\vert{}1-0.8\vert{}=0.2$$
+#
+# At Nyquist:
+#
+# $$\omega=\pi \Rightarrow z=-1$$
+#
+# Distance:
+#
+# $$\vert{}-1-0.8\vert{}=1.8$$
+#
+# Because the denominator is much smaller at DC, the gain is much larger there.
+#
+# So without any formula:
+#
+# $$\boxed{\text{low-pass tendency}}$$
+#
+# That is the exact geometric reasoning emphasized in the slide.
+#
+# ---
+#
+# # 16. We can verify numerically
+#
+# At $\omega=0$:
+#
+# $$H(1)=\frac{1}{1-0.8}=5$$
+#
+# At $\omega=\pi$:
+#
+# $$H(-1)=\frac{1}{1+0.8} = \frac{1}{1.8} \approx 0.556$$
+#
+# So:
+#
+# $$\vert{}H(0)\vert{}=5$$
+#
+# and
+#
+# $$\vert{}H(\pi)\vert{} \approx 0.556$$
+#
+# The geometry predicted that result before algebra confirmed it.
+#
+# That is exactly the habit the lecture is trying to cultivate.
+#
+# ---
+#
+# # 17. A great question: what if the pole were at -0.8?
+#
+# Then the pole would lie near
+#
+# $$z=-1$$
+#
+# which corresponds to
+#
+# $$\omega=\pi$$
+#
+# So now the filter would favor high discrete-time frequencies instead.
+#
+# That is a very clean way to demonstrate that **pole angle determines preferred frequency**.
+#
+# ---
+#
+# # 18. Complex-conjugate pole pairs
+#
+# For a real filter, complex poles typically occur in conjugate pairs:
+#
+# $$p_{1,2} = r e^{\pm j\omega_0}$$
+#
+# The angle $\omega_0$ sets the resonant frequency.
+#
+# The radius $r$ controls how sharply resonant and how long-lived the transient is.
+#
+# This is one of the most important pole-zero intuitions in audio DSP.
+#
+# ---
+#
+# # 19. Pole radius and time-domain ringing
+#
+# A corresponding causal mode behaves like
+#
+# $$r^n\cos(\omega_0 n+\phi)u[n]$$
+#
+# Compare $r=0.7$ and $r=0.97$.
+#
+# For 0.7:
+#
+# $$0.7^{10}\approx 0.028$$
+#
+# The transient dies quickly.
+#
+# For 0.97:
+#
+# $$0.97^{10}\approx 0.737$$
+#
+# The transient is still quite strong after ten samples.
+#
+# That makes the deck's statement very concrete:
+#
+# $$\boxed{r\text{ closer to }1 \rightarrow \text{longer ringing}}$$
+#
+# The slides explicitly say moving a pole radially inward/outward without changing angle changes resonance sharpness and memory while keeping the center frequency fixed.
+#
+# ---
+#
+# # 20. Why does the resonant peak become sharper as $r \to 1$?
+#
+# Because the pole approaches the frequency-response evaluation path itself: the unit circle.
+#
+# Near $\omega_0$,
+#
+# $$\vert{}e^{j\omega}-re^{j\omega_0}\vert{}$$
+#
+# becomes very small.
+#
+# But away from $\omega_0$, the distance remains larger.
+#
+# So the amplification becomes concentrated into a narrower angular region.
+#
+# Thus:
+#
+# $$\boxed{r\uparrow1 \Rightarrow \text{narrower, stronger resonance}}$$
+#
+# ---
+#
+# # 21. Design example: removing 60-Hz hum
+#
+# The slides give:
+#
+# $$f_s=1000\text{ Hz}$$
+#
+# and desired notch:
+#
+# $$f_0=60\text{ Hz}$$
+#
+# Convert to normalized angular frequency:
+#
+# $$\omega_0 = 2\pi\frac{60}{1000} \approx 0.377\text{ rad/sample}$$
+#
+# Then place zeros at:
+#
+# $$\boxed{z=e^{\pm j\omega_0}}$$
+#
+# Because those zeros lie exactly on the unit circle at the hum frequency, the response becomes zero at 60 Hz.
+#
+# ---
+#
+# # 22. Why must the zeros occur as a conjugate pair?
+#
+# Because we usually want real filter coefficients.
+#
+# If one zero is
+#
+# $$e^{j\omega_0}$$
+#
+# include its conjugate
+#
+# $$e^{-j\omega_0}$$
+#
+# The resulting polynomial has real coefficients.
+#
+# That is why the notch numerator becomes
+#
+# $$1-2\cos\omega_0 z^{-1}+z^{-2}$$
+#
+# ---
+#
+# # 23. Deriving the notch numerator
+#
+# Start with zeros at
+#
+# $$z_1=e^{j\omega_0}, \qquad z_2=e^{-j\omega_0}$$
+#
+# Then
+#
+# $$(z-z_1)(z-z_2)$$
+#
+# expands to
+#
+# $$z^2 - (z_1+z_2)z + z_1z_2$$
+#
+# Since
+#
+# $$z_1+z_2 = 2\cos\omega_0$$
+#
+# and
+#
+# $$z_1z_2=1$$
+#
+# divide by $z^2$ to write it in $z^{-1}$ form:
+#
+# $$\boxed{1-2\cos\omega_0 z^{-1}+z^{-2}}$$
+#
+# That is exactly the numerator shown in the slide.
+#
+# ---
+#
+# # 24. Why add poles near the zeros?
+#
+# A numerator with unit-circle zeros alone gives the notch, but it can affect a relatively broad region around the notch.
+#
+# So place poles at the same angles, but slightly inside:
+#
+# $$p_{1,2} = r e^{\pm j\omega_0}, \qquad r<1$$
+#
+# The denominator becomes
+#
+# $$1-2r\cos\omega_0 z^{-1}+r^2z^{-2}$$
+#
+# Then:
+#
+# $$\boxed{H(z) = K \frac{1-2\cos\omega_0 z^{-1}+z^{-2}}{1-2r\cos\omega_0 z^{-1}+r^2z^{-2}}}$$
+#
+# This is the notch-filter equation in the lecture.
+#
+# ---
+#
+# # 25. What do the poles actually do in this notch filter?
+#
+# The zeros force exact cancellation at
+#
+# $$\omega_0$$
+#
+# The nearby poles increase the response near—but not at—the notch.
+#
+# So they make the attenuation more localized.
+#
+# A good verbal explanation is:
+#
+# > Zeros create the hole; nearby poles pull the surrounding response back up.
+#
+# That is a very intuitive description.
+#
+# ---
+#
+# # 26. What does $r$ control?
+#
+# If
+#
+# $$r=0.8$$
+#
+# the poles are relatively far from the unit circle.
+#
+# The notch tends to affect a wider frequency region.
+#
+# If
+#
+# $$r=0.985$$
+#
+# or
+#
+# $$r=0.99$$
+#
+# the poles are close to the unit circle, and the notch becomes very narrow.
+#
+# At the same time, the transient response lasts longer.
+#
+# So there is a tradeoff:
+#
+# $$\boxed{\text{narrow frequency selectivity} \leftrightarrow \text{longer time-domain ringing}}$$
+#
+# That is a very important DSP design principle.
+#
+# ---
+#
+# # 27. Approximate coefficients for the 60-Hz example
+#
+# For
+#
+# $$f_s=1000\text{ Hz}, \qquad f_0=60\text{ Hz}$$
+#
+# $$\omega_0 \approx 0.377$$
+#
+# Then
+#
+# $$\cos\omega_0 \approx 0.930$$
+#
+# The numerator is approximately
+#
+# $$1-1.860z^{-1}+z^{-2}$$
+#
+# With
+#
+# $$r=0.985$$
+#
+# the denominator is approximately
+#
+# $$1-1.832z^{-1}+0.9702z^{-2}$$
+#
+# So students can see how a pole-zero geometry turns directly into practical filter coefficients.
+#
+# ---
+#
+# # 28. What is $K$?
+#
+# The gain constant $K$ is used to set the desired gain somewhere away from the notch.
+#
+# For example, one common choice is to normalize the DC response:
+#
+# $$H(1)=1$$
+#
+# Then solve for $K$.
+#
+# For the 60-Hz, $r=0.985$ example, that normalization is approximately
+#
+# $$K \approx 0.987$$
+#
+# The exact value matters less pedagogically than the idea:
+#
+# > Poles and zeros control shape; $K$ controls the overall vertical scale.
+#
+# The slide says $K$ is often chosen so DC or passband gain is approximately one.
+#
+# ---
+#
+# # 29. Excellent prediction question
+#
+# Suppose you move the zeros from
+#
+# $$\vert{}z\vert{}=1$$
+#
+# to
+#
+# $$\vert{}z\vert{}=0.9$$
+#
+# but keep the same angle.
+#
+# Does the perfect notch remain?
+#
+# No.
+#
+# Why?
+#
+# At
+#
+# $$z=e^{j\omega_0}$$
+#
+# the evaluation point no longer equals the zero.
+#
+# The numerator distance is small but not zero.
+#
+# Therefore:
+#
+# $$\boxed{\vert{}H(e^{j\omega_0})\vert{}>0}$$
+#
+# So the attenuation is deep, but not infinite.
+#
+# This is one of the sandbox prompts in the slides.
+#
+# ---
+#
+# # 30. Another sandbox prediction
+#
+# Move a conjugate pole pair from $r=0.9$ to $r=0.98$ without changing angle.
+#
+# What should students predict before plotting?
+#
+# Good answer:
+#
+# > The center frequency stays nearly the same because the angle did not change. The peak becomes sharper and stronger, and the impulse response rings longer because the radius moved closer to one.
+#
+# That is exactly the concept-check answer later in the lecture.
+#
+# ---
+#
+# # 31. Python: roots to coefficients
+#
+# The deck uses:
+#
+# ```python id="pzpython1"
+# zeros = np.exp(1j*np.array([w0, -w0]))
+# poles = r * zeros
+#
+# b = np.poly(zeros).real
+# a = np.poly(poles).real
+#
+# ```
+#
+# This is worth unpacking.
+#
+# `zeros` contains the desired roots of the numerator polynomial.
+#
+# `np.poly(zeros)` constructs the polynomial whose roots are those values.
+#
+# Likewise for the poles.
+#
+# So:
+#
+# $$\boxed{\text{geometry} \rightarrow \text{coefficients}}$$
+#
+# is implemented by `np.poly`.
+#
+# ---
+#
+# # 32. Coefficients back to roots
+#
+# If you already have
+#
+# ```python id="pzpython2"
+# a = [1, -1.2, 0.32]
+#
+# ```
+#
+# then:
+#
+# ```python id="pzpython3"
+# np.roots(a)
+#
+# ```
+#
+# finds
+#
+# $$0.8,\quad 0.4$$
+#
+# So:
+#
+# $$\boxed{\text{coefficients} \rightarrow \text{geometry}}$$
+#
+# is implemented by `np.roots`.
+#
+# The slides explicitly highlight this two-way mapping.
+#
+# ---
+#
+# # 33. What is `freqz` doing?
+#
+# When you run
+#
+# ```python id="pzpython4"
+# w, H = signal.freqz(b, a)
+#
+# ```
+#
+# SciPy numerically evaluates the transfer function at points on the unit circle:
+#
+# $$z=e^{j\omega}$$
+#
+# So `freqz` is essentially verifying
+#
+# $$H(e^{j\omega})$$
+#
+# A good answer to:
+#
+# > “Why should I still learn pole-zero geometry if `freqz` plots it for me?”
+#
+# is:
+#
+# > Because geometry lets you predict the important response features and diagnose a filter before trusting the plot or code.
+#
+# That is also the explicit teaching point of the Python slide.
+#
+# ---
+#
+# # 34. Why not just low-pass the 60-Hz hum?
+#
+# Because a low-pass filter would remove a huge amount of useful audio along with the hum.
+#
+# A notch filter can remove a very narrow component.
+#
+# The audio-demo slide emphasizes exactly this comparison: the narrow notch targets the hum while leaving nearby useful content mostly intact, whereas broad filtering would discard far more information.
+#
+# That is a great real engineering example of why selective filter design matters.
+#
+# ---
+#
+# # 35. A subtle point: what about 120-Hz hum?
+#
+# The demo description mentions synthetic 60-Hz and 120-Hz hum.
+#
+# A notch only at 60 Hz does not automatically eliminate the 120-Hz harmonic.
+#
+# So a good classroom question is:
+#
+# > “If the power-line interference has strong harmonics at 120 Hz and 180 Hz, what would you do?”
+#
+# Good answers include:
+#
+# * add separate notch sections at the harmonics,
+# * cascade several notch filters,
+# * use a comb-like structure if appropriate.
+#
+# This is a natural extension of the same pole-zero idea.
+#
+# ---
+#
+# # 36. Cascading notch sections
+#
+# If
+#
+# $$H_1(z)$$
+#
+# removes 60 Hz and
+#
+# $$H_2(z)$$
+#
+# removes 120 Hz, then the cascade is
+#
+# $$\boxed{H(z)=H_1(z)H_2(z)}$$
+#
+# In the pole-zero plot, the combined system simply contains all of the poles and zeros from both sections.
+#
+# This nicely connects back to convolution/cascade properties from Week 1.
+#
+# ---
+#
+# # 37. ML connection: preprocessing changes what the model sees
+#
+# The deck closes the technical section by connecting front-end filters to ML features.
+#
+# Any filter before a spectrogram changes:
+#
+# $$x[n] \rightarrow X(e^{j\omega}) \rightarrow \text{spectrogram} \rightarrow \text{features}$$
+#
+# So a notch that removes known 60-Hz hum may be useful.
+#
+# But a filter could also remove information that is actually predictive.
+#
+# The deck frames the design question as whether you are removing a nuisance, imposing a useful inductive bias, or accidentally deleting information required by the classifier.
+#
+# That is an excellent ML bridge.
+#
+# ---
+#
+# # 38. A useful ML example
+#
+# Suppose you want to classify motor faults.
+#
+# You notice a narrow 120-Hz component and assume it is electrical hum, so you notch it out.
+#
+# But what if faulty motors genuinely produce a mechanical component near 120 Hz?
+#
+# You have now thrown away a discriminative feature.
+#
+# The DSP filter is technically “working,” but the ML system may get worse.
+#
+# That is why front-end filtering must be task-aware.
+#
+# ---
+#
+# # 39. Stability matters even more in an ML pipeline
+#
+# Suppose a preprocessing IIR filter has a pole outside the unit circle but is implemented causally.
+#
+# Its output may grow dramatically.
+#
+# That can create:
+#
+# * huge spectrogram values,
+# * clipping,
+# * NaNs or infinities,
+# * unstable feature scaling,
+# * bad neural-network gradients.
+#
+# So “stability” is not an abstract textbook condition.
+#
+# It protects every downstream stage.
+#
+# This is exactly the rationale behind the stability bullet on the ML-bridge slide.
+#
+# ---
+#
+# # 40. Good concept-check answer
+#
+# The deck asks:
+#
+# > A conjugate pole pair is moved from radius 0.7 to 0.97 at the same angle. What changes?
+#
+# Correct:
+#
+# $$\boxed{\text{peak gets sharper and ringing lasts longer}}$$
+#
+# Why isn't the resonant frequency changing much?
+#
+# Because the pole angle stayed constant.
+#
+# Why doesn't a notch appear?
+#
+# Because a notch comes from a zero, not a pole.
+#
+# Why doesn't the system become time-varying?
+#
+# Because moving fixed pole locations changes the LTI system coefficients, but once chosen, the system is still time-invariant.
+#
+# The deck gives the same answer and reasoning.
+#
+# ---
+#
+# # 41. Some additional clicker questions
+#
+# ### Question 1
+#
+# A causal rational filter has a pole at
+#
+# $$z=1.05$$
+#
+# Can it be BIBO stable?
+#
+# A. Yes
+# B. No
+# C. Only if there is also a zero at 1.05
+# D. Only for sinusoidal inputs
+#
+# Best course-level answer:
+#
+# $$\boxed{B}$$
+#
+# for the causal rational realization described by its uncancelled poles.
+#
+# ---
+#
+# ### Question 2
+#
+# A zero is at
+#
+# $$z=e^{j\pi/2}$$
+#
+# Where is the notch?
+#
+# $$\boxed{\omega=\pi/2}$$
+#
+# At $f_s=48$ kHz:
+#
+# $$f = \frac{\pi/2}{2\pi}(48000) = 12000\text{ Hz}$$
+#
+# ---
+#
+# ### Question 3
+#
+# A pole is at
+#
+# $$0.95e^{j0.25\pi}$$
+#
+# What do you expect?
+#
+# Good answer:
+#
+# > A resonance near $\omega=0.25\pi$, with fairly long-lived ringing because the pole radius is close to one.
+#
+# ---
+#
+# ### Question 4
+#
+# Which change makes a resonator ring longer?
+#
+# A. Move pole from 0.95 to 0.6
+# B. Move pole from 0.6 to 0.95
+# C. Move zero onto unit circle
+# D. Increase numerator gain only
+#
+# Answer:
+#
+# $$\boxed{B}$$
+#
+# ---
+#
+# ### Question 5
+#
+# A perfect notch requires what geometrically?
+#
+# Good answer:
+#
+# > A zero exactly on the unit circle at the target frequency angle.
+#
+# ---
+#
+# # 42. One subtle issue students may ask about: pole-zero cancellation
+#
+# Suppose numerator and denominator both contain
+#
+# $$1-az^{-1}$$
+#
+# Algebraically they cancel.
+#
+# In practical system analysis, exact pole-zero cancellation can be delicate because numerical coefficient errors may leave a residual pole.
+#
+# For this lecture, the simpler rule is:
+#
+# > Identify the poles of the effective transfer function after exact algebraic cancellation, but recognize that near-cancellation in physical or finite-precision systems may still matter.
+#
+# That is a useful graduate-level aside.
+#
+# ---
+#
+# # 43. Coefficient/root sanity check from the reserve slide
+#
+# The reserve example is:
+#
+# $$1-1.4z^{-1}+0.45z^{-2} = (1-0.5z^{-1})(1-0.9z^{-1})$$
+#
+# So poles are:
+#
+# $$0.5,\quad 0.9$$
+#
+# For a causal system:
+#
+# $$\boxed{\vert{}z\vert{}>0.9}$$
+#
+# Since
+#
+# $$1>0.9$$
+#
+# the unit circle lies in the ROC.
+#
+# Therefore:
+#
+# $$\boxed{\text{causal and stable}}$$
+#
+# The slide uses this as a fast sanity check.
+#
+# ---
+#
+# # 44. What I would expect from seniors
+#
+# A senior should be able to:
+#
+# * derive $H(z)$ from a difference equation,
+# * factor it,
+# * identify poles/zeros,
+# * select a causal ROC,
+# * test stability,
+# * sketch qualitative frequency response from the pole-zero plot,
+# * explain a simple notch filter.
+#
+# ---
+#
+# # 45. What I would additionally expect from graduate students
+#
+# Graduate students should be able to:
+#
+# * explain why ROC is essential to causality/stability,
+# * derive the geometric magnitude expression,
+# * connect pole radius to decay time,
+# * explain the frequency/time selectivity tradeoff,
+# * derive the conjugate-pair notch section,
+# * reason about normalization gain,
+# * discuss the impact of front-end filtering on later ML features.
+#
+# ---
+#
+# # 46. A strong answer to the exit ticket
+#
+# The lecture's exit ticket asks:
+#
+# > Why does a zero on the unit circle create a notch?
+#
+# A weak answer:
+#
+# > Because zeros reduce gain.
+#
+# A good answer:
+#
+# > Because at the zero's angle the unit-circle evaluation point $e^{j\omega}$ coincides with the zero, making one numerator distance zero.
+#
+# An excellent answer:
+#
+# $$\vert{}H(e^{j\omega})\vert{} = \vert{}K\vert{} \frac{\prod_k\vert{}e^{j\omega}-z_k\vert{}}{\prod_m\vert{}e^{j\omega}-p_m\vert{}}$$
+#
+# If
+#
+# $$z_0=e^{j\omega_0}$$
+#
+# then at $\omega=\omega_0$,
+#
+# $$\vert{}e^{j\omega_0}-z_0\vert{}=0$$
+#
+# so
+#
+# $$\boxed{\vert{}H(e^{j\omega_0})\vert{}=0}$$
+#
+# That is a full geometric explanation.
+#
+# ---
+#
+# # 47. The deepest idea of the lecture
+#
+# I would keep coming back to this picture:
+#
+# $$\boxed{\text{coefficients} \rightarrow \text{roots} \rightarrow \text{geometry} \rightarrow \text{behavior}}$$
+#
+# The coefficients are what you implement.
+#
+# The poles and zeros are what you reason with.
+#
+# The ROC tells you causality and stability.
+#
+# The unit circle tells you frequency response.
+#
+# And the physical/audio consequences follow from where everything sits relative to that circle.
+#
+# So the entire Week 3 story becomes:
+#
+# $$\boxed{\text{difference equation} \rightarrow H(z) \rightarrow \text{zeros, poles, ROC} \rightarrow \text{causality/stability} \rightarrow H(e^{j\omega}) \rightarrow \text{sound}}$$
+#
+# That is why this lecture is such an important turning point: students stop seeing a digital filter mainly as a string of coefficients and begin seeing it as **geometry in the z-plane**.
+
+# %%
