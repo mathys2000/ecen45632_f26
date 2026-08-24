@@ -1226,3 +1226,302 @@
 #
 # ---------------------------------------
 #
+
+# %% [markdown]
+# ## Week 2, Lecture 3, Exit Tickets
+#
+# What are good exit ticket questions with answers for this lecture?
+#
+# Chat GPT (Medium):
+#
+# For this lecture, I’d make the exit ticket short enough to finish in about **3–5 minutes**, but design it to test whether students understand the *reasoning* behind sampling rather than just remembering (f_s>2f_M). Your lecture emphasizes the sampling model, spectral replication, aliasing as non-uniqueness, and why anti-alias filtering must occur before sampling or decimation. 
+#
+# Here are some strong choices.
+#
+# 1. **A continuous-time signal contains frequencies only up to 7 kHz. What is the minimum theoretical sampling rate required to avoid aliasing?**
+#
+#    **Answer:**
+#    
+#    $$f_s > 2f_M = 14\text{ kHz}$$
+#    
+#    So theoretically the sampling rate must be **greater than 14 kHz**. In practice, you would choose something higher to allow room for the anti-alias filter transition band.
+#
+#    **What this tests:** Whether students distinguish the signal bandwidth from the Nyquist frequency and can apply the no-overlap condition. Your slides explicitly distinguish the Nyquist frequency (f_s/2) from the Nyquist rate (2f_M). 
+#
+# 2. **A 9 kHz sinusoid is sampled at (f_s=12) kHz. What frequency will appear in the sampled data?**
+#
+#    **Answer:**
+#    The Nyquist frequency is 6 kHz. The 9 kHz sinusoid folds around 6 kHz:
+#
+#    
+#    $$f_{\text{alias}}=|9-12|=3\text{ kHz}.$$
+#    
+#
+#    So the sampled data looks like a **3 kHz sinusoid**.
+#
+#    **What this tests:** Whether students can actually predict an alias rather than only say “aliasing occurs.”
+#
+# 3. **True or false: If aliasing occurs during sampling, we can usually remove it afterward with a digital low-pass filter. Explain in one sentence.**
+#
+#    **Answer:** **False.** Once aliasing occurs, an aliased component and a genuine in-band component can produce the same samples, so the digital system cannot determine which one was originally present.
+#
+#    This is one of the most important conceptual points in the lecture: aliasing is a loss of uniqueness, not simply extra noise. 
+#
+# 4. **Why does sampling create repeated copies of the analog spectrum?**
+#
+#    **Good answer:** Because ideal sampling multiplies the continuous-time signal by a periodic impulse train. Multiplication in time corresponds to convolution in frequency, and the Fourier transform of the impulse train is itself an impulse train. Convolving (X_c(j\Omega)) with those impulses creates shifted copies of the spectrum spaced by the sampling frequency.
+#
+#    **Excellent student answer:**
+#    “Sampling multiplies (x_c(t)) by an impulse train; in frequency this becomes convolution with another impulse train, producing replicas of (X_c(j\Omega)) every (\Omega_s).”
+#
+#    That is almost exactly the central derivation developed in the lecture.  
+#
+# 5. **Suppose two different continuous-time sinusoids produce exactly the same discrete-time samples. What phenomenon does this illustrate?**
+#
+#    **Answer:** **Aliasing.**
+#
+#    **Better answer:** Aliasing demonstrates that the mapping from continuous-time signals to samples is no longer one-to-one; multiple analog signals are consistent with the same digital sequence.
+#
+#    **What this tests:** Whether they understand the deeper idea that aliasing is **non-uniqueness** rather than merely “frequencies getting messed up.” Your lecture makes that distinction explicitly. 
+#
+# 6. **You have audio sampled at 48 kHz and want to reduce the rate to 12 kHz. Why is `x[::4]` potentially wrong? What should you do instead?**
+#
+#    **Answer:** Keeping every fourth sample changes the Nyquist frequency from 24 kHz to 6 kHz. Any energy above 6 kHz can therefore alias into the new baseband.
+#
+#    Correct procedure:
+#
+#    
+#    $$\boxed{\text{Low-pass filter first} \rightarrow \text{downsample by 4}}$$
+#    
+#
+#    This connects sampling theory directly to the practical decimation example in the lecture. 
+#
+# 7. **A 10 kHz component is present in a 48 kHz recording. The recording is naively downsampled to 12 kHz. Where will the 10 kHz component appear?**
+#
+#    **Answer:**
+#
+#    
+#    $$f_{\text{alias}}=|10-12|=2\text{ kHz}.$$
+#    
+#
+#    It appears falsely as a **2 kHz component**.
+#
+#    **Follow-up:** Why could this be particularly dangerous for a machine-learning classifier?
+#
+#    **Answer:** Because the classifier may learn the repeatable 2 kHz alias as though it were a real physical feature of the signal. Your lecture specifically emphasizes that a CNN cannot know that this structure originated as an alias. 
+#
+# 8. **Complete the sentence: An anti-alias filter must be placed ______ the ADC because ______.**
+#
+#    **Answer:**
+#    “An anti-alias filter must be placed **before** the ADC because once out-of-band energy folds into the sampled baseband, its original frequency cannot generally be recovered.”
+#
+#    **What this tests:** Whether students understand the physical ordering, not merely the vocabulary. 
+#
+# For this particular lecture, my favorite **three-question exit ticket** would be:
+#
+# > **1.** A 9 kHz tone is sampled at 12 kHz. What frequency appears in the samples?
+# > **Answer:** 3 kHz.
+# >
+# > **2.** Why can't a digital filter generally remove aliasing after sampling?
+# > **Answer:** Because after frequencies fold together, genuine in-band and aliased components are indistinguishable.
+# >
+# > **3.** In one or two sentences, explain why sampling creates spectral replicas.
+# > **Answer:** Sampling multiplies the signal by a periodic impulse train. Multiplication in time becomes convolution in frequency, creating shifted copies of the original spectrum at multiples of the sampling frequency.
+#
+# That combination is particularly useful because **Question 1 tests calculation, Question 2 tests physical/conceptual understanding, and Question 3 tests whether they understood the mathematical mechanism**. Together they give you a better diagnosis than three Nyquist-rate calculations.
+#
+# One question I would **not** use as the primary exit-ticket question is simply, *“State the Nyquist sampling theorem.”* A student can memorize (f_s>2f_M) and still misunderstand essentially everything important in this lecture. Your stated learning objective is specifically that students should be able to **derive—not just quote—the sampling theorem**, so the exit ticket should reflect that goal. 
+#
+# -----------------
+#
+
+# %% [markdown]
+# ## Week 2, Lecture 4, Exit Tickets
+#
+# What are good exit ticket questions with answers for this lecture?
+#
+# Chat GPT (Medium):
+#
+# For this lecture, I’d make the exit ticket test three different things: **ideal reconstruction**, **practical DAC behavior**, and **quantization/SQNR**. That matches the lecture’s stated outcomes very well. 
+#
+# Here are several good choices with answers.
+#
+# 1. **Why does ideal reconstruction use sinc functions?**
+#
+#    **Answer:** Because the ideal reconstruction filter is a brick-wall low-pass filter, and its impulse response is a sinc function. Therefore, reconstruction is performed by summing shifted sinc functions weighted by the sample values.
+#
+#    A strong student answer would be:
+#    “Each sample scales a shifted sinc, and the sinc functions interpolate exactly through the original sample values.”
+#
+#    This directly follows the lecture’s derivation from ideal low-pass filtering to sinc interpolation. 
+#
+# 2. **Why does sinc interpolation pass exactly through the sample values?**
+#
+#    **Answer:** Because the normalized sinc function is zero at every nonzero integer offset and equals 1 at zero. At (t=mT), all sinc terms vanish except the one centered at (mT).
+#
+#    So:
+#
+#    
+#    $$x_r(mT)=x[m].$$
+#    
+#
+#    This is a very good conceptual check because it shows whether students understand why sinc interpolation actually works rather than simply recognizing the formula. 
+#
+# 3. **Why don't practical DACs usually implement ideal sinc interpolation directly?**
+#
+#    **Answer:** Because an ideal sinc impulse response has infinite duration and is noncausal. A real DAC instead usually produces a simpler waveform such as a zero-order hold and then uses an analog reconstruction filter.
+#
+#    The lecture explicitly contrasts ideal interpolation with the practical DAC approach. 
+#
+# 4. **What does a zero-order hold do in the time domain?**
+#
+#    **Answer:** It holds each sample value constant for one sampling period.
+#
+#    **Follow-up:** What does that do in frequency?
+#
+#    **Answer:** It introduces a sinc-shaped magnitude response, causing progressively greater attenuation at higher frequencies.
+#
+#    This makes a nice two-part exit-ticket question because students must connect the time-domain staircase to the frequency-domain droop.  
+#
+# 5. **True or false: The frequency droop produced by a zero-order hold is random noise.**
+#
+#    **Answer:** **False.** It is a deterministic frequency-response effect.
+#
+#    **Better answer:** The ZOH has a sinc-shaped transfer-function magnitude, so higher-frequency components are attenuated in a predictable way.
+#
+#    That distinction is explicitly emphasized in the lecture. 
+#
+# 6. **A DAC uses a zero-order hold. What is the purpose of the analog reconstruction filter that follows it?**
+#
+#    **Answer:** Primarily to remove spectral images around multiples of the sampling frequency. It can also help compensate some of the ZOH passband droop.
+#
+#    This tests whether students see the DAC and analog filter as one reconstruction chain rather than treating the DAC output as the final waveform. 
+#
+# 7. **What is the difference between sampling and quantization?**
+#
+#    **Answer:**
+#
+#    * Sampling discretizes **time**.
+#    * Quantization discretizes **amplitude**.
+#
+#    This is simple, but it is worth asking because students often mix the two concepts. The lecture makes this distinction explicitly. 
+#
+# 8. **How many nominal quantization levels does an (8)-bit quantizer have?**
+#
+#    **Answer:**
+#
+#    
+#    $$2^8=256.$$
+#    
+#
+#    **Follow-up:** What happens to the quantization step $\Delta$ if you add one more bit?
+#
+#    **Answer:** It is approximately cut in half.
+#
+#    Since quantization-noise power is proportional to $\Delta^2$, halving $\Delta$ reduces the noise power by approximately a factor of 4.  
+#
+# 9. **Approximately how much does ideal SQNR improve when one bit is added?**
+#
+#    **Answer:** About
+#
+#    
+#    $$6\text{ dB per bit}.$$
+#    
+#
+#    More precisely, for a full-scale sine,
+#
+#    
+#    $$\mathrm{SQNR}\approx6.02B+1.76\text{ dB}.$$
+#    
+#
+#    The “6 dB per bit” result comes from the fact that one extra bit halves $\Delta$, reducing quantization-noise power by a factor of 4. 
+#
+# 10. **Estimate the ideal SQNR of a full-scale 10-bit sinusoid.**
+#
+# **Answer:**
+#
+#
+# $$\mathrm{SQNR}\approx 6.02(10)+1.76$$
+#
+#
+#
+# $$\approx61.96\text{ dB}$$
+#
+#
+# or about **62 dB**.
+#
+# 11. **Estimate the ideal SQNR of a full-scale 12-bit sinusoid.**
+#
+# **Answer:**
+#
+#
+# $$6.02(12)+1.76
+# =74.0\text{ dB}.$$
+#
+#
+# This is also the calculation already included in the lecture's existing exit check. 
+#
+# 12. **Why is the common statement “16-bit audio has about 96 dB of dynamic range” slightly different from the (98.1) dB SQNR result?**
+#
+# **Answer:** They use slightly different reference calculations. Roughly (6) dB/bit gives about (96) dB, while
+#
+#
+# $$6.02B+1.76$$
+#
+#
+# gives approximately (98.1) dB for a full-scale sine because it incorporates the RMS power of the sine and the uniform quantization-error model.
+#
+# That is a stronger exit question for an advanced class because it tests whether students understand where the numbers come from rather than treating them as conflicting facts. 
+#
+# 13. **A recording is stored as 16-bit PCM. You convert it to a PyTorch `float32` tensor. Has the signal now gained additional amplitude resolution?**
+#
+# **Answer:** **No.**
+#
+# The representation used for subsequent computation has changed, but the information captured during quantization has not. Values between the original 16-bit quantization levels cannot be recovered just by casting the data to `float32`. 
+#
+# This would be one of my favorite exit-ticket questions because it connects the DSP material directly to the later ML part of the course.
+#
+# 14. **True or false: If an audio recording is stored as `float32`, it cannot contain significant quantization error.**
+#
+# **Answer:** **False.**
+#
+# A `float32` tensor may simply contain values that originated from a much lower-resolution ADC or PCM file. More computational precision does not restore information that was lost during acquisition. 
+#
+# 15. **The additive quantization-noise model assumes quantization error is approximately uniform and uncorrelated with the signal. Is this always true?**
+#
+# **Answer:** **No.**
+#
+# It is a useful approximation when the signal spans many quantization levels and the error is sufficiently decorrelated from the signal. Low-level signals can produce structured or signal-correlated quantization error.
+#
+# This is a very good higher-level conceptual question because it tests whether students understand the distinction between a mathematical model and physical reality. 
+#
+# For a **3-question exit ticket**, I would probably use these:
+#
+# **1. Explain in one sentence why ideal reconstruction produces sinc interpolation.**
+#
+# **Answer:** Because the ideal reconstruction system is a brick-wall low-pass filter whose impulse response is a sinc.
+#
+# **2. A DAC uses a zero-order hold. What happens to its frequency response as frequency increases?**
+#
+# **Answer:** The response follows a sinc-shaped envelope, so higher frequencies experience progressively greater magnitude droop.
+#
+# **3. An audio file recorded with a 12-bit ADC is converted to `float32` for PyTorch. Does it now have 32-bit measurement accuracy? Explain.**
+#
+# **Answer:** No. `float32` gives more numerical precision for computation, but it cannot recreate amplitude information lost during the original 12-bit quantization.
+#
+# I particularly like that set because the questions move from **ideal theory → practical hardware → DSP/ML interpretation**, which is exactly the progression of the lecture. The lecture summary itself follows essentially that same structure: sinc interpolation, ZOH behavior, quantization/SQNR, and the distinction between PCM bit depth and computational dtype. 
+#
+# If you want a slightly more quantitative exit ticket, I would substitute Question 3 with:
+#
+# **A full-scale 8-bit sinusoid has approximately what ideal SQNR?**
+#
+#
+# $$6.02(8)+1.76\approx49.9\text{ dB}.$$
+#
+#
+# That one is useful because a student who answers **48 dB** is showing that they remember the (6\text{ dB/bit}) approximation, while a student who gets **about 50 dB** understands the full-scale-sine formula. Both responses tell you something useful about where they are conceptually.
+#
+# ------------------------
+#
+
+# %%

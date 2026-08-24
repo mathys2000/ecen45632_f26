@@ -2546,5 +2546,477 @@
 # $$\boxed{\text{difference equation} \rightarrow H(z) \rightarrow \text{zeros, poles, ROC} \rightarrow \text{causality/stability} \rightarrow H(e^{j\omega}) \rightarrow \text{sound}}$$
 #
 # That is why this lecture is such an important turning point: students stop seeing a digital filter mainly as a string of coefficients and begin seeing it as **geometry in the z-plane**.
+#
+# ----------
+
+# %% [markdown]
+# ## Week 3, Lecture 5, Exit Tickets
+#
+# What are good exit ticket questions with answers for this lecture?
+#
+# Chat GPT (Medium):
+#
+# For this lecture, the best exit ticket questions should test whether students understand that a z-transform is not just an algebraic expression: **the ROC is part of the answer**. That is the central idea of the lecture and is built directly into the learning outcomes. 
+#
+# Here are strong choices.
+#
+# 1. **Why can the same rational expression (X(z)) correspond to different time-domain sequences?**
+#
+#    **Answer:** Because different regions of convergence correspond to different valid power-series expansions, which produce different time supports.
+#
+#    For example,
+#
+#    
+#    $$X(z)=\frac{1}{1-az^{-1}}$$
+#    
+#
+#    can represent
+#
+#    
+#    $$a^n u[n], \qquad |z|>|a|$$
+#    
+#
+#    or
+#
+#    
+#    $$-a^n u[-n-1], \qquad |z|<|a|.$$
+#    
+#
+#    This is probably the single most important exit-ticket question for the lecture. The slides explicitly emphasize that the rational expression alone does not uniquely determine the sequence. 
+#
+# 2. **For**
+#    
+#    $$X(z)=\frac{1}{1-0.8z^{-1}},\qquad |z|>0.8,$$
+#    
+#    **is the sequence right-sided or left-sided? Does its DTFT exist?**
+#
+#    **Answer:** It is **right-sided** because the ROC is outside the pole.
+#
+#    The DTFT **does exist** because the unit circle $|z|=1$ lies inside the ROC $|z|>0.8$.
+#
+#    **What this tests:** Whether students can infer both time support and DTFT existence directly from ROC geometry.
+#
+# 3. **For**
+#    
+#    $$X(z)=\frac{1}{1-1.2z^{-1}},\qquad |z|>1.2,$$
+#    
+#    **does the DTFT exist? Explain without computing it.**
+#
+#    **Answer:** **No.**
+#
+#    The DTFT is obtained by evaluating the z-transform on the unit circle. Since (|z|=1) is not in the ROC (|z|>1.2), the DTFT does not exist in the ordinary sense.
+#
+#    This directly tests the lecture’s statement that the DTFT exists if and only if the unit circle lies in the ROC. 
+#
+# 4. **For**
+#    
+#    $$X(z)=\frac{1}{1-1.2z^{-1}},\qquad |z|<1.2,
+#    
+#    **does the DTFT exist?**
+#
+#    **Answer:** **Yes.**
+#
+#    Even though the pole magnitude exceeds 1, the ROC is inside the pole and includes the unit circle:
+#
+#    
+#    $$1<1.2.$$
+#    
+#
+#    So the DTFT exists.
+#
+#    This is a very useful conceptual trap because students often incorrectly reason, “pole outside unit circle means no DTFT.” The ROC, not just the pole location, determines the answer.
+#
+# 5. **True or false: A pole can lie inside the ROC.**
+#
+#    **Answer:** **False.**
+#
+#    A pole is a point where the transform diverges, so it cannot belong to the region of convergence.
+#
+#    The lecture explicitly identifies this as a common mistake worth preventing. 
+#
+# 6. **What determines whether**
+#    
+#    $$\frac{1}{1-az^{-1}}$$
+#    
+#    **represents a right-sided or left-sided sequence?**
+#
+#    **Answer:** The **ROC**.
+#
+#    * $|z|>|a|$ gives a right-sided sequence.
+#    * $|z|<|a|$ gives a left-sided sequence.
+#
+#    This is a concise but high-value question because it checks whether students recognize that the pole itself does not determine sidedness.
+#
+# 7. **Why is the z-transform more general than the DTFT?**
+#
+#    **Answer:** Because the z-transform allows
+#
+#    
+#    $$z=re^{j\omega}$$
+#    
+#
+#    with arbitrary radius $r$. The factor $r^{-n}$ can provide exponential weighting that makes a sum converge even when it does not converge on the unit circle.
+#
+#    At
+#
+#    
+#    $$r=1,
+#    
+#
+#    the z-transform becomes the DTFT.
+#
+#    The lecture introduces exactly this “radial damping” interpretation. 
+#
+# 8. **Consider**
+#    
+#    $$x[n]=2^n u[n].$$
+#    
+#    **Why does its z-transform exist even though its DTFT does not?**
+#
+#    **Answer:** Its transform sum is
+#
+#    
+#    $$\sum_{n=0}^{\infty}2^n z^{-n}.$$
+#    
+#
+#    This converges when
+#
+#    
+#    $$\left|\frac{2}{z}\right|<1$$
+#    
+#
+#    or
+#
+#    
+#    $$|z|>2.$$
+#    
+#
+#    The unit circle $|z|=1$ is not in that ROC, so the DTFT does not exist, but the z-transform does exist for $|z|>2$. 
+#
+# 9. **A rational z-transform has poles at radii 0.5 and 0.9, with ROC**
+#    
+#    $$0.5<|z|<0.9.$$
+#    
+#    **Is the corresponding sequence right-sided, left-sided, or two-sided? Does its DTFT exist?**
+#
+#    **Answer:** It is **two-sided** because the ROC lies between pole radii.
+#
+#    Its DTFT **does not exist** because the unit circle $|z|=1$ is outside the ROC.
+#
+#    This matches the ROC classification example used in the lecture. 
+#
+# 10. **For a rational z-transform, what generally does an ROC outside the outermost pole imply?**
+#
+# **Answer:** A **right-sided sequence**.
+#
+# **Follow-up:** What does an ROC inside the innermost pole imply?
+#
+# **Answer:** A **left-sided sequence**.
+#
+# **Follow-up:** What does an ROC between poles imply?
+#
+# **Answer:** A **two-sided sequence**.
+#
+# This directly checks whether students have internalized the ROC geometry summarized in the lecture. 
+#
+# 11. **Suppose**
+#     
+#     $$X(z)=
+#     \frac{1}{(1-0.5z^{-1})(1-0.8z^{-1})}$$
+#     
+#     **and the ROC is $|z|>0.8$. Are the two partial-fraction terms right-sided or left-sided?**
+#
+# **Answer:** Both are **right-sided**, because the ROC is outside both poles.
+#
+# The inverse is
+#
+#
+# $$x[n] =
+# -\frac53(0.5)^n u[n]
+# +
+# \frac83(0.8)^n u[n].$$
+#
+#
+# This checks whether students know that partial-fraction coefficients alone are insufficient—the ROC determines how each term is interpreted. 
+#
+# 12. **For that same rational expression, suppose instead**
+#     
+#     $$0.5<|z|<0.8.$$
+#     
+#     **Which term is right-sided and which is left-sided?**
+#
+# **Answer:**
+#
+# * The pole at $0.5$ gives a **right-sided** term because the ROC lies outside it.
+# * The pole at $0.8$ gives a **left-sided** term because the ROC lies inside it.
+#
+# Therefore,
+#
+#
+# $x[n] =
+# -\frac53(0.5)^n u[n]
+# -\frac83(0.8)^n u[-n-1].$$
+#
+#
+# This is an excellent stronger exit-ticket question if partial fractions were the major focus near the end of class.
+#
+# 13. **SciPy gives you the poles and residues of a rational z-transform. Can it determine the ROC automatically?**
+#
+# **Answer:** **No.**
+#
+# It can determine the algebraic poles and residues, but it cannot infer whether each term should be interpreted as right-sided or left-sided unless additional support or ROC information is supplied.
+#
+# That distinction is made explicitly in the Python portion of the lecture. 
+#
+# 14. **Complete the sentence: The DTFT of (x[n]) is the z-transform evaluated ______, provided ______.**
+#
+# **Answer:**
+# “The DTFT is the z-transform evaluated **on the unit circle, (z=e^{j\omega})**, provided **the unit circle lies in the ROC**.”
+#
+# This is an especially efficient exit-ticket item because it tests two core concepts simultaneously.
+#
+# 15. **True or false: If two z-transforms have the same poles and residues, they must represent the same sequence.**
+#
+# **Answer:** **False.**
+#
+# They can have different ROCs, and therefore correspond to different time-domain supports.
+#
+# The lecture highlights this very strongly: the same poles and residues do not imply the same sequence. 
+#
+# For a **3-question exit ticket**, I would use:
+#
+# **1.**
+#
+# $$X(z)=\frac{1}{1-1.2z^{-1}},\qquad |z|<1.2.$$
+#
+#
+# Is the sequence right-sided or left-sided? Does its DTFT exist?
+#
+# **Answer:** Left-sided; yes, because the unit circle is inside the ROC.
+#
+# **2. Why can't a rational expression $X(z)$ by itself uniquely determine $x[n]$?**
+#
+# **Answer:** Because different ROCs correspond to different convergent power-series expansions and therefore different time-domain supports.
+#
+# **3. Complete the statement: The DTFT exists if and only if ______.**
+#
+# **Answer:** The unit circle $|z|=1$ lies in the ROC.
+#
+# That set gives you a particularly useful diagnostic:
+#
+# * **Question 1:** Can they interpret ROC geometry?
+# * **Question 2:** Do they understand why ROC matters?
+# * **Question 3:** Do they understand the DTFT/z-transform relationship?
+#
+# I would favor these over a question such as “Write the definition of the z-transform.” A student can memorize
+#
+#
+# $$X(z)=\sum_{n=-\infty}^{\infty}x[n]z^{-n}$$
+#
+#
+# without grasping the central conceptual advance of this lecture. The stated goal is that students reason from **both algebra and ROC geometry**, so the exit ticket should force them to do exactly that. 
+#
+# --------------------
+#
+
+# %% [markdown]
+# ## Week 3, Lecture 6, Exit Tickets
+#
+# What are good exit ticket questions with answers for this lecture?
+#
+# Chat GPT (Medium):
+#
+# For this lecture, I would make the exit ticket test whether students can move from **algebra → poles/zeros → ROC → frequency-response intuition**. That is exactly what the lecture is trying to build: predicting behavior before plotting it. 
+#
+# Here are good choices.
+#
+# 1. **Why does a zero on the unit circle create a notch in the frequency response?**
+#
+#    **Answer:** At the frequency corresponding to the zero angle, the evaluation point $e^{j\omega}$ lands exactly on the zero. One numerator distance becomes zero, so
+#
+#    
+#    $$|H(e^{j\omega})|=0.$$
+#    
+#
+#    This is probably the strongest single conceptual exit-ticket question for the lecture because it checks whether students understand the pole-zero geometry rather than just remembering “zeros make notches.” 
+#
+# 2. **Why does a pole close to the unit circle create a resonance?**
+#
+#    **Answer:** When $e^{j\omega}$ passes near a pole, the distance from the unit-circle point to the pole becomes small. Since pole distances appear in the denominator of $H(e^{j\omega})$, the magnitude becomes large.
+#
+#    A strong answer would also mention that the pole angle sets the approximate resonant frequency and the pole radius controls how sharp and long-lived the resonance is. 
+#
+# 3. **A causal rational system has poles at $0.4$ and $0.8$. What is its ROC? Is it stable?**
+#
+#    **Answer:** Because the system is causal, the ROC is outside the outermost pole:
+#
+#    
+#    $$|z|>0.8.$$
+#    
+#
+#    Since the unit circle $|z|=1$ lies in that ROC, the system is also **BIBO stable**. 
+#
+# 4. **A causal system has a pole at $z=1.1$. Is it BIBO stable? Why?**
+#
+#    **Answer:** **No.**
+#
+#    Causality requires
+#
+#    
+#    $$|z|>1.1,$$
+#    
+#
+#    so the unit circle is not in the ROC. Therefore the system is not BIBO stable.
+#
+#    This is a good question because it forces students to reason through ROC rather than use a memorized rule. 
+#
+# 5. **True or false: “A system is stable if all of its poles are inside the unit circle.”**
+#
+#    **Answer:** **Not always.**
+#
+#    More precisely, for a **causal rational system**, all poles must lie strictly inside the unit circle for BIBO stability.
+#
+#    Without the causality/ROC assumption, pole locations alone do not determine stability. The lecture explicitly emphasizes this nuance. 
+#
+# 6. **A rational system has a pole at $1.1$ and ROC $|z|<1.1$. Is the system causal? Is it stable?**
+#
+#    **Answer:**
+#
+#    * **Not causal**; the ROC is inside the pole, so the impulse response is left-sided.
+#    * **Stable**; the unit circle lies inside the ROC because $1<1.1$.
+#
+#    This is an excellent conceptual trap because students often incorrectly assume that a pole outside the unit circle automatically means instability. The lecture itself classifies exactly this case as anti-causal but stable. 
+#
+# 7. **Suppose**
+#    
+#    $$H(z)=\frac{1}{1-0.8z^{-1}}.$$
+#    
+#    Without plotting anything, would you expect low-pass or high-pass behavior? Explain geometrically.
+#
+#    **Answer:** **Low-pass.**
+#
+#    The pole is at $z=0.8$, close to the unit-circle point $z=1$, which corresponds to $\omega=0$. Therefore the denominator becomes small near low frequency, producing large gain there.
+#
+#    At $\omega=\pi$, the unit-circle point is $z=-1$, much farther from the pole, so the gain is smaller. 
+#
+# 8. **A conjugate pole pair is moved from radius $0.7$ to radius $0.97$, but the pole angles stay the same. What changes?**
+#
+#    **Answer:** The resonant frequency stays approximately the same because the angle has not changed, but the resonance becomes **sharper and stronger**, and the impulse response rings for longer.
+#
+#    This is one of the lecture’s explicit concept checks. 
+#
+# 9. **What determines the approximate center frequency of a resonance: pole angle or pole radius?**
+#
+#    **Answer:** The **pole angle** determines the approximate resonance frequency.
+#
+#    **Follow-up:** What does the radius control?
+#
+#    **Answer:** How sharp/strong the resonance is and how slowly the corresponding impulse-response component decays.
+#
+#    The lecture states that the decay is roughly proportional to $r^n$. 
+#
+# 10. **A zero is moved from exactly on the unit circle to slightly inside it, while keeping the same angle. Does the notch remain perfect?**
+#
+# **Answer:** **No.**
+#
+# A perfect notch requires the zero itself to lie on the unit circle so that (e^{j\omega}) can coincide exactly with the zero. If the zero is moved inside, the distance is no longer zero, so the attenuation is finite rather than exact.
+#
+# This is a very good geometric reasoning question and follows naturally from the sandbox activity. 
+#
+# 11. **At (f_s=1000) Hz, where should zeros be placed to remove a 60 Hz sinusoid?**
+#
+# **Answer:** First calculate
+#
+#
+# $$\omega_0=2\pi\frac{60}{1000}\approx0.377\text{ rad/sample}.$$
+#
+#
+# Then place conjugate zeros at
+#
+#
+# $$z=e^{\pm j0.377}.$$
+#
+#
+# This creates a notch at 60 Hz. 
+#
+# 12. **Why are poles often placed near the zeros in a narrow notch filter?**
+#
+# **Answer:** The zeros force exact cancellation at the unwanted frequency, while nearby poles restore the response at neighboring frequencies so the notch stays narrow rather than attenuating a broad band.
+#
+# In the lecture’s phrasing: **zeros do the cancellation; nearby poles keep the rest of the spectrum from being unnecessarily attenuated.** 
+#
+# 13. **Given the difference equation**
+#     
+#     $$y[n]-1.2y[n-1]+0.32y[n-2]
+#     =
+#     x[n]+0.3x[n-1],$$
+#     
+#     **write $H(z)$.**
+#
+# **Answer:**
+#
+#
+# $$H(z) =
+# \frac{Y(z)}{X(z)}=
+# \frac{1+0.3z^{-1}}
+# {1-1.2z^{-1}+0.32z^{-2}}.$$
+#
+#
+# **Follow-up:** Where do the poles and zeros come from?
+#
+# **Answer:** Numerator roots are zeros; denominator roots are poles. 
+#
+# 14. **Why isn't the transfer-function ratio (H(z)) by itself enough to determine causality?**
+#
+# **Answer:** Because causality depends on the ROC. For a rational LTI system, a causal impulse response is right-sided, which means the ROC must lie outside the outermost pole.
+#
+# So the polynomial ratio gives poles and zeros, but the ROC gives the support interpretation. 
+#
+# 15. **Complete the statement: For an LTI system, BIBO stability requires ______.**
+#
+# **Answer:** The unit circle must lie in the ROC:
+#
+#
+# $$|z|=1\subset\text{ROC}.$$
+#
+#
+# Equivalently, the impulse response must satisfy
+#
+#
+# $$\sum_n |h[n]|<\infty.$$
+#
+#
+#
+#
+# For a **3-question exit ticket**, I would probably use these:
+#
+# **1. Why does a zero on the unit circle create a notch?**
+#
+# **Answer:** Because at that frequency the point $e^{j\omega}$ coincides with the zero, making a numerator distance zero and therefore $H(e^{j\omega})=0$.
+#
+# **2. A causal rational system has poles at $0.5$ and $0.9$. Is it stable? Explain using the ROC.**
+#
+# **Answer:** Yes. Causality gives
+#
+#
+# $$|z|>0.9,$$
+#
+#
+# and this ROC includes the unit circle, so the system is BIBO stable.
+#
+# **3. A conjugate pole pair moves from radius 0.8 to 0.98 at the same angle. What changes physically?**
+#
+# **Answer:** The resonant frequency stays essentially the same, but the peak becomes sharper/stronger and the impulse response rings longer.
+#
+# That set gives you three distinct diagnostics:
+#
+# * **Question 1:** pole-zero geometry,
+# * **Question 2:** causality/stability reasoning,
+# * **Question 3:** physical interpretation of pole radius.
+#
+# I would favor those over asking students simply to “define a pole” or “define a zero.” The lecture’s main goal is for students to **predict filter behavior before plotting**, so a strong exit ticket should require prediction from geometry, not just vocabulary recall. 
+#
+# -------------------------------
+#
 
 # %%
