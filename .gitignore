@@ -16,3 +16,6 @@ __pycache__/
 
 ### Exclude zipped files
 *.zip
+
+# ignore lock files
+~$*
