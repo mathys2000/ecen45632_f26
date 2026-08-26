@@ -1,0 +1,8128 @@
+Week 13 easier
+
+**Week 13: Introduction to PyTorch.** Tensors, automatic differentiation, and building basic Multilayer Perceptrons (MLPs) for signal classification (Raschka).
+
+Can you map out two 75 min lectures for week 13. The class is a senior/graduate level DSP and ML course. The textbooks are Oppenheim/Schafer "Discrete-Time Signal Processing" and Raschka "Machine Learning with PyTorch and Scikit-Learn"
+
+Gemini Pro:
+
+Here is a structured plan for Week 13, bridging the deterministic signal processing of Oppenheim/Schafer with the data-driven framework of Raschka.
+
+### Lecture 25: Tensors and Automatic Differentiation (75 Min)
+
+This session transitions students from traditional DSP arrays to the computational graphs that power modern machine learning.
+
+* **From Vectors to Tensors (20 min):** Map 1D discrete-time signals $x[n]$ and 2D spectrograms to PyTorch tensors. Contrast standard NumPy arrays with PyTorch tensors, emphasizing GPU acceleration and gradient tracking.
+* **Tensor Operations for DSP (20 min):** Demonstrate matrix multiplication, broadcasting, and dimensionality manipulation. Explain how a batch of framed audio is typically represented as a 3D tensor: $(N, C, L)$ for Batch, Channel, and Length.
+* **The Chain Rule & Autograd (35 min):** Introduce `torch.autograd`. Explain how PyTorch dynamically builds a directed acyclic graph during the forward pass to automatically compute gradients $\nabla_{\theta} L$ via backpropagation, eliminating the need to derive complex partial derivatives by hand.
+
+### Lecture 26: MLPs for Signal Classification (75 Min)
+
+This session focuses on designing, assembling, and training a neural network to classify extracted DSP features (e.g., MFCCs or spectral flux).
+
+* **Architecture of an MLP (20 min):** Define the linear algebraic forward pass $\mathbf{y} = f(\mathbf{W}\mathbf{x} + \mathbf{b})$. Discuss hidden layers and the critical necessity of non-linear activations (like ReLU) to draw complex decision boundaries between signal classes.
+* **Loss Functions & Optimizers (25 min):** Connect the network's predictions to a measurable cost. Introduce Cross-Entropy Loss for multi-class signal classification, and explain how optimizers like Adam update the network's weights: $\theta_{t+1} = \theta_t - \eta \nabla L$.
+* **The PyTorch Training Loop (30 min):** Walk through the standard 5-step training idiom required in PyTorch:
+1. Pass the signal features forward.
+2. Compute the loss.
+3. Clear old gradients with `optimizer.zero_grad()`.
+4. Backpropagate the error with `loss.backward()`.
+5. Update weights with `optimizer.step()`.
+
+----------
+
+Can you provide a basic PyTorch training loop script that implements an MLP to classify audio features? 
+
+Gemini Pro:
+
+Here is a complete, runnable PyTorch script that implements a Multilayer Perceptron (MLP) for audio feature classification (e.g., 20 MFCC features classified into 10 audio categories).
+
+The script includes synthetic data generation for immediate execution, model definition, and the standard 5-step PyTorch training and validation loops.
+
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+
+# -----------------------------------------------------------------------------
+# 1. Model Definition
+# -----------------------------------------------------------------------------
+class AudioFeatureMLP(nn.Module):
+    """
+    Multilayer Perceptron for classifying extracted 1D audio features
+    (e.g., MFCCs, spectral centroid, spectral flux).
+    """
+    def __init__(self, input_dim: int, hidden_dim: int, num_classes: int):
+        super().__init__()
+        self.network = nn.Sequential(
+            # First hidden layer
+            nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(p=0.3),
+            
+            # Second hidden layer
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.BatchNorm1d(hidden_dim // 2),
+            nn.ReLU(),
+            nn.Dropout(p=0.3),
+            
+            # Output classifier layer (raw logits)
+            nn.Linear(hidden_dim // 2, num_classes)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.network(x)
+
+# -----------------------------------------------------------------------------
+# 2. Setup Hyperparameters and Synthetic Dataset
+# -----------------------------------------------------------------------------
+# Device selection (GPU if available)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
+# Dataset parameters
+NUM_SAMPLES = 1200
+NUM_FEATURES = 20    # e.g., 20 MFCC coefficients per frame/window
+NUM_CLASSES = 10     # e.g., 10 instrument or genre classes
+BATCH_SIZE = 64
+EPOCHS = 15
+LEARNING_RATE = 1e-3
+
+# Generate synthetic audio features and integer labels
+torch.manual_seed(42)
+X_data = torch.randn(NUM_SAMPLES, NUM_FEATURES)
+y_data = torch.randint(0, NUM_CLASSES, (NUM_SAMPLES,))
+
+# Split into 80% train / 20% validation
+train_size = int(0.8 * NUM_SAMPLES)
+X_train, X_val = X_data[:train_size], X_data[train_size:]
+y_train, y_val = y_data[:train_size], y_data[train_size:]
+
+# Wrap in PyTorch DataLoaders
+train_dataset = TensorDataset(X_train, y_train)
+val_dataset = TensorDataset(X_val, y_val)
+
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+# -----------------------------------------------------------------------------
+# 3. Model, Loss Function, and Optimizer Instantiation
+# -----------------------------------------------------------------------------
+model = AudioFeatureMLP(
+    input_dim=NUM_FEATURES, 
+    hidden_dim=128, 
+    num_classes=NUM_CLASSES
+).to(device)
+
+# CrossEntropyLoss expects unnormalized logits and class index targets
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+# -----------------------------------------------------------------------------
+# 4. Training and Evaluation Loops
+# -----------------------------------------------------------------------------
+for epoch in range(1, EPOCHS + 1):
+    # --- Training Phase ---
+    model.train()
+    running_train_loss = 0.0
+    correct_train = 0
+    total_train = 0
+
+    for features, labels in train_loader:
+        features, labels = features.to(device), labels.to(device)
+
+        # Step 1: Forward pass
+        logits = model(features)
+
+        # Step 2: Compute loss
+        loss = criterion(logits, labels)
+
+        # Step 3: Zero gradients from previous iteration
+        optimizer.zero_grad()
+
+        # Step 4: Backward pass (compute partial derivatives dL/dw)
+        loss.backward()
+
+        # Step 5: Optimizer step (update parameters w_new = w_old - lr * grad)
+        optimizer.step()
+
+        # Track metrics
+        running_train_loss += loss.item() * features.size(0)
+        preds = torch.argmax(logits, dim=1)
+        correct_train += (preds == labels).sum().item()
+        total_train += labels.size(0)
+
+    epoch_train_loss = running_train_loss / total_train
+    epoch_train_acc = (correct_train / total_train) * 100
+
+    # --- Validation Phase ---
+    model.eval()
+    running_val_loss = 0.0
+    correct_val = 0
+    total_val = 0
+
+    # Disable autograd gradient computation during evaluation to save memory
+    with torch.no_grad():
+        for features, labels in val_loader:
+            features, labels = features.to(device), labels.to(device)
+
+            logits = model(features)
+            loss = criterion(logits, labels)
+
+            running_val_loss += loss.item() * features.size(0)
+            preds = torch.argmax(logits, dim=1)
+            correct_val += (preds == labels).sum().item()
+            total_val += labels.size(0)
+
+    epoch_val_loss = running_val_loss / total_val
+    epoch_val_acc = (correct_val / total_val) * 100
+
+    print(
+        f"Epoch [{epoch:02d}/{EPOCHS:02d}] | "
+        f"Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.1f}% | "
+        f"Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.1f}%"
+    )
+
+```
+
+---
+
+### Key Structural Highlights
+
+* **Unnormalized Output (Logits):** The final `nn.Linear` layer outputs raw scores without Softmax. `nn.CrossEntropyLoss()` combines `LogSoftmax` and `NLLLoss` internally for numerical stability.
+* **Regularization:** `nn.BatchNorm1d` normalizes layer activations across the batch dimension, and `nn.Dropout(p=0.3)` prevents co-adaptation of hidden units during training.
+* **Evaluation Context:** `with torch.no_grad():` turns off gradient tracking during validation, saving memory and speeding up execution.
+
+-------
+
+How do I modify this script to load real .wav audio files and compute MFCC features using torchaudio? 
+
+Gemini Pro:
+
+To load real audio files and compute MFCCs dynamically, we need to replace the synthetic data block with a custom PyTorch **Dataset**.
+
+The main challenge when moving from traditional DSP to an MLP is that an audio file produces a 2D MFCC tensor (Coefficients × Time), but a standard MLP expects a 1D vector of fixed size. The standard fix for simple MLPs is to **average the MFCCs across the time dimension**, summarizing the entire clip into a single 1D vector.
+
+Here is the modified data loading section using `torchaudio`.
+
+### 1. The Custom Audio Dataset
+
+First, ensure you have `torchaudio` installed. This custom `Dataset` class handles loading, standardizing the sample rate, converting to mono, extracting the MFCCs, and pooling them into a 1D vector.
+
+```python
+import os
+import torch
+import torchaudio
+from torch.utils.data import Dataset, DataLoader
+import torchaudio.transforms as T
+
+class MFCCAudioDataset(Dataset):
+    def __init__(self, file_paths: list, labels: list, target_sr=16000, n_mfcc=20):
+        """
+        Args:
+            file_paths: List of string paths to .wav files.
+            labels: List of integer class labels corresponding to the files.
+            target_sr: The sample rate to convert all audio to.
+            n_mfcc: Number of Mel-frequency cepstral coefficients to extract.
+        """
+        self.file_paths = file_paths
+        self.labels = labels
+        self.target_sr = target_sr
+        
+        # Define the torchaudio MFCC transform
+        self.mfcc_transform = T.MFCC(
+            sample_rate=target_sr,
+            n_mfcc=n_mfcc,
+            melkwargs={
+                "n_fft": 400,
+                "hop_length": 160,
+                "n_mels": 40,
+                "center": False
+            }
+        )
+
+    def __len__(self):
+        return len(self.file_paths)
+
+    def __getitem__(self, idx):
+        wav_path = self.file_paths[idx]
+        label = self.labels[idx]
+        
+        # 1. Load the audio file
+        waveform, sample_rate = torchaudio.load(wav_path)
+        
+        # 2. Resample if the file's sample rate doesn't match our target
+        if sample_rate != self.target_sr:
+            resampler = T.Resample(orig_freq=sample_rate, new_freq=self.target_sr)
+            waveform = resampler(waveform)
+            
+        # 3. Convert stereo to mono by averaging channels
+        if waveform.shape[0] > 1:
+            waveform = torch.mean(waveform, dim=0, keepdim=True)
+            
+        # 4. Extract MFCCs 
+        # Output shape is (channels, n_mfcc, time_frames) -> e.g., (1, 20, 150)
+        mfcc = self.mfcc_transform(waveform)
+        
+        # 5. Average across the time dimension to get a fixed-size 1D vector
+        # Shape becomes (1, n_mfcc) -> squeeze to (n_mfcc,)
+        mfcc_vector = torch.mean(mfcc, dim=2).squeeze(0)
+        
+        return mfcc_vector, torch.tensor(label, dtype=torch.long)
+
+```
+
+---
+
+### 2. Wiring it into your Training Script
+
+Replace the "Setup Hyperparameters and Synthetic Dataset" section of the previous script with the following logic. This assumes you have parsed a list of file paths and their corresponding integer labels from your directory structure.
+
+```python
+# -----------------------------------------------------------------------------
+# Replacement: Real Dataset Initialization
+# -----------------------------------------------------------------------------
+
+# Example: Assuming you have generated lists of file paths and integer labels
+# file_paths = ["dataset/dog/bark1.wav", "dataset/cat/meow1.wav", ...]
+# labels = [0, 1, ...] # 0 for dog, 1 for cat
+
+# Split paths and labels into training and validation lists
+from sklearn.model_selection import train_test_split
+
+train_paths, val_paths, train_labels, val_labels = train_test_split(
+    file_paths, labels, test_size=0.2, random_state=42
+)
+
+NUM_FEATURES = 20 # Number of MFCCs
+NUM_CLASSES = len(set(labels)) # Number of unique classes
+
+# Instantiate the custom datasets
+train_dataset = MFCCAudioDataset(train_paths, train_labels, target_sr=16000, n_mfcc=NUM_FEATURES)
+val_dataset = MFCCAudioDataset(val_paths, val_labels, target_sr=16000, n_mfcc=NUM_FEATURES)
+
+# Create the DataLoaders
+BATCH_SIZE = 32
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+```
+
+**What happens next?**
+Once this is wired in, you can run the exact same model definition, loss function, optimizer, and training loop provided in the previous step. The PyTorch `DataLoader` handles calling `__getitem__`, grabbing batches of 32 `.wav` files at a time, calculating their MFCCs on the fly, and feeding them to your MLP.
+
+-------
+
+How do I upgrade this model to a CNN or RNN so I don't have to average out the time dimension of the MFCCs? 
+
+Gemini Pro:
+
+Averaging your MFCCs across the time dimension is a great baseline, but it destroys the temporal dynamics of the audio—essentially ignoring the sequence of sounds (like how "cat" and "tack" have the same phonemes but in a different order).
+
+Upgrading to a 1D CNN or an RNN allows the network to learn from that temporal structure. Here is how to implement both in PyTorch.
+
+---
+
+## Option 1: The 1D CNN (Fast & Great for Local Patterns)
+
+A 1D CNN slides a filter across the time dimension, picking up local acoustic features like sudden attacks, clicks, or specific phonetic transients.
+
+* **The Shape Match:** PyTorch’s `nn.Conv1d` expects an input shape of `(batch_size, channels, length)`. This perfectly matches standard MFCC outputs, where `n_mfcc` is your channel count and time is your length.
+* **How it handles time:** Instead of averaging *everything*, you use pooling layers (like `MaxPool1d`) to downsample the time dimension gradually, retaining structural information before flattening it for the final linear layer.
+
+```python
+import torch.nn as nn
+import torch.nn.functional as F
+
+class AudioCNN(nn.Module):
+    def __init__(self, n_mfcc, num_classes):
+        super().__init__()
+        # Input: (batch, n_mfcc, time)
+        self.conv1 = nn.Conv1d(in_channels=n_mfcc, out_channels=32, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        
+        # You will need to calculate the flattened size based on your max time steps
+        self.fc1 = nn.Linear(64 * (time_steps // 4), 128) 
+        self.fc2 = nn.Linear(128, num_classes)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(x.size(0), -1) # Flatten the remaining time and channel dimensions
+        x = F.relu(self.fc1(x))
+        return self.fc2(x)
+
+```
+
+---
+
+## Option 2: The RNN / LSTM (Best for Long-Term Context)
+
+Recurrent Neural Networks (like LSTMs or GRUs) process the audio frame-by-frame, updating a hidden "memory" state. This is ideal if the meaning of a sound depends heavily on what happened seconds earlier.
+
+* **The Shape Gotcha:** PyTorch’s `nn.LSTM` (with `batch_first=True`) expects an input shape of `(batch_size, seq_len, input_size)`.
+* **The Fix:** You **must** swap the last two dimensions of your MFCC tensor so that time becomes the sequence length, and `n_mfcc` becomes the feature size processed at each time step.
+
+```python
+class AudioLSTM(nn.Module):
+    def __init__(self, n_mfcc, hidden_size, num_classes):
+        super().__init__()
+        # input_size is n_mfcc (features per time step)
+        self.lstm = nn.LSTM(input_size=n_mfcc, hidden_size=hidden_size, 
+                            num_layers=2, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        # Swap dimensions: (batch, n_mfcc, time) -> (batch, time, n_mfcc)
+        x = x.permute(0, 2, 1)
+        
+        # Pass through LSTM
+        out, (hn, cn) = self.lstm(x)
+        
+        # Grab the hidden state from the very last time step for classification
+        last_hidden = out[:, -1, :] 
+        return self.fc(last_hidden)
+
+```
+
+------------------
+
+How do I handle variable-length audio clips in PyTorch using padding and pack_padded_sequence? 
+
+Handling variable-length audio natively is one of the most powerful reasons to use PyTorch for DSP.
+
+When your `.wav` files are different durations, their MFCC tensors have different time lengths. You cannot stack tensors of different sizes into a single batch matrix.
+
+The standard workflow involves three steps:
+
+1. **Padding:** Fill the shorter sequences with zeros to match the longest sequence in the *current* batch.
+2. **Packing:** Wrap the padded tensor in a special PyTorch object (`PackedSequence`) that tells the RNN exactly where the real data ends and the zero-padding begins.
+3. **Processing:** The RNN skips the padding, preventing zeros from corrupting the hidden state.
+
+---
+
+1. **Update the Dataset to return lengths:**
+First, your dataset needs to return both the raw, un-averaged MFCC sequence and its original length before any padding occurs.
+
+```python
+def __getitem__(self, idx):
+    # ... load audio and extract MFCCs ...
+    mfcc = self.mfcc_transform(waveform)
+    
+    # Shape is (1, n_mfcc, time) -> (time, n_mfcc) for RNN processing
+    mfcc_seq = mfcc.squeeze(0).transpose(0, 1)
+    
+    # We must return the length so the RNN knows when to stop
+    seq_length = mfcc_seq.size(0)
+    
+    return mfcc_seq, torch.tensor(label), seq_length
+
+```
+
+
+2. **Write a custom collate_fn:** This intercepts the DataLoader batching process.
+By default, PyTorch's `DataLoader` uses `torch.stack` to build a batch. This fails on unequal tensor sizes. You must provide a custom `collate_fn` to apply dynamic padding using `pad_sequence`.
+
+```python
+from torch.nn.utils.rnn import pad_sequence
+
+def pad_collate_fn(batch):
+    # `batch` is a list of tuples from your __getitem__: (mfcc_seq, label, length)
+    sequences = [item[0] for item in batch]
+    labels = [item[1] for item in batch]
+    lengths = [item[2] for item in batch]
+    
+    # 1. Pad the sequences with zeros
+    # batch_first=True makes the output shape: (batch_size, max_seq_len, n_mfcc)
+    padded_seqs = pad_sequence(sequences, batch_first=True, padding_value=0.0)
+    
+    return padded_seqs, torch.stack(labels), torch.tensor(lengths)
+
+# Pass it into your DataLoader
+train_loader = DataLoader(
+    train_dataset, 
+    batch_size=32, 
+    shuffle=True, 
+    collate_fn=pad_collate_fn
+)
+
+```
+
+
+3. **Pack the sequence inside the Model:**
+Inside your model's `forward` pass, use `pack_padded_sequence` right before the LSTM. PyTorch requires the lengths tensor to be on the CPU, even if the data is on the GPU.
+
+```python
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+
+class VariableAudioLSTM(nn.Module):
+    def __init__(self, n_mfcc, hidden_size, num_classes):
+        super().__init__()
+        self.lstm = nn.LSTM(input_size=n_mfcc, hidden_size=hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x_padded, lengths):
+        # 1. Pack the padded tensor. 
+        # enforce_sorted=False is crucial if your batch isn't sorted by length descending
+        packed_input = pack_padded_sequence(
+            x_padded, 
+            lengths.cpu(), 
+            batch_first=True, 
+            enforce_sorted=False
+        )
+        
+        # 2. Pass the packed object directly to the LSTM
+        packed_output, (hidden, cell) = self.lstm(packed_input)
+        
+        # 3. For classification, we usually just want the final hidden state.
+        # hidden shape is (num_layers, batch, hidden_size). Grab the top layer.
+        final_hidden = hidden[-1, :, :]
+        
+        return self.fc(final_hidden)
+
+```
+
+
+> **Key Insight:** Without `pack_padded_sequence`, the LSTM would process the trailing zeros in short audio clips. Because an RNN's state evolves at every time step, processing $2$ seconds of silence after $3$ seconds of actual audio will severely "dilute" the memory of the actual audio feature by the time the sequence finishes.
+
+--------------
+
+How do I combine a CNN feature extractor with an LSTM for audio classification? 
+
+Gemini Pro:
+
+A Convolutional Recurrent Neural Network (CRNN) represents a perfect division of labor: the **CNN** acts as a powerful, learnable frontend that extracts localized acoustic features (like transients, edges, and formants), while the **LSTM** acts as the backend, modeling the long-term temporal sequence of those features.
+
+This is the standard architecture used in state-of-the-art systems for speech recognition, music transcription, and environmental sound classification.
+
+### The Dimensionality Dance
+
+The hardest part of building a CRNN in PyTorch is managing the tensor shapes as they pass between the two networks:
+
+1. **CNN Phase:** PyTorch's 1D convolutions expect `(Batch, Channels, Time)`. Your raw MFCCs start in this shape (where `Channels = n_mfcc`).
+2. **The Hand-off:** The CNN outputs a tensor of shape `(Batch, CNN_Channels, Reduced_Time)`.
+3. **LSTM Phase:** PyTorch's LSTM (with `batch_first=True`) expects `(Batch, Time, Features)`. You must use `.permute(0, 2, 1)` to swap the channels and time dimensions before feeding the sequence to the RNN.
+
+Here is how you implement this end-to-end.
+
+### The CRNN Implementation
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence
+
+class AudioCRNN(nn.Module):
+    def __init__(self, n_mfcc, cnn_channels, rnn_hidden_size, num_classes):
+        super().__init__()
+        
+        # -----------------------------------------------------------------
+        # 1. CNN Feature Extractor
+        # -----------------------------------------------------------------
+        # Input shape: (Batch, n_mfcc, Time)
+        self.conv1 = nn.Conv1d(in_channels=n_mfcc, out_channels=cnn_channels, 
+                               kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm1d(cnn_channels)
+        
+        # MaxPool1d reduces the time dimension by half
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        
+        self.conv2 = nn.Conv1d(in_channels=cnn_channels, out_channels=cnn_channels * 2, 
+                               kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm1d(cnn_channels * 2)
+        
+        # -----------------------------------------------------------------
+        # 2. LSTM Sequence Modeler
+        # -----------------------------------------------------------------
+        # The input size to the LSTM is the number of channels output by conv2
+        lstm_input_size = cnn_channels * 2
+        self.lstm = nn.LSTM(input_size=lstm_input_size, 
+                            hidden_size=rnn_hidden_size, 
+                            num_layers=2, 
+                            batch_first=True, 
+                            dropout=0.3)
+        
+        # -----------------------------------------------------------------
+        # 3. Classifier
+        # -----------------------------------------------------------------
+        self.fc = nn.Linear(rnn_hidden_size, num_classes)
+
+    def forward(self, x_padded, lengths):
+        # x_padded shape: (Batch, n_mfcc, Time)
+        
+        # --- CNN Block ---
+        x = self.pool(F.relu(self.bn1(self.conv1(x_padded))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        
+        # Now x shape: (Batch, cnn_channels*2, Reduced_Time)
+        
+        # --- The Hand-off ---
+        # Swap channels and time: (Batch, Reduced_Time, cnn_channels*2)
+        x = x.permute(0, 2, 1)
+        
+        # --- Recalculate Lengths ---
+        # Because we used MaxPool1d(2) twice, the time dimension is 1/4th the original size.
+        # We must divide the original sequence lengths by 4 before packing!
+        # Using integer division (//) to round down just like the pooling layer does.
+        reduced_lengths = lengths // 4 
+        
+        # --- LSTM Block ---
+        # Pack the sequences using the new reduced lengths
+        packed_input = pack_padded_sequence(
+            x, 
+            reduced_lengths.cpu(), 
+            batch_first=True, 
+            enforce_sorted=False
+        )
+        
+        packed_output, (hidden, cell) = self.lstm(packed_input)
+        
+        # --- Classification Block ---
+        # Extract the final hidden state of the top LSTM layer
+        final_hidden = hidden[-1, :, :] 
+        
+        return self.fc(final_hidden)
+
+```
+
+---
+
+## Why Recalculating Lengths is Critical
+
+If you pass variable-length padded audio through a CNN, the pooling layers shrink both the *real audio data* and the *zero padding*.
+
+If you pass the original `lengths` tensor to `pack_padded_sequence` after the CNN has shrunk the time dimension, PyTorch will throw a runtime error because you are telling it the sequence is longer than the tensor actually is! You must mathematically map your pooling stride to the `lengths` tensor before packing.
+
+-----------
+
+How do I calculate precision, recall, and a confusion matrix on the validation set using scikit-learn to see how my CRNN is performing? 
+
+Gemini Pro:
+
+To evaluate your PyTorch model using scikit-learn, you need to bridge the gap between PyTorch's dynamic GPU tensors and scikit-learn's static CPU arrays.
+
+Scikit-learn cannot process PyTorch tensors directly. You must extract the predictions and true labels from the model during the validation loop, move them to the CPU, convert them to standard NumPy arrays, and then feed them into scikit-learn's metric functions.
+
+1. **Accumulate predictions in the validation loop:**
+First, modify your validation loop to store the predictions and true labels in lists. Use `.cpu().numpy()` to pull the data out of the GPU and convert it to a format scikit-learn understands.
+
+```python
+import numpy as np
+
+# Run inside your standard training script
+model.eval()
+
+# Create lists to hold all validation predictions and true labels
+all_preds = []
+all_targets = []
+
+with torch.no_grad():
+    for features, lengths, labels in val_loader:
+        features = features.to(device)
+        labels = labels.to(device)
+        
+        # Forward pass
+        logits = model(features, lengths)
+        
+        # Get integer predictions (argmax)
+        preds = torch.argmax(logits, dim=1)
+        
+        # Move data to CPU and convert to numpy arrays
+        all_preds.extend(preds.cpu().numpy())
+        all_targets.extend(labels.cpu().numpy())
+        
+# Convert lists to flat numpy arrays for scikit-learn
+all_preds = np.array(all_preds)
+all_targets = np.array(all_targets)
+
+```
+
+
+2. **Calculate Precision, Recall, and F1-Score:**
+Use `classification_report` to get a comprehensive breakdown of precision, recall, and F1-score for every single audio class, along with macro and weighted averages.
+
+```python
+from sklearn.metrics import classification_report
+
+# Suppose your classes are ['kick', 'snare', 'hihat', ...]
+target_names = ['class_0', 'class_1', 'class_2', 'class_3', 'class_4'] # Replace with actual names
+
+report = classification_report(
+    all_targets, 
+    all_preds, 
+    target_names=target_names
+)
+print("Classification Report:\n", report)
+
+```
+
+
+3. **Generate the Confusion Matrix:**
+A confusion matrix is critical for audio classification because it shows exactly which sounds the model is confusing (e.g., misclassifying a 'snare' as a 'hihat' frequently).
+
+```python
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
+# Calculate the raw matrix
+cm = confusion_matrix(all_targets, all_preds)
+
+# Plot it using ConfusionMatrixDisplay
+disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm, 
+    display_labels=target_names
+)
+
+# Create a figure and plot
+fig, ax = plt.subplots(figsize=(10, 8))
+disp.plot(ax=ax, cmap='viridis')
+plt.title("Audio Classification Confusion Matrix")
+plt.show()
+
+```
+
+
+---
+
+### What to look for in the results
+
+When analyzing the output, precision and recall tell you different things about your model's performance on specific audio classes:
+
+* **High Precision, Low Recall on Class X:** The model rarely guesses Class X, but when it does, it is usually right. It is "conservative" with this label.
+* **Low Precision, High Recall on Class X:** The model guesses Class X constantly. It catches almost all true instances of Class X, but it also falsely labels many other sounds as Class X.
+
+--------
+
+My audio dataset has way more examples of some classes than others. How can I use class weights in PyTorch's CrossEntropyLoss to fix this imbalance? 
+
+Gemini Pro:
+
+When you have an imbalanced dataset—like 10,000 samples of a "dog bark" but only 50 samples of "glass breaking"—the neural network will naturally optimize for the majority class to minimize overall error. It learns that simply guessing "dog bark" all the time yields a 99% accuracy.
+
+By passing class weights into `nn.CrossEntropyLoss`, you penalize the model more heavily for getting the rare classes wrong.
+
+Here is an interactive look at how modifying class weights shifts the loss focus:
+
+> **Key insight:** To balance the scales, you want to assign weights that are **inversely proportional** to the frequency of the classes in your training data.
+
+Here is how to calculate those weights and apply them in PyTorch.
+
+1. **Calculate the class frequencies:**
+First, count how many samples belong to each class across your entire training dataset. Scikit-learn has a built-in utility for this that does the math for you.
+
+```python
+import numpy as np
+from sklearn.utils.class_weight import compute_class_weight
+
+# Example: A list of all the labels in your training set
+# Let's assume 0 is majority (e.g., 1000 samples) and 1, 2 are minority (e.g., 50 samples)
+train_labels = [0]*1000 + [1]*50 + [2]*50 
+
+# Calculate weights inversely proportional to class frequencies
+class_weights = compute_class_weight(
+    class_weight='balanced', 
+    classes=np.unique(train_labels), 
+    y=train_labels
+)
+
+print("Calculated weights:", class_weights)
+# Output will be roughly: [0.36, 7.33, 7.33]
+
+```
+
+
+2. **Convert weights to a PyTorch Tensor:**
+PyTorch loss functions expect weights as a 1D float tensor. Critically, **the weight tensor must be on the same device as the model and your data** (e.g., the GPU).
+
+```python
+import torch
+import torch.nn as nn
+
+# 1. Convert to a float32 PyTorch tensor
+weights_tensor = torch.tensor(class_weights, dtype=torch.float32)
+
+# 2. Move it to your device (GPU/CPU)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+weights_tensor = weights_tensor.to(device)
+
+```
+
+
+3. **Pass weights to CrossEntropyLoss:**
+Provide the tensor to the `weight` argument when you initialize your loss function. You only do this once before your training loop starts.
+
+```python
+# Initialize the loss function with the class weights
+criterion = nn.CrossEntropyLoss(weight=weights_tensor)
+
+# ... inside your training loop ...
+for features, lengths, labels in train_loader:
+    features, labels = features.to(device), labels.to(device)
+    
+    optimizer.zero_grad()
+    
+    # Forward pass
+    outputs = model(features, lengths)
+    
+    # Calculate loss (the minority classes will now generate larger gradients if missed)
+    loss = criterion(outputs, labels)
+    
+    loss.backward()
+    optimizer.step()
+
+```
+
+------------------
+
+Besides class weights, how can I use audio data augmentation like time stretching or pitch shifting to physically balance the dataset? 
+
+Gemini Pro:
+
+Yes! While class weights adjust the penalty *after* the model makes a mistake, **data augmentation** physically expands the minority class by creating realistic variations of existing training samples. This teaches the network invariant features rather than just memorizing a few rare files.
+
+In audio machine learning, augmentation is typically applied **on-the-fly inside the Dataset's `__getitem__` method** (or via specialized libraries like `torch-audiomentations`). This means every time an audio file is loaded, it gets randomly transformed, generating a virtually infinite pool of unique training examples.
+
+---
+
+### 1. Implementing Augmentations with `torchaudio`
+
+Torchaudio provides built-in transformations for raw waveforms like **Pitch Shifting** and **Speed Perturbation**, as well as spectrogram-level masking (like SpecAugment).
+
+Here is how you can update your custom `Dataset` class to apply these augmentations **only to the minority class** (oversampling via augmentation), or randomly to all classes to improve overall generalization.
+
+```python
+import torch
+import torchaudio
+import torchaudio.transforms as T
+from torch.utils.data import Dataset
+import random
+
+class AugmentedAudioDataset(Dataset):
+    def __init__(self, file_paths, labels, target_sr=16000, n_mfcc=20, augment_minority_class=None):
+        self.file_paths = file_paths
+        self.labels = labels
+        self.target_sr = target_sr
+        self.augment_minority_class = augment_minority_class # e.g., pass the minority class index
+        
+        self.mfcc_transform = T.MFCC(
+            sample_rate=target_sr,
+            n_mfcc=n_mfcc,
+            melkwargs={"n_fft": 400, "hop_length": 160, "n_mels": 40}
+        )
+        
+        # Define audio-domain augmentations using torchaudio
+        self.pitch_shift = T.PitchShift(sample_rate=target_sr, n_steps=2) # Shift up by 2 semitones
+        
+    def __len__(self):
+        return len(self.file_paths)
+
+    def __getitem__(self, idx):
+        wav_path = self.file_paths[idx]
+        label = self.labels[idx]
+        
+        waveform, sample_rate = torchaudio.load(wav_path)
+        
+        if sample_rate != self.target_sr:
+            waveform = T.Resample(orig_freq=sample_rate, new_freq=self.target_sr)(waveform)
+            
+        if waveform.shape[0] > 1:
+            waveform = torch.mean(waveform, dim=0, keepdim=True)
+            
+        # --- DATA AUGMENTATION LOGIC ---
+        # If this sample belongs to the minority class, apply random augmentations
+        if self.augment_minority_class is not None and label == self.augment_minority_class:
+            # 50% chance to pitch shift
+            if random.random() > 0.5:
+                waveform = self.pitch_shift(waveform)
+                
+            # Add random Gaussian noise to mimic varying recording environments
+            if random.random() > 0.5:
+                noise = torch.randn_like(waveform) * 0.005
+                waveform = waveform + noise
+        # -------------------------------
+        
+        # Extract MFCC sequence: shape becomes (time, n_mfcc) for sequence models
+        mfcc = self.mfcc_transform(waveform)
+        mfcc_seq = mfcc.squeeze(0).transpose(0, 1)
+        seq_length = mfcc_seq.size(0)
+        
+        return mfcc_seq, torch.tensor(label, dtype=torch.long), seq_length
+
+```
+
+---
+
+### 2. Common Audio Augmentation Strategies for Imbalance
+
+When dealing with severe class imbalance in audio, a combination of these four techniques works best:
+
+1. **Pitch Shifting (`torchaudio.transforms.PitchShift`):** Shifts the harmonic content up or down by a number of semitones without changing the duration. Great for instrument or voice classification.
+2. **Time Stretching / Speed Perturbation:** Slows down or speeds up the audio clip, simulating someone speaking or playing faster/slower.
+3. **Additive Noise (`torch.randn`):** Mixing low-level white noise or background environmental noise into minority samples prevents the model from overfitting to clean studio recordings.
+4. **Frequency and Time Masking (SpecAugment):** Zeroing out random vertical (frequency) or horizontal (time) bars on the MFCC matrix. This forces the neural network to learn redundant cues rather than relying on a single frequency band.
+
+### The Best Practice Combination
+
+In professional pipelines, you rarely rely on just *one* fix. The industry standard for handling highly imbalanced audio datasets is a two-pronged approach:
+
+* **Physically balance the data frequency** by augmenting the minority class files on-the-fly during training (so the data loader sees them more often and in varied forms).
+* **Fine-tune the loss penalty** using `nn.CrossEntropyLoss(weight=class_weights)` to catch any remaining discrepancies.
+
+-------------
+
+Gemini Pro:
+
+Limit reached. Continuing with Flash-Lite.
+Some features aren’t available until your limit resets on Aug 24 at 12:50 AM. Upgrade for higher limits and more.
+
+------------
+
+### Week 13, Lecture 25: Tensors and Automatic Differentiation (75 Min)
+
+This session transitions students from traditional DSP arrays to the computational graphs that power modern machine learning.
+
+* **From Vectors to Tensors (20 min):** Map 1D discrete-time signals $x[n]$ and 2D spectrograms to PyTorch tensors. Contrast standard NumPy arrays with PyTorch tensors, emphasizing GPU acceleration and gradient tracking.
+* **Tensor Operations for DSP (20 min):** Demonstrate matrix multiplication, broadcasting, and dimensionality manipulation. Explain how a batch of framed audio is typically represented as a 3D tensor: $(N, C, L)$ for Batch, Channel, and Length.
+* **The Chain Rule & Autograd (35 min):** Introduce `torch.autograd`. Explain how PyTorch dynamically builds a directed acyclic graph during the forward pass to automatically compute gradients $\nabla_{\theta} L$ via backpropagation, eliminating the need to derive complex partial derivatives by hand.
+
+Prompt: Can you create slides and python code for this 75 minute class of a DSP and ML course for a combined senior and first year Electrical and Computer Engineering class? The DSP textbook is Discrete-Time Signal Processing by Oppenheim and Schafer. The ML textbook is Machine Learning with PyTorch and Scikit-Learn by Raschka. Add some homework problems with solutions and a weekly quiz with solutions as well. Please render math equations in LaTeX. 
+
+ChatGPT:
+
+I’ll make this lecture explicitly bridge three things the students already know: x[n] as a discrete-time sequence, framed/STFT audio as multidimensional arrays, and the chain rule from calculus. The central DSP example will be a small learnable FIR system so autograd feels like a generalization of familiar convolution—not a black-box neural-network trick.
+
+ChatGPT:  (Medium)
+
+Created. The package is built around the DSP-to-ML transition you described, with tensor shapes tied directly to signals, spectrograms, filterbanks, and learnable FIR filters.
+
+### Files
+
+* [Complete Week 13 Lecture 25 instructor package](sandbox:/mnt/data/week13_lecture25/Week13_Lecture25_Instructor_Package.zip)
+* [36-slide PowerPoint](sandbox:/mnt/data/week13_lecture25/Week13_Lecture25_Tensors_Autograd.pptx)
+* [Jupyter notebook](sandbox:/mnt/data/week13_lecture25/notebooks/Lecture25_Tensors_Autograd.ipynb)
+* [Executed/verified notebook](sandbox:/mnt/data/week13_lecture25/notebooks/Lecture25_Tensors_Autograd_executed.ipynb)
+* [Standalone Python code](sandbox:/mnt/data/week13_lecture25/lecture25_tensors_autograd.py)
+* [Homework, quiz, and worked solutions](sandbox:/mnt/data/week13_lecture25/Lecture25_Homework_Quiz_Solutions.md)
+* [README / teaching flow](sandbox:/mnt/data/week13_lecture25/README.txt)
+
+The notebook was executed successfully with **no errors**, and the PowerPoint contains **36 slides**.
+
+## Lecture structure
+
+The deck follows the requested 75-minute flow:
+
+**0–20 min — From vectors to tensors**
+
+Students move from familiar DSP notation,
+
+[
+x[n]
+]
+
+to tensors such as
+
+[
+\mathbf{x}\in\mathbb{R}^{L}
+]
+
+for a waveform and
+
+[
+\mathbf{X}\in\mathbb{C}^{F\times T}
+]
+
+for an STFT. The slides compare NumPy and PyTorch and emphasize that tensors add device placement and optional gradient tracking rather than changing the underlying DSP mathematics.
+
+**20–40 min — Tensor operations for DSP**
+
+The lecture develops:
+
+[
+(N,C,L)
+]
+
+for batch, channel, and signal length, along with reshaping, `unsqueeze`, broadcasting, and matrix multiplication.
+
+One DSP-specific example treats a filterbank as
+
+[
+\mathbf{E}
+==========
+
+\mathbf{W}\mathbf{P},
+]
+
+where
+
+[
+\mathbf{P}\in\mathbb{R}^{F\times T},
+\qquad
+\mathbf{W}\in\mathbb{R}^{M\times F},
+]
+
+so that
+
+[
+\mathbf{E}\in\mathbb{R}^{M\times T}.
+]
+
+This helps students see that tensor operations are not foreign ML constructs—they are familiar DSP linear algebra with more explicit dimensions.
+
+**40–75 min — Chain rule and autograd**
+
+The deck starts with a scalar chain-rule calculation by hand and then maps it to a computational graph.
+
+For example,
+
+[
+u=2\theta-3,
+]
+
+[
+L=(u+1)^2,
+]
+
+gives
+
+[
+\frac{dL}{d\theta}
+==================
+
+\frac{dL}{du}
+\frac{du}{d\theta}.
+]
+
+Then PyTorch performs the same calculation with
+
+```python
+theta = torch.tensor(4.0, requires_grad=True)
+
+u = 2 * theta - 3
+L = (u + 1)**2
+
+L.backward()
+
+print(theta.grad)
+```
+
+The main DSP example treats FIR coefficients as learnable parameters:
+
+[
+\hat y[n]
+=========
+
+\sum_{k=0}^{M-1} h[k]x[n-k].
+]
+
+Using the mean-square loss
+
+[
+L
+=
+
+\frac{1}{N}
+\sum_n
+\left(
+\hat y[n]-y[n]
+\right)^2,
+]
+
+the analytical gradient is
+
+[
+\frac{\partial L}{\partial h[r]}
+================================
+
+\frac{2}{N}
+\sum_n
+\left(
+\hat y[n]-y[n]
+\right)x[n-r].
+]
+
+The lecture then shows that `autograd` produces this gradient automatically and uses gradient descent,
+
+[
+h_r^{(m+1)}
+===========
+
+## h_r^{(m)}
+
+\eta
+\frac{\partial L}{\partial h[r]},
+]
+
+to recover an unknown FIR filter.
+
+The demonstration converges from zero taps toward approximately
+
+[
+\boxed{
+[0.15,;0.50,;0.25,;-0.10]
+}
+]
+
+so students see “training” as something directly connected to DSP system identification rather than immediately jumping into a neural-network black box.
+
+## Homework and quiz
+
+The package includes **7 homework problems** covering tensor shapes, broadcasting, matrix multiplication, the chain rule, gradient accumulation, learnable FIR gradients, and `detach()` versus `no_grad()`.
+
+There is also a **10-minute weekly quiz** with six questions and a separate instructor solution section in the PowerPoint. All mathematical expressions in the instructional material are presented in LaTeX-style notation.
+
+---------------------
+
+Week 13, Lecture 25
+
+Explain in more detail what's going on here and what good answers and/or examples are. Please use LaTeX for all math expressions
+
+Chat GPT:
+
+Yes. This lecture is really making one conceptual transition:
+
+[
+\boxed{
+\text{DSP computation}
+;\longrightarrow;
+\text{differentiable DSP computation}
+}
+]
+
+The important message is that tensors are not “neural-network objects.” They are familiar arrays plus metadata and, optionally, a record of how they were computed. The deck states this explicitly: a tensor can represent the same waveform, spectrum, filterbank, or feature matrix students already know from DSP. 
+
+Below is how I would explain the lecture in class, including what strong answers and useful examples look like.
+
+---
+
+# Slides 2–4: What actually changes when a DSP array becomes a tensor?
+
+A discrete-time signal
+
+[
+x[n]
+]
+
+is usually introduced mathematically as a sequence.
+
+If we observe (L) samples, we might write
+
+[
+\mathbf{x}
+==========
+
+\begin{bmatrix}
+x[0] & x[1] & \cdots & x[L-1]
+\end{bmatrix}^{T}.
+]
+
+In NumPy, that becomes an array with shape
+
+[
+(L,).
+]
+
+In PyTorch, the numerical values may be identical and the shape can still be
+
+[
+(L,),
+]
+
+but the tensor also carries several practical properties:
+
+[
+\boxed{
+\text{shape},;
+\text{dtype},;
+\text{device},;
+\text{requires_grad}
+}
+]
+
+which the deck highlights. 
+
+A useful way to phrase this is:
+
+> A mathematical sequence tells us the values. A PyTorch tensor also tells the software how those values are stored and whether their computational history should be tracked.
+
+## Good answer to the slide question
+
+The slide asks:
+
+> “What extra information does the tensor carry that the mathematical sequence (x[n]) does not?”
+
+A good student answer is:
+
+> “It carries the tensor shape, numerical data type, the device where the data live, and whether PyTorch should track operations involving the tensor for gradient computation.”
+
+An even better answer is:
+
+> “Those properties affect both correctness and performance. Shape determines axis meaning, dtype affects precision, device determines where computation happens, and `requires_grad` determines whether the tensor participates in automatic differentiation.”
+
+---
+
+# Slide 5: Spectrograms are already tensors
+
+Students sometimes hear “tensor” and imagine something exotic.
+
+But a spectrogram is already naturally a rank-2 object.
+
+If the STFT is
+
+[
+X[k,m],
+]
+
+where
+
+[
+k
+]
+
+indexes frequency and
+
+[
+m
+]
+
+indexes time frames, then we can represent it as
+
+[
+\mathbf{X}
+\in
+\mathbb{C}^{F\times T}.
+]
+
+For example, with
+
+[
+N_{\text{FFT}}=256,
+]
+
+a one-sided real-input STFT has
+
+[
+\frac{256}{2}+1
+===============
+
+129
+]
+
+frequency bins.
+
+So a possible tensor shape is
+
+[
+(129,32).
+]
+
+The deck emphasizes that PyTorch tensors can also have complex dtype, so STFT-domain quantities can remain inside a differentiable graph. 
+
+That is an important point.
+
+You do not necessarily have to reduce everything to real magnitude data before using PyTorch.
+
+---
+
+# Rank versus shape
+
+This is worth explicitly distinguishing.
+
+A tensor with shape
+
+[
+(129,32)
+]
+
+has rank 2 because it has two axes.
+
+A tensor with shape
+
+[
+(32,2,16000)
+]
+
+has rank 3.
+
+The numbers in the shape describe axis lengths.
+
+The number of entries in the shape describes the rank.
+
+Students often confuse these.
+
+A good check is:
+
+> “What is the rank of a stereo batch with shape ((32,2,16000))?”
+
+Correct answer:
+
+[
+\boxed{3}
+]
+
+not (16000), and not (32).
+
+---
+
+# Slide 6: Tensor anatomy is really engineering bookkeeping
+
+The deck says many PyTorch problems are not “machine-learning problems” at all—they are shape, dtype, or device problems. 
+
+That is absolutely worth stressing to ECE students.
+
+I would compare tensor shape to units in circuit analysis.
+
+If a student writes
+
+[
+5\text{ V} + 3\text{ A},
+]
+
+the arithmetic operation is defined syntactically, but the physical meaning is wrong.
+
+Similarly, a tensor operation might run numerically while the axes are semantically wrong.
+
+For example, suppose
+
+[
+\mathbf{x}
+]
+
+has shape
+
+[
+(N,C,L).
+]
+
+Then
+
+[
+x[7,1,250]
+]
+
+means:
+
+[
+\text{batch item }7,
+]
+
+[
+\text{channel }1,
+]
+
+[
+\text{sample }250.
+]
+
+If you accidentally interpret the shape as
+
+[
+(N,L,C),
+]
+
+the values may still exist, but the computation is conceptually wrong.
+
+That is why “print the shape” is not beginner trivia. It is a genuine model-design diagnostic.
+
+---
+
+# Slide 7: NumPy versus PyTorch
+
+The deck makes a subtle but useful point: the main distinction is not really
+
+[
+\text{array}
+\quad\text{versus}\quad
+\text{tensor}
+]
+
+but more like
+
+[
+\text{numerical array}
+\quad\text{versus}\quad
+\text{numerical array participating in differentiable computation}.
+]
+
+
+
+Both NumPy and PyTorch can perform vectorized operations.
+
+For example:
+
+```python
+y = x**2 + 3*x
+```
+
+looks nearly the same in both libraries.
+
+But if
+
+```python
+x.requires_grad = True
+```
+
+then PyTorch can remember enough about the operation
+
+[
+y=x^2+3x
+]
+
+to later compute
+
+[
+\frac{dy}{dx}
+=============
+
+2x+3.
+]
+
+That is the key additional capability.
+
+---
+
+# `torch.from_numpy` versus `torch.tensor`
+
+The deck briefly mentions a useful subtlety.
+
+If
+
+```python
+t = torch.from_numpy(a)
+```
+
+then on CPU, (t) may share memory with the NumPy array (a).
+
+So changing one can affect the other.
+
+For example:
+
+```python
+a = np.array([1., 2., 3.], dtype=np.float32)
+t = torch.from_numpy(a)
+
+a[0] = 99
+```
+
+can cause
+
+```python
+t[0]
+```
+
+to also become (99).
+
+By contrast,
+
+```python
+t = torch.tensor(a)
+```
+
+normally creates a copy.
+
+This is a good example of why tensor behavior is partly about storage semantics, not just equations.
+
+---
+
+# Slide 8: GPU acceleration is not automatically faster
+
+The deck correctly says that GPU acceleration is a placement decision, not magic. 
+
+Suppose you have a vector of only
+
+[
+L=100
+]
+
+samples and perform one multiplication.
+
+Moving those (100) values to a GPU may cost more time than the computation itself.
+
+The benefit comes when the operation has lots of parallel work, such as
+
+[
+\text{large matrix multiplication},
+]
+
+[
+\text{large batched convolution},
+]
+
+or
+
+[
+\text{many spectrograms processed together}.
+]
+
+A good answer to
+
+> “Why might a GPU be slower for a tiny operation?”
+
+is:
+
+> “Because transferring data and launching GPU kernels has overhead. The arithmetic must be large enough to amortize that cost.”
+
+---
+
+# Slides 9–11: Shape conventions
+
+The concept check asks students to map familiar audio objects to shapes. 
+
+These are worth explaining carefully.
+
+## One mono clip
+
+Suppose one clip has
+
+[
+L=16000
+]
+
+samples.
+
+A simple representation is
+
+[
+\boxed{(16000,)}
+]
+
+which is rank 1.
+
+---
+
+## Batch of stereo clips
+
+Suppose we have
+
+[
+N=32
+]
+
+clips,
+
+[
+C=2
+]
+
+channels,
+
+and
+
+[
+L=16000
+]
+
+samples per clip.
+
+Then the common Conv1d convention is
+
+[
+\boxed{(32,2,16000)}.
+]
+
+The deck later formalizes this as
+
+[
+(N,C,L),
+]
+
+where (N) is batch, (C) is channel, and (L) is length. 
+
+---
+
+# Why include a channel dimension for mono?
+
+Suppose you have (32) mono clips.
+
+You might initially store them as
+
+[
+(32,16000).
+]
+
+But a 1-D convolution layer usually expects
+
+[
+(N,C,L).
+]
+
+So for mono,
+
+[
+C=1,
+]
+
+and you insert the singleton channel dimension:
+
+[
+\boxed{
+(32,1,16000)
+}
+]
+
+using
+
+```python
+x = x.unsqueeze(1)
+```
+
+The (1) is not meaningless. It explicitly says:
+
+> There is one physical signal channel.
+
+---
+
+# Slide 10: `unsqueeze`, `permute`, and `reshape`
+
+These operations are mathematically simple but semantically important.
+
+## `unsqueeze`
+
+If
+
+[
+x
+]
+
+has shape
+
+[
+(N,L),
+]
+
+then
+
+```python
+x = x.unsqueeze(1)
+```
+
+produces
+
+[
+(N,1,L).
+]
+
+It inserts a new axis of length (1).
+
+No samples are added.
+
+---
+
+## `permute`
+
+Suppose
+
+[
+A
+]
+
+has shape
+
+[
+(8,20,30).
+]
+
+Then
+
+```python
+B = A.permute(0,2,1)
+```
+
+produces shape
+
+[
+(8,30,20).
+]
+
+This changes which semantic quantity belongs to each axis.
+
+That is different from simply regrouping the same entries.
+
+---
+
+## `reshape`
+
+This is where students can get into trouble.
+
+Suppose
+
+[
+A\in\mathbb{R}^{8\times20\times30}.
+]
+
+The total number of elements is
+
+[
+8\cdot20\cdot30=4800.
+]
+
+You could reshape to
+
+[
+(8,600),
+]
+
+because
+
+[
+8\cdot600=4800.
+]
+
+But whether that is meaningful depends on what the original axes represented.
+
+A good teaching statement is:
+
+> A shape-compatible reshape is not necessarily a physically meaningful reshape.
+
+---
+
+# Slide 12: Broadcasting
+
+The deck uses a very practical DSP example: one gain per channel. 
+
+Suppose
+
+[
+\text{audio.shape}
+==================
+
+(N,C,L).
+]
+
+For stereo,
+
+[
+C=2.
+]
+
+Suppose we want gains
+
+[
+g_0=0.5,
+\qquad
+g_1=1.25.
+]
+
+A natural gain tensor is
+
+[
+\mathbf{g}
+==========
+
+\begin{bmatrix}
+0.5 & 1.25
+\end{bmatrix}.
+]
+
+But shape
+
+[
+(2,)
+]
+
+does not say which axis should correspond to channel.
+
+We want
+
+[
+\boxed{
+(1,C,1)
+}
+]
+
+because:
+
+[
+1
+]
+
+in the batch dimension means “reuse this gain for every batch item,”
+
+[
+C
+]
+
+matches the channel dimension,
+
+and the final
+
+[
+1
+]
+
+means “reuse this gain for every time sample.”
+
+So
+
+[
+\mathbf{y}
+==========
+
+\mathbf{x}\odot\mathbf{g}
+]
+
+broadcasts correctly.
+
+---
+
+# Slide 14: Why shape ((2,)) fails
+
+The deck's concept check asks about
+
+[
+\text{audio.shape}
+==================
+
+(8,2,1000)
+]
+
+and
+
+[
+\text{gain.shape}
+=================
+
+(2,).
+]
+
+
+
+PyTorch broadcasting aligns shapes from the **rightmost dimension**.
+
+So conceptually it tries to compare
+
+[
+(8,2,1000)
+]
+
+with
+
+[
+(\phantom{8,2,}2).
+]
+
+The last dimensions are
+
+[
+1000
+]
+
+and
+
+[
+2,
+]
+
+which do not match and neither is (1).
+
+Therefore the operation fails.
+
+The correct gain shape is
+
+[
+\boxed{(1,2,1)}.
+]
+
+Then the alignment is
+
+[
+(8,2,1000)
+]
+
+with
+
+[
+(1,2,1),
+]
+
+and every dimension is either equal or (1).
+
+---
+
+# Slide 13: Matrix multiplication as DSP
+
+The filterbank example is especially useful because it shows that PyTorch operations are just familiar linear algebra. 
+
+Suppose the power spectrogram is
+
+[
+\mathbf{P}
+\in
+\mathbb{R}^{257\times100}.
+]
+
+Interpretation:
+
+[
+257
+]
+
+frequency bins,
+
+[
+100
+]
+
+time frames.
+
+Suppose the filterbank matrix is
+
+[
+\mathbf{W}
+\in
+\mathbb{R}^{40\times257}.
+]
+
+Then
+
+[
+\boxed{
+\mathbf{E}
+==========
+
+\mathbf{W}\mathbf{P}
+}
+]
+
+has shape
+
+[
+(40,100).
+]
+
+Why?
+
+[
+(40\times257)
+(257\times100)
+\rightarrow
+(40\times100).
+]
+
+Each output entry is
+
+[
+E_{m,t}
+=======
+
+\sum_{k=0}^{256}
+W_{m,k}P_{k,t}.
+]
+
+That is simply the energy in filterbank band (m) at frame (t).
+
+A strong answer to “What does matrix multiplication mean physically here?” is:
+
+> “Each row of (W) defines one spectral weighting function. Multiplying (W) by each spectrogram column combines the original frequency-bin powers into band energies.”
+
+---
+
+# Slide 15: The conceptual turning point
+
+The lecture then asks:
+
+> What if the DSP coefficients are unknown?
+
+That is where traditional DSP computation becomes a learnable model. 
+
+Suppose we have a system
+
+[
+\hat y = f(x;\theta),
+]
+
+where
+
+[
+\theta
+]
+
+contains unknown parameters.
+
+We compare the predicted output
+
+[
+\hat y
+]
+
+against a desired output
+
+[
+y
+]
+
+using a loss
+
+[
+L(\theta).
+]
+
+Now we ask:
+
+[
+\boxed{
+\text{How should } \theta \text{ change so that }L\text{ decreases?}
+}
+]
+
+The mathematical answer is the gradient:
+
+[
+\boxed{
+\nabla_{\theta}L
+}
+]
+
+The direction
+
+[
+-\nabla_{\theta}L
+]
+
+is locally the direction of steepest decrease.
+
+This is the bridge from signal processing to learning.
+
+---
+
+# Slide 16: Chain rule by hand
+
+The deck gives a scalar example and evaluates the gradient at (\theta=2). 
+
+Suppose
+
+[
+u=3\theta+1
+]
+
+and
+
+[
+L=u^2.
+]
+
+Then
+
+[
+\frac{dL}{d\theta}
+==================
+
+\frac{dL}{du}
+\frac{du}{d\theta}.
+]
+
+We have
+
+[
+\frac{dL}{du}
+=============
+
+2u
+]
+
+and
+
+[
+\frac{du}{d\theta}
+==================
+
+3.
+
+]
+
+Therefore,
+
+[
+\frac{dL}{d\theta}
+==================
+
+6u.
+]
+
+Since
+
+[
+u=3\theta+1,
+]
+
+we get
+
+[
+\boxed{
+\frac{dL}{d\theta}
+==================
+
+6(3\theta+1)
+}
+]
+
+or
+
+[
+\boxed{
+\frac{dL}{d\theta}
+==================
+
+18\theta+6.
+}
+]
+
+At
+
+[
+\theta=2,
+]
+
+[
+u=7
+]
+
+and
+
+[
+\frac{dL}{d\theta}
+==================
+
+# 6(7)
+
+\boxed{42}.
+]
+
+This is exactly what PyTorch later produces.
+
+---
+
+# What does the gradient value (42) mean?
+
+Students often treat gradients as symbolic objects.
+
+I would ask:
+
+> “What does (42) actually tell us?”
+
+A good answer:
+
+> “Near (\theta=2), increasing (\theta) slightly increases the loss at approximately (42) units of loss per unit change in (\theta).”
+
+More formally,
+
+[
+L(\theta+\Delta\theta)
+\approx
+L(\theta)
++
+\frac{dL}{d\theta}\Delta\theta.
+]
+
+So if
+
+[
+\Delta\theta=0.01,
+]
+
+then approximately
+
+[
+\Delta L
+\approx
+42(0.01)
+========
+
+0.42.
+]
+
+That makes the gradient physically interpretable as local sensitivity.
+
+---
+
+# Slide 17: The computational graph
+
+The graph is
+
+[
+\theta
+\rightarrow
+u=3\theta+1
+\rightarrow
+L=u^2.
+]
+
+The deck explains that the forward pass builds a directed acyclic graph and the backward pass multiplies local derivatives using the chain rule. 
+
+A useful way to visualize the reverse pass is:
+
+Start with
+
+[
+\frac{dL}{dL}=1.
+]
+
+At the (L=u^2) node:
+
+[
+\frac{dL}{du}=2u.
+]
+
+At the (u=3\theta+1) node:
+
+[
+\frac{du}{d\theta}=3.
+]
+
+Multiply:
+
+[
+\frac{dL}{d\theta}
+==================
+
+\frac{dL}{du}
+\frac{du}{d\theta}
+==================
+
+2u\cdot3.
+]
+
+Autograd is not inventing a new calculus rule.
+
+It is automating repeated application of the chain rule.
+
+---
+
+# Why is the graph a DAG?
+
+DAG means directed acyclic graph.
+
+Directed because computation flows from inputs to outputs.
+
+Acyclic because, within one forward evaluation, a quantity cannot depend on itself through a closed loop.
+
+For example,
+
+[
+\theta
+\rightarrow u
+\rightarrow L
+]
+
+contains no cycle.
+
+This matters because the backward traversal can process dependencies in reverse topological order.
+
+---
+
+# Slide 18: Why reverse-mode autodiff is ideal for ML
+
+The deck states the critical reason:
+
+> Many parameters, one scalar loss. 
+
+Suppose
+
+[
+\theta
+======
+
+\begin{bmatrix}
+\theta_1 & \theta_2 & \cdots & \theta_P
+\end{bmatrix}^{T}
+]
+
+with
+
+[
+P=10^6.
+]
+
+The loss is scalar:
+
+[
+L\in\mathbb{R}.
+]
+
+We want
+
+[
+\nabla_\theta L
+===============
+
+\begin{bmatrix}
+\frac{\partial L}{\partial\theta_1}\
+\frac{\partial L}{\partial\theta_2}\
+\vdots\
+\frac{\partial L}{\partial\theta_P}
+\end{bmatrix}.
+]
+
+Reverse mode computes all of these efficiently in one backward traversal.
+
+That is exactly the problem structure encountered in neural networks and learnable DSP systems.
+
+---
+
+# Slide 19: A vectorized linear model
+
+The deck uses
+
+[
+\hat y
+======
+
+wx+b
+]
+
+with mean-square loss. 
+
+Suppose the target is
+
+[
+y_i=2.5x_i-0.4.
+]
+
+The model begins with
+
+[
+w=0.2,
+\qquad
+b=0.
+]
+
+Predictions are
+
+[
+\hat y_i
+========
+
+wx_i+b.
+]
+
+The loss is
+
+[
+\boxed{
+L
+=
+
+\frac{1}{N}
+\sum_{i=1}^{N}
+(\hat y_i-y_i)^2
+}
+]
+
+PyTorch computes both
+
+[
+\frac{\partial L}{\partial w}
+]
+
+and
+
+[
+\frac{\partial L}{\partial b}
+]
+
+from the same backward pass.
+
+A useful hand derivation is
+
+[
+\frac{\partial L}{\partial w}
+=============================
+
+\frac{2}{N}
+\sum_{i=1}^{N}
+(\hat y_i-y_i)x_i
+]
+
+and
+
+[
+\frac{\partial L}{\partial b}
+=============================
+
+\frac{2}{N}
+\sum_{i=1}^{N}
+(\hat y_i-y_i).
+]
+
+This starts looking very similar to the FIR gradient later.
+
+---
+
+# Slide 20: Understanding the minimal autograd API
+
+The deck's minimal example is:
+
+```python
+theta = torch.tensor(2.0, requires_grad=True)
+u = 3*theta + 1
+loss = u**2
+loss.backward()
+print(theta.grad)
+```
+
+which produces
+
+[
+42.
+]
+
+
+
+The conceptual role of each line is:
+
+`requires_grad=True`
+
+means
+
+[
+\text{track operations downstream from }\theta.
+]
+
+`loss.backward()`
+
+means
+
+[
+\text{compute }\frac{\partial L}{\partial(\cdot)}
+]
+
+for all relevant upstream leaf tensors.
+
+`theta.grad`
+
+stores
+
+[
+\frac{\partial L}{\partial\theta}.
+]
+
+---
+
+# Why does `.grad` usually live on leaf tensors?
+
+A leaf tensor is typically a parameter created directly by the programmer, such as
+
+```python
+theta = torch.tensor(..., requires_grad=True)
+```
+
+The intermediate value
+
+[
+u=3\theta+1
+]
+
+is temporary.
+
+Autograd needs (u)'s information for the backward pass, but storing a persistent `.grad` tensor for every intermediate would consume unnecessary memory.
+
+A good answer to the slide question is:
+
+> “We normally care about gradients of the parameters we intend to update. Intermediate gradients are used internally during backpropagation but are not all retained as user-visible `.grad` fields by default.”
+
+---
+
+# Slide 21: Gradient accumulation
+
+This is one of the most common PyTorch surprises.
+
+The deck demonstrates:
+
+[
+L=x^2
+]
+
+at
+
+[
+x=3.
+]
+
+Then
+
+[
+\frac{dL}{dx}=2x=6.
+]
+
+After the first `backward()`,
+
+[
+x.\text{grad}=6.
+]
+
+After a second `backward()` without clearing,
+
+[
+x.\text{grad}=12.
+]
+
+
+
+The reason is:
+
+[
+\boxed{
+\text{PyTorch accumulates gradients}
+}
+]
+
+rather than replacing them.
+
+This behavior is mathematically useful.
+
+If a parameter influences the loss through several paths,
+
+[
+L=L_1+L_2,
+]
+
+then
+
+[
+\frac{\partial L}{\partial\theta}
+=================================
+
+\frac{\partial L_1}{\partial\theta}
++
+\frac{\partial L_2}{\partial\theta}.
+]
+
+So summing gradient contributions is exactly what the chain rule requires.
+
+The danger is accidentally accumulating across training iterations.
+
+---
+
+# Typical training loop
+
+The deck gives the standard pattern:
+
+```python
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()
+```
+
+Conceptually:
+
+[
+\text{clear old gradient}
+]
+
+[
+\text{compute current gradient}
+]
+
+[
+\text{update parameters}.
+]
+
+If you skip the clearing step, the parameter update can use
+
+[
+g_{\text{old}}+g_{\text{new}}
+]
+
+instead of just
+
+[
+g_{\text{new}}.
+]
+
+---
+
+# Slide 22: `no_grad()` versus `detach()`
+
+These are related but different. 
+
+## `torch.no_grad()`
+
+This is a context manager.
+
+Operations executed inside it do not create autograd history.
+
+For example:
+
+```python
+with torch.no_grad():
+    y = model(x)
+```
+
+This is useful during inference because we do not need gradients.
+
+It saves memory and computation.
+
+---
+
+## `.detach()`
+
+Suppose
+
+[
+y
+]
+
+already belongs to a graph.
+
+Then
+
+```python
+z = y.detach()
+```
+
+creates a tensor with the same numerical values but disconnected from that graph.
+
+So gradients through (z) do not flow backward to the operations that created (y).
+
+A good use is:
+
+```python
+plot_value = y_hat.detach().cpu().numpy()
+```
+
+because plotting does not need gradient history.
+
+---
+
+# Good answer: What is the difference?
+
+> “`no_grad()` prevents graph construction for operations executed inside a region. `detach()` takes an existing tensor and creates a view of its values that no longer participates in the current gradient graph.”
+
+That is a very solid answer.
+
+---
+
+# Slide 23: FIR filtering as a learnable model
+
+This is the strongest DSP connection in the lecture.
+
+A causal FIR filter is
+
+[
+\boxed{
+\hat y[n]
+=========
+
+\sum_{k=0}^{M-1}
+h[k]x[n-k]
+}
+]
+
+where the tap coefficients
+
+[
+h[k]
+]
+
+are now treated as unknown parameters.
+
+Suppose we know a target output
+
+[
+y[n].
+]
+
+Define the error
+
+[
+e[n]
+====
+
+\hat y[n]-y[n].
+]
+
+Use mean-square error:
+
+[
+\boxed{
+L
+=
+
+\frac{1}{N}
+\sum_n e^2[n]
+}
+]
+
+The deck points out that the resulting gradient is correlation-like. 
+
+Let's derive it.
+
+---
+
+# Deriving the FIR gradient
+
+We want
+
+[
+\frac{\partial L}{\partial h[r]}.
+]
+
+Start with
+
+[
+L
+=
+
+\frac{1}{N}
+\sum_n
+(\hat y[n]-y[n])^2.
+]
+
+Then
+
+[
+\frac{\partial L}{\partial h[r]}
+================================
+
+\frac{1}{N}
+\sum_n
+2(\hat y[n]-y[n])
+\frac{\partial\hat y[n]}{\partial h[r]}.
+]
+
+Since
+
+[
+\hat y[n]
+=========
+
+\sum_k h[k]x[n-k],
+]
+
+we have
+
+[
+\frac{\partial\hat y[n]}{\partial h[r]}
+=======================================
+
+x[n-r].
+]
+
+Therefore,
+
+[
+\boxed{
+\frac{\partial L}{\partial h[r]}
+================================
+
+\frac{2}{N}
+\sum_n
+e[n]x[n-r]
+}
+]
+
+This is a beautiful result for DSP students.
+
+It says:
+
+> The gradient for tap (r) is obtained by correlating the current output error with the input delayed by (r) samples.
+
+That should feel very familiar to anyone who has seen adaptive filtering.
+
+---
+
+# Connection to LMS adaptive filtering
+
+This is a particularly valuable extension.
+
+The LMS update has the general form
+
+[
+h_r[m+1]
+========
+
+h_r[m]
++
+\mu e[m]x[m-r]
+]
+
+depending on sign convention.
+
+Gradient descent has the generic form
+
+[
+h_r^{(m+1)}
+===========
+
+## h_r^{(m)}
+
+\eta
+\frac{\partial L}{\partial h[r]}.
+]
+
+These have essentially the same structure:
+
+[
+\boxed{
+\text{coefficient update}
+\propto
+\text{error}\times\text{input}
+}
+]
+
+So modern autograd is not disconnected from classical adaptive signal processing.
+
+It generalizes the same gradient idea to arbitrarily complicated differentiable systems.
+
+This is one of the best conceptual bridges in the entire lecture.
+
+---
+
+# Important `conv1d` convention
+
+The slide correctly warns that `torch.nn.functional.conv1d` implements cross-correlation in the deep-learning convention. 
+
+Textbook discrete-time convolution is
+
+[
+y[n]
+====
+
+\sum_k h[k]x[n-k].
+]
+
+Deep-learning “convolution” often computes something closer to
+
+[
+y[n]
+====
+
+\sum_k w[k]x[n+k]
+]
+
+depending on indexing and padding conventions.
+
+So if you want exact textbook convolution ordering, you may need to flip the kernel.
+
+A good student observation is:
+
+> “The operation is still linear and shift structured, but the coefficient indexing convention differs.”
+
+Exactly.
+
+---
+
+# Slide 24: System identification by gradient descent
+
+The deck's FIR demo has target taps
+
+[
+\boxed{
+[0.15,;0.50,;0.25,;-0.10]
+}
+]
+
+and the learned taps converge to nearly the same values. 
+
+This is a simple system-identification problem.
+
+Imagine that the actual system is
+
+[
+h_{\text{true}}[k].
+]
+
+We feed a known input
+
+[
+x[n]
+]
+
+through the system and observe
+
+[
+y[n].
+]
+
+Our model has unknown coefficients
+
+[
+h[k].
+]
+
+We calculate
+
+[
+\hat y[n]
+]
+
+and the loss
+
+[
+L.
+]
+
+Autograd calculates
+
+[
+\nabla_hL.
+]
+
+Then gradient descent updates
+
+[
+\boxed{
+h^{(m+1)}
+=========
+
+## h^{(m)}
+
+\eta\nabla_hL
+}
+]
+
+until the modeled filter matches the target system.
+
+The key teaching statement from the slide is excellent:
+
+> Autograd did not “understand filters.”
+
+It simply differentiated the operations you programmed.
+
+That is exactly what students need to understand before neural networks arrive.
+
+---
+
+# A useful question: Is this “machine learning”?
+
+Yes.
+
+The model contains parameters
+
+[
+h[k]
+]
+
+that are learned from data by minimizing an objective.
+
+So even though the model is “just an FIR filter,” it satisfies the core ML pattern:
+
+[
+\boxed{
+\text{parameterized model}
++
+\text{data}
++
+\text{loss}
++
+\text{optimization}
+}
+]
+
+This helps demystify neural networks.
+
+---
+
+# Slide 25: Common failure modes
+
+The deck emphasizes that many early PyTorch mistakes are bookkeeping mistakes. 
+
+These are worth turning into diagnosis questions.
+
+## Wrong axis order
+
+Expected:
+
+[
+(N,C,L)
+]
+
+received:
+
+[
+(N,L,C).
+]
+
+Good diagnosis:
+
+> “The numerical data are present, but the layer is interpreting time samples as channels.”
+
+---
+
+## Mixed device
+
+Input on CPU:
+
+[
+x\in\text{CPU memory}
+]
+
+parameters on GPU:
+
+[
+\theta\in\text{GPU memory}.
+]
+
+The operation cannot proceed because the operands are not in compatible memory spaces.
+
+---
+
+## Gradient accumulation
+
+Symptom:
+
+Training becomes unstable or parameter updates become unexpectedly large.
+
+Likely cause:
+
+Forgot
+
+```python
+optimizer.zero_grad()
+```
+
+---
+
+## Detached graph
+
+Symptom:
+
+A parameter's gradient is `None` even though you expect it to affect the loss.
+
+Likely cause:
+
+An intermediate tensor was detached or created under `no_grad()`.
+
+---
+
+## In-place operation
+
+An in-place modification can overwrite a value autograd needs for the backward pass.
+
+While learning, functional-style code is safer:
+
+```python
+y = x + 1
+```
+
+rather than aggressively modifying tensors in place.
+
+---
+
+# Homework 1: Tensor shapes
+
+The deck asks students to assign sensible shapes. 
+
+Good answers are:
+
+### One mono clip, (16000) samples
+
+[
+\boxed{(16000,)}
+]
+
+rank:
+
+[
+\boxed{1}
+]
+
+### (32) stereo clips
+
+[
+\boxed{(32,2,16000)}
+]
+
+rank:
+
+[
+\boxed{3}
+]
+
+### One STFT
+
+[
+\boxed{(257,101)}
+]
+
+possibly complex.
+
+Rank:
+
+[
+\boxed{2}
+]
+
+### Batch of (32) one-channel spectrograms
+
+[
+\boxed{(32,1,257,101)}
+]
+
+rank:
+
+[
+\boxed{4}
+]
+
+The important thing is not just the numbers. Students should state what each axis means.
+
+---
+
+# Homework 2: Broadcasting gains
+
+Given
+
+[
+x.shape=(24,2,8000),
+]
+
+we want
+
+[
+g_L=0.5
+]
+
+and
+
+[
+g_R=1.2.
+]
+
+Use
+
+[
+\boxed{
+g.shape=(1,2,1)
+}
+]
+
+with
+
+```python
+g = torch.tensor([0.5, 1.2]).view(1,2,1)
+y = x * g
+```
+
+The result has shape
+
+[
+\boxed{(24,2,8000)}.
+]
+
+---
+
+# Homework 3: Filterbank multiplication
+
+Given
+
+[
+\mathbf{P}
+\in
+\mathbb{R}^{257\times100}
+]
+
+and
+
+[
+\mathbf{W}
+\in
+\mathbb{R}^{40\times257},
+]
+
+compute
+
+[
+\boxed{
+\mathbf{E}
+==========
+
+\mathbf{W}\mathbf{P}
+}
+]
+
+with
+
+[
+\mathbf{E}
+\in
+\mathbb{R}^{40\times100}.
+]
+
+Interpretation:
+
+[
+40
+]
+
+filterbank bands by
+
+[
+100
+]
+
+time frames.
+
+The solution in the appendix gives exactly this interpretation. 
+
+---
+
+# Homework 4: Chain rule
+
+The problem uses
+
+[
+u=2\theta-3
+]
+
+and
+
+[
+L=(u+1)^2.
+]
+
+First simplify:
+
+[
+u+1
+===
+
+2\theta-2.
+]
+
+Then
+
+[
+L=(2\theta-2)^2.
+]
+
+By the chain rule,
+
+[
+\frac{dL}{d\theta}
+==================
+
+2(2\theta-2)\cdot2.
+]
+
+Therefore,
+
+[
+\boxed{
+\frac{dL}{d\theta}
+==================
+
+8\theta-8
+}
+]
+
+At
+
+[
+\theta=4,
+]
+
+[
+\frac{dL}{d\theta}
+==================
+
+# 32-8
+
+\boxed{24}.
+]
+
+The instructor appendix confirms this result. 
+
+---
+
+# Homework 5: Accumulation
+
+For
+
+[
+L=x^2
+]
+
+at
+
+[
+x=3,
+]
+
+the derivative is
+
+[
+\frac{dL}{dx}
+=============
+
+# 2x
+
+6.
+
+]
+
+First backward:
+
+[
+\boxed{6}
+]
+
+Second backward without clearing:
+
+[
+\boxed{12}
+]
+
+because PyTorch accumulates gradients.
+
+The solution appendix states exactly this. 
+
+---
+
+# Homework 6: FIR gradient interpretation
+
+The key result is
+
+[
+\boxed{
+\frac{\partial L}{\partial h[r]}
+================================
+
+\frac{2}{N}
+\sum_n
+e[n]x[n-r].
+}
+]
+
+The strongest interpretation is:
+
+> “The gradient for each tap is proportional to the correlation between the current output error and the input sequence delayed to that tap.”
+
+That is the DSP meaning of backpropagation through an FIR filter. The deck's solution appendix makes the same point. 
+
+---
+
+# Weekly quiz: Good answers
+
+The quiz asks several very good conceptual questions. 
+
+## Q1
+
+(16) mono clips, each (4000) samples, using ((N,C,L)):
+
+[
+\boxed{(16,1,4000)}
+]
+
+---
+
+## Q2
+
+For input shape
+
+[
+(8,2,1000),
+]
+
+one independent gain per channel should have shape
+
+[
+\boxed{(1,2,1)}.
+]
+
+---
+
+## Q3
+
+> Every PyTorch tensor automatically tracks gradients.
+
+Answer:
+
+[
+\boxed{\text{False}}
+]
+
+A floating-point or complex tensor typically tracks gradients only when
+
+```python
+requires_grad=True
+```
+
+or when it is downstream from such a tensor.
+
+---
+
+## Q5
+
+Why is reverse-mode autodiff appropriate for modern ML?
+
+Good answer:
+
+> “Because one scalar loss depends on many parameters. Reverse mode computes all components of (\nabla_\theta L) efficiently in a single backward traversal.”
+
+That matches the instructor solution. 
+
+---
+
+## Q6
+
+What happens if gradients are never cleared?
+
+Good answer:
+
+> “They accumulate across iterations, so later updates use the sum of old and new gradients rather than just the current gradient.”
+
+Again, exactly the intended concept. 
+
+---
+
+# The most important conceptual connection to DSP
+
+I would make this connection very explicit near the end of the lecture.
+
+Traditional DSP often looks like
+
+[
+x[n]
+\rightarrow
+H
+\rightarrow
+y[n]
+]
+
+where the system (H) is known.
+
+Modern ML often looks like
+
+[
+x
+\rightarrow
+f(x;\theta)
+\rightarrow
+\hat y
+]
+
+where the system contains unknown parameters
+
+[
+\theta.
+]
+
+Then we define
+
+[
+L(\hat y,y)
+]
+
+and compute
+
+[
+\nabla_\theta L.
+]
+
+So the fundamental change is not:
+
+> “We stopped doing signal processing and started doing machine learning.”
+
+It is:
+
+[
+\boxed{
+\text{We made some signal-processing operations parameterized and differentiable.}
+}
+]
+
+That is a much more coherent transition for ECE students.
+
+---
+
+# What I would expect a senior student to know
+
+By the end of the lecture, a strong senior should be able to explain:
+
+[
+(N,C,L)
+]
+
+and why axis order matters;
+
+how broadcasting works;
+
+why a filterbank can be written as
+
+[
+\mathbf{E}=\mathbf{W}\mathbf{P};
+]
+
+what
+
+```python
+requires_grad=True
+```
+
+does;
+
+why
+
+```python
+loss.backward()
+```
+
+computes gradients;
+
+and why gradients need to be cleared between training iterations.
+
+---
+
+# What I would expect a first-year graduate student to know
+
+In addition, I would want the graduate student to be able to derive:
+
+[
+\frac{dL}{d\theta}
+==================
+
+\frac{dL}{du}
+\frac{du}{d\theta},
+]
+
+explain why reverse-mode autodiff is efficient for
+
+[
+L:\mathbb{R}^{P}\rightarrow\mathbb{R},
+]
+
+derive
+
+[
+\frac{\partial L}{\partial h[r]}
+================================
+
+\frac{2}{N}
+\sum_n e[n]x[n-r],
+]
+
+and recognize that this FIR gradient has the same error-times-input structure that appears in classical adaptive filtering.
+
+---
+
+# One sentence students should leave with
+
+The best answer to the minute-paper question at the end of the deck would be something like:
+
+> “A tensor that merely contains a signal stores numerical samples and metadata, while a tensor participating in a computational graph also retains the differentiable relationships needed to compute how a final loss changes with respect to upstream parameters.”
+
+That captures the entire lecture. The deck itself summarizes the same progression: tensors store familiar DSP data with shape/dtype/device metadata, tensor operations express vectorized DSP, autograd constructs a dynamic graph, and unknown DSP parameters can then be optimized from
+
+[
+\nabla_{\theta}L.
+]
+
+--------------------
+
+Week 13, Lecture 25, LaTeX math
+
+Please convert all math expressions to LaTeX. Don't change anything else.
+
+Gemini Flash-Lite:
+
+Yes. This lecture is really making one conceptual transition:
+
+
+$$\boxed{ \text{DSP computation} \longrightarrow \text{differentiable DSP computation} }$$
+
+
+The important message is that tensors are not “neural-network objects.” They are familiar arrays plus metadata and, optionally, a record of how they were computed. The deck states this explicitly: a tensor can represent the same waveform, spectrum, filterbank, or feature matrix students already know from DSP.
+Below is how I would explain the lecture in class, including what strong answers and useful examples look like.
+Slides 2–4: What actually changes when a DSP array becomes a tensor?
+A discrete-time signal
+
+
+$$x[n]$$
+
+
+is usually introduced mathematically as a sequence.
+If we observe $L$ samples, we might write
+
+$$\mathbf{x} = \begin{bmatrix} x[0] & x[1] & \cdots & x[L-1] \end{bmatrix}^{T}.$$
+
+
+In NumPy, that becomes an array with shape
+
+
+$$(L,).$$
+
+
+In PyTorch, the numerical values may be identical and the shape can still be
+
+
+$$(L,),$$
+
+
+but the tensor also carries several practical properties:
+
+
+$$\boxed{ \text{shape}, \; \text{dtype}, \; \text{device}, \; \text{requires\_grad} }$$
+
+
+which the deck highlights.
+A useful way to phrase this is:
+
+A mathematical sequence tells us the values. A PyTorch tensor also tells the software how those values are stored and whether their computational history should be tracked.
+Good answer to the slide question
+The slide asks:
+
+“What extra information does the tensor carry that the mathematical sequence $x[n]$ does not?”
+A good student answer is:
+
+“It carries the tensor shape, numerical data type, the device where the data live, and whether PyTorch should track operations involving the tensor for gradient computation.”
+An even better answer is:
+
+“Those properties affect both correctness and performance. Shape determines axis meaning, dtype affects precision, device determines where computation happens, and requires_grad determines whether the tensor participates in automatic differentiation.”
+Slide 5: Spectrograms are already tensors
+Students sometimes hear “tensor” and imagine something exotic.
+But a spectrogram is already naturally a rank-2 object.
+If the STFT is
+
+
+$$X[k,m],$$
+
+
+where
+
+
+$$k$$
+
+
+indexes frequency and
+
+
+$$m$$
+
+
+indexes time frames, then we can represent it as
+
+
+$$\mathbf{X} \in \mathbb{C}^{F\times T}.$$
+
+
+For example, with
+
+
+$$N_{\text{FFT}}=256,$$
+
+
+a one-sided real-input STFT has
+
+$$\frac{256}{2}+1 = 129$$
+
+
+frequency bins.
+So a possible tensor shape is
+
+
+$$(129,32).$$
+
+
+The deck emphasizes that PyTorch tensors can also have complex dtype, so STFT-domain quantities can remain inside a differentiable graph.
+That is an important point.
+You do not necessarily have to reduce everything to real magnitude data before using PyTorch.
+Rank versus shape
+This is worth explicitly distinguishing.
+A tensor with shape
+
+
+$$(129,32)$$
+
+
+has rank 2 because it has two axes.
+A tensor with shape
+
+
+$$(32,2,16000)$$
+
+
+has rank 3.
+The numbers in the shape describe axis lengths.
+The number of entries in the shape describes the rank.
+Students often confuse these.
+A good check is:
+
+“What is the rank of a stereo batch with shape $(32,2,16000)$?”
+Correct answer:
+
+
+$$\boxed{3}$$
+
+
+not $16000$, and not $32$.
+Slide 6: Tensor anatomy is really engineering bookkeeping
+The deck says many PyTorch problems are not “machine-learning problems” at all—they are shape, dtype, or device problems.
+That is absolutely worth stressing to ECE students.
+I would compare tensor shape to units in circuit analysis.
+If a student writes
+
+
+$$5\text{ V} + 3\text{ A},$$
+
+
+the arithmetic operation is defined syntactically, but the physical meaning is wrong.
+Similarly, a tensor operation might run numerically while the axes are semantically wrong.
+For example, suppose
+
+
+$$\mathbf{x}$$
+
+
+has shape
+
+
+$$(N,C,L).$$
+
+
+Then
+
+
+$$x[7,1,250]$$
+
+
+means:
+
+
+$$\text{batch item } 7,$$
+
+$$\text{channel } 1,$$
+
+$$\text{sample } 250.$$
+
+
+If you accidentally interpret the shape as
+
+
+$$(N,L,C),$$
+
+
+the values may still exist, but the computation is conceptually wrong.
+That is why “print the shape” is not beginner trivia. It is a genuine model-design diagnostic.
+Slide 7: NumPy versus PyTorch
+The deck makes a subtle but useful point: the main distinction is not really
+
+
+$$\text{array} \quad\text{versus}\quad \text{tensor}$$
+
+
+but more like
+
+
+$$\text{numerical array} \quad\text{versus}\quad \text{numerical array participating in differentiable computation}.$$
+
+
+Both NumPy and PyTorch can perform vectorized operations.
+For example:
+
+```python
+y = x**2 + 3*x
+
+```
+
+looks nearly the same in both libraries.
+But if
+
+```python
+x.requires_grad = True
+
+```
+
+then PyTorch can remember enough about the operation
+
+
+$$y=x^2+3x$$
+
+
+to later compute
+
+$$\frac{dy}{dx} = 2x+3.$$
+
+
+That is the key additional capability.
+torch.from_numpy versus torch.tensor
+The deck briefly mentions a useful subtlety.
+If
+
+```python
+t = torch.from_numpy(a)
+
+```
+
+then on CPU, $t$ may share memory with the NumPy array $a$.
+So changing one can affect the other.
+For example:
+
+```python
+a = np.array([1., 2., 3.], dtype=np.float32)
+t = torch.from_numpy(a)
+
+a[0] = 99
+
+```
+
+can cause
+
+```python
+t[0]
+
+```
+
+to also become $99$.
+By contrast,
+
+```python
+t = torch.tensor(a)
+
+```
+
+normally creates a copy.
+This is a good example of why tensor behavior is partly about storage semantics, not just equations.
+Slide 8: GPU acceleration is not automatically faster
+The deck correctly says that GPU acceleration is a placement decision, not magic.
+Suppose you have a vector of only
+
+
+$$L=100$$
+
+
+samples and perform one multiplication.
+Moving those $100$ values to a GPU may cost more time than the computation itself.
+The benefit comes when the operation has lots of parallel work, such as
+
+
+$$\text{large matrix multiplication},$$
+
+$$\text{large batched convolution},$$
+
+
+or
+
+
+$$\text{many spectrograms processed together}.$$
+
+
+A good answer to
+
+“Why might a GPU be slower for a tiny operation?”
+is:
+
+“Because transferring data and launching GPU kernels has overhead. The arithmetic must be large enough to amortize that cost.”
+Slides 9–11: Shape conventions
+The concept check asks students to map familiar audio objects to shapes.
+These are worth explaining carefully.
+
+One mono clip
+Suppose one clip has
+
+
+$$L=16000$$
+
+
+samples.
+A simple representation is
+
+
+$$\boxed{(16000,)}$$
+
+
+which is rank 1.
+Batch of stereo clips
+Suppose we have
+
+
+$$N=32$$
+
+
+clips,
+
+
+$$C=2$$
+
+
+channels,
+and
+
+
+$$L=16000$$
+
+
+samples per clip.
+Then the common Conv1d convention is
+
+
+$$\boxed{(32,2,16000)}.$$
+
+
+The deck later formalizes this as
+
+
+$$(N,C,L),$$
+
+
+where $N$ is batch, $C$ is channel, and $L$ is length.
+Why include a channel dimension for mono?
+Suppose you have $32$ mono clips.
+You might initially store them as
+
+
+$$(32,16000).$$
+
+
+But a 1-D convolution layer usually expects
+
+
+$$(N,C,L).$$
+
+
+So for mono,
+
+
+$$C=1,$$
+
+
+and you insert the singleton channel dimension:
+
+
+$$\boxed{ (32,1,16000) }$$
+
+
+using
+
+```python
+x = x.unsqueeze(1)
+
+```
+
+The $1$ is not meaningless. It explicitly says:
+
+There is one physical signal channel.
+Slide 10: unsqueeze, permute, and reshape
+These operations are mathematically simple but semantically important.
+
+unsqueeze
+If
+
+
+$$x$$
+
+
+has shape
+
+
+$$(N,L),$$
+
+
+then
+
+```python
+x = x.unsqueeze(1)
+
+```
+
+produces
+
+
+$$(N,1,L).$$
+
+
+It inserts a new axis of length $1$.
+No samples are added.
+permute
+Suppose
+
+
+$$A$$
+
+
+has shape
+
+
+$$(8,20,30).$$
+
+
+Then
+
+```python
+B = A.permute(0,2,1)
+
+```
+
+produces shape
+
+
+$$(8,30,20).$$
+
+
+This changes which semantic quantity belongs to each axis.
+That is different from simply regrouping the same entries.
+reshape
+This is where students can get into trouble.
+Suppose
+
+
+$$A\in\mathbb{R}^{8\times20\times30}.$$
+
+
+The total number of elements is
+
+
+$$8\cdot20\cdot30=4800.$$
+
+
+You could reshape to
+
+
+$$(8,600),$$
+
+
+because
+
+
+$$8\cdot600=4800.$$
+
+
+But whether that is meaningful depends on what the original axes represented.
+A good teaching statement is:
+
+A shape-compatible reshape is not necessarily a physically meaningful reshape.
+Slide 12: Broadcasting
+The deck uses a very practical DSP example: one gain per channel.
+Suppose
+
+$$\text{audio.shape} = (N,C,L).$$
+
+
+For stereo,
+
+
+$$C=2.$$
+
+
+Suppose we want gains
+
+
+$$g_0=0.5, \qquad g_1=1.25.$$
+
+
+A natural gain tensor is
+
+$$\mathbf{g} = \begin{bmatrix} 0.5 & 1.25 \end{bmatrix}.$$
+
+
+But shape
+
+
+$$(2,)$$
+
+
+does not say which axis should correspond to channel.
+We want
+
+
+$$\boxed{ (1,C,1) }$$
+
+
+because:
+$1$ in the batch dimension means “reuse this gain for every batch item,”
+$C$ matches the channel dimension,
+and the final $1$ means “reuse this gain for every time sample.”
+So
+
+$$\mathbf{y} = \mathbf{x}\odot\mathbf{g}$$
+
+
+broadcasts correctly.
+Slide 14: Why shape $(2,\)$ fails
+The deck's concept check asks about
+
+$$\text{audio.shape} = (8,2,1000)$$
+
+
+and
+
+$$\text{gain.shape} = (2,).$$
+
+
+PyTorch broadcasting aligns shapes from the rightmost dimension.
+So conceptually it tries to compare
+
+
+$$(8,2,1000)$$
+
+
+with
+
+
+$$(\phantom{8,2,}2).$$
+
+
+The last dimensions are
+
+
+$$1000$$
+
+
+and
+
+
+$$2,$$
+
+
+which do not match and neither is $1$.
+Therefore the operation fails.
+The correct gain shape is
+
+
+$$\boxed{(1,2,1)}.$$
+
+
+Then the alignment is
+
+
+$$(8,2,1000)$$
+
+
+with
+
+
+$$(1,2,1),$$
+
+
+and every dimension is either equal or $1$.
+Slide 13: Matrix multiplication as DSP
+The filterbank example is especially useful because it shows that PyTorch operations are just familiar linear algebra.
+Suppose the power spectrogram is
+
+
+$$\mathbf{P} \in \mathbb{R}^{257\times100}.$$
+
+
+Interpretation:
+$257$ frequency bins,
+$100$ time frames.
+Suppose the filterbank matrix is
+
+
+$$\mathbf{W} \in \mathbb{R}^{40\times257}.$$
+
+
+Then
+
+$$\boxed{ \mathbf{E} = \mathbf{W}\mathbf{P} }$$
+
+
+has shape
+
+
+$$(40,100).$$
+
+
+Why?
+
+
+$$(40\times257)(257\times100) \rightarrow (40\times100).$$
+
+
+Each output entry is
+
+$$E_{m,t} = \sum_{k=0}^{256} W_{m,k}P_{k,t}.$$
+
+
+That is simply the energy in filterbank band $m$ at frame $t$.
+A strong answer to “What does matrix multiplication mean physically here?” is:
+
+“Each row of $\mathbf{W}$ defines one spectral weighting function. Multiplying $\mathbf{W}$ by each spectrogram column combines the original frequency-bin powers into band energies.”
+Slide 15: The conceptual turning point
+The lecture then asks:
+
+What if the DSP coefficients are unknown?
+That is where traditional DSP computation becomes a learnable model.
+Suppose we have a system
+
+
+$$\hat{y} = f(x;\theta),$$
+
+
+where
+
+
+$$\theta$$
+
+
+contains unknown parameters.
+We compare the predicted output
+
+
+$$\hat{y}$$
+
+
+against a desired output
+
+
+$$y$$
+
+
+using a loss
+
+
+$$L(\theta).$$
+
+
+Now we ask:
+
+
+$$\boxed{ \text{How should } \theta \text{ change so that } L \text{ decreases?} }$$
+
+
+The mathematical answer is the gradient:
+
+
+$$\boxed{ \nabla_{\theta}L }$$
+
+
+The direction
+
+
+$$-\nabla_{\theta}L$$
+
+
+is locally the direction of steepest decrease.
+This is the bridge from signal processing to learning.
+Slide 16: Chain rule by hand
+The deck gives a scalar example and evaluates the gradient at $\theta=2$.
+Suppose
+
+
+$$u=3\theta+1$$
+
+
+and
+
+
+$$L=u^2.$$
+
+
+Then
+
+$$\frac{dL}{d\theta} = \frac{dL}{du}\frac{du}{d\theta}.$$
+
+
+We have
+
+$$\frac{dL}{du} = 2u$$
+
+
+and
+
+$$\frac{du}{d\theta} = 3.$$
+
+
+Therefore,
+
+$$\frac{dL}{d\theta} = 6u.$$
+
+
+Since
+
+
+$$u=3\theta+1,$$
+
+
+we get
+
+$$\boxed{ \frac{dL}{d\theta} = 6(3\theta+1) }$$
+
+
+or
+
+$$\boxed{ \frac{dL}{d\theta} = 18\theta+6. }$$
+
+
+At
+
+
+$$\theta=2,$$
+
+$$u=7$$
+
+
+and
+
+$$\frac{dL}{d\theta} = 6(7) = \boxed{42}.$$
+
+
+This is exactly what PyTorch later produces.
+What does the gradient value $42$ mean?
+Students often treat gradients as symbolic objects.
+I would ask:
+
+“What does $42$ actually tell us?”
+A good answer:
+
+“Near $\theta=2$, increasing $\theta$ slightly increases the loss at approximately $42$ units of loss per unit change in $\theta$.”
+More formally,
+
+
+$$L(\theta+\Delta\theta) \approx L(\theta) + \frac{dL}{d\theta}\Delta\theta.$$
+
+
+So if
+
+
+$$\Delta\theta=0.01,$$
+
+
+then approximately
+
+$$\Delta L \approx 42(0.01) = 0.42.$$
+
+
+That makes the gradient physically interpretable as local sensitivity.
+Slide 17: The computational graph
+The graph is
+
+
+$$\theta \rightarrow u=3\theta+1 \rightarrow L=u^2.$$
+
+
+The deck explains that the forward pass builds a directed acyclic graph and the backward pass multiplies local derivatives using the chain rule.
+A useful way to visualize the reverse pass is:
+Start with
+
+
+$$\frac{dL}{dL}=1.$$
+
+
+At the $L=u^2$ node:
+
+
+$$\frac{dL}{du}=2u.$$
+
+
+At the $u=3\theta+1$ node:
+
+
+$$\frac{du}{d\theta}=3.$$
+
+
+Multiply:
+
+$$\frac{dL}{d\theta} = \frac{dL}{du}\frac{du}{d\theta} = 2u\cdot3.$$
+
+
+Autograd is not inventing a new calculus rule.
+It is automating repeated application of the chain rule.
+Why is the graph a DAG?
+DAG means directed acyclic graph.
+Directed because computation flows from inputs to outputs.
+Acyclic because, within one forward evaluation, a quantity cannot depend on itself through a closed loop.
+For example,
+
+
+$$\theta \rightarrow u \rightarrow L$$
+
+
+contains no cycle.
+This matters because the backward traversal can process dependencies in reverse topological order.
+Slide 18: Why reverse-mode autodiff is ideal for ML
+The deck states the critical reason:
+
+Many parameters, one scalar loss.
+Suppose
+
+$$\theta = \begin{bmatrix} \theta_1 & \theta_2 & \cdots & \theta_P \end{bmatrix}^{T}$$
+
+
+with
+
+
+$$P=10^6.$$
+
+
+The loss is scalar:
+
+
+$$L\in\mathbb{R}.$$
+
+
+We want
+
+$$\nabla_\theta L = \begin{bmatrix} \frac{\partial L}{\partial\theta_1} \\ \frac{\partial L}{\partial\theta_2} \\ \vdots \\ \frac{\partial L}{\partial\theta_P} \end{bmatrix}.$$
+
+
+Reverse mode computes all of these efficiently in one backward traversal.
+That is exactly the problem structure encountered in neural networks and learnable DSP systems.
+Slide 19: A vectorized linear model
+The deck uses
+
+$$\hat{y} = wx+b$$
+
+
+with mean-square loss.
+Suppose the target is
+
+
+$$y_i=2.5x_i-0.4.$$
+
+
+The model begins with
+
+
+$$w=0.2, \qquad b=0.$$
+
+
+Predictions are
+
+$$\hat{y}_i = wx_i+b.$$
+
+
+The loss is
+
+$$\boxed{ L = \frac{1}{N}\sum_{i=1}^{N}(\hat{y}_i-y_i)^2 }$$
+
+
+PyTorch computes both
+
+
+$$\frac{\partial L}{\partial w}$$
+
+
+and
+
+
+$$\frac{\partial L}{\partial b}$$
+
+
+from the same backward pass.
+A useful hand derivation is
+
+$$\frac{\partial L}{\partial w} = \frac{2}{N}\sum_{i=1}^{N}(\hat{y}_i-y_i)x_i$$
+
+
+and
+
+$$\frac{\partial L}{\partial b} = \frac{2}{N}\sum_{i=1}^{N}(\hat{y}_i-y_i).$$
+
+
+This starts looking very similar to the FIR gradient later.
+Slide 20: Understanding the minimal autograd API
+The deck's minimal example is:
+
+```python
+theta = torch.tensor(2.0, requires_grad=True)
+u = 3*theta + 1
+loss = u**2
+loss.backward()
+print(theta.grad)
+
+```
+
+which produces
+
+
+$$42.$$
+
+
+The conceptual role of each line is:
+`requires_grad=True`
+means
+
+
+$$\text{track operations downstream from } \theta.$$
+
+
+`loss.backward()`
+means
+
+
+$$\text{compute } \frac{\partial L}{\partial(\cdot)}$$
+
+
+for all relevant upstream leaf tensors.
+`theta.grad`
+stores
+
+
+$$\frac{\partial L}{\partial\theta}.$$
+
+
+Why does `.grad` usually live on leaf tensors?
+A leaf tensor is typically a parameter created directly by the programmer, such as
+
+```python
+theta = torch.tensor(..., requires_grad=True)
+
+```
+
+The intermediate value
+
+
+$$u=3\theta+1$$
+
+
+is temporary.
+Autograd needs $u$'s information for the backward pass, but storing a persistent `.grad` tensor for every intermediate would consume unnecessary memory.
+A good answer to the slide question is:
+
+“We normally care about gradients of the parameters we intend to update. Intermediate gradients are used internally during backpropagation but are not all retained as user-visible `.grad` fields by default.”
+Slide 21: Gradient accumulation
+This is one of the most common PyTorch surprises.
+The deck demonstrates:
+
+
+$$L=x^2$$
+
+
+at
+
+
+$$x=3.$$
+
+
+Then
+
+
+$$\frac{dL}{dx}=2x=6.$$
+
+
+After the first `backward()`,
+
+
+$$x.\text{grad}=6.$$
+
+
+After a second `backward()` without clearing,
+
+
+$$x.\text{grad}=12.$$
+
+
+The reason is:
+
+
+$$\boxed{ \text{PyTorch accumulates gradients} }$$
+
+
+rather than replacing them.
+This behavior is mathematically useful.
+If a parameter influences the loss through several paths,
+
+
+$$L=L_1+L_2,$$
+
+
+then
+
+$$\frac{\partial L}{\partial\theta} = \frac{\partial L_1}{\partial\theta} + \frac{\partial L_2}{\partial\theta}.$$
+
+
+So summing gradient contributions is exactly what the chain rule requires.
+The danger is accidentally accumulating across training iterations.
+Typical training loop
+The deck gives the standard pattern:
+
+```python
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()
+
+```
+
+Conceptually:
+
+
+$$\text{clear old gradient}$$
+
+$$\text{compute current gradient}$$
+
+$$\text{update parameters}.$$
+
+
+If you skip the clearing step, the parameter update can use
+
+
+$$g_{\text{old}}+g_{\text{new}}$$
+
+
+instead of just
+
+
+$$g_{\text{new}}.$$
+
+
+Slide 22: `no_grad()` versus `detach()`
+These are related but different.
+
+`torch.no_grad()`
+This is a context manager.
+Operations executed inside it do not create autograd history.
+For example:
+
+```python
+with torch.no_grad():
+    y = model(x)
+
+```
+
+This is useful during inference because we do not need gradients.
+It saves memory and computation.
+`.detach()`
+Suppose
+
+
+$$y$$
+
+
+already belongs to a graph.
+Then
+
+```python
+z = y.detach()
+
+```
+
+creates a tensor with the same numerical values but disconnected from that graph.
+So gradients through $z$ do not flow backward to the operations that created $y$.
+A good use is:
+
+```python
+plot_value = y_hat.detach().cpu().numpy()
+
+```
+
+because plotting does not need gradient history.
+Good answer: What is the difference?
+“`no_grad()` prevents graph construction for operations executed inside a region. `detach()` takes an existing tensor and creates a view of its values that no longer participates in the current gradient graph.”
+That is a very solid answer.
+Slide 23: FIR filtering as a learnable model
+This is the strongest DSP connection in the lecture.
+A causal FIR filter is
+
+$$\boxed{ \hat{y}[n] = \sum_{k=0}^{M-1} h[k]x[n-k] }$$
+
+
+where the tap coefficients
+
+
+$$h[k]$$
+
+
+are now treated as unknown parameters.
+Suppose we know a target output
+
+
+$$y[n].$$
+
+
+Define the error
+
+$$e[n] = \hat{y}[n]-y[n].$$
+
+
+Use mean-square error:
+
+$$\boxed{ L = \frac{1}{N}\sum_n e^2[n] }$$
+
+
+The deck points out that the resulting gradient is correlation-like.
+Let's derive it.
+Deriving the FIR gradient
+We want
+
+
+$$\frac{\partial L}{\partial h[r]}.$$
+
+
+Start with
+
+$$L = \frac{1}{N}\sum_n (\hat{y}[n]-y[n])^2.$$
+
+
+Then
+
+$$\frac{\partial L}{\partial h[r]} = \frac{1}{N}\sum_n 2(\hat{y}[n]-y[n])\frac{\partial\hat{y}[n]}{\partial h[r]}.$$
+
+
+Since
+
+$$\hat{y}[n] = \sum_k h[k]x[n-k],$$
+
+
+we have
+
+$$\frac{\partial\hat{y}[n]}{\partial h[r]} = x[n-r].$$
+
+
+Therefore,
+
+$$\boxed{ \frac{\partial L}{\partial h[r]} = \frac{2}{N}\sum_n e[n]x[n-r] }$$
+
+
+This is a beautiful result for DSP students.
+It says:
+
+The gradient for tap $r$ is obtained by correlating the current output error with the input delayed by $r$ samples.
+That should feel very familiar to anyone who has seen adaptive filtering.
+Connection to LMS adaptive filtering
+This is a particularly valuable extension.
+The LMS update has the general form
+
+$$h_r[m+1] = h_r[m] + \mu e[m]x[m-r]$$
+
+
+depending on sign convention.
+Gradient descent has the generic form
+
+$$h_r^{(m+1)} = h_r^{(m)} - \eta\frac{\partial L}{\partial h[r]}.$$
+
+
+These have essentially the same structure:
+
+
+$$\boxed{ \text{coefficient update} \propto \text{error} \times \text{input}$$
+
+
+So modern autograd is not disconnected from classical adaptive signal processing.
+It generalizes the same gradient idea to arbitrarily complicated differentiable systems.
+This is one of the best conceptual bridges in the entire lecture.
+Important conv1d convention
+The slide correctly warns that `torch.nn.functional.conv1d` implements cross-correlation in the deep-learning convention.
+Textbook discrete-time convolution is
+
+$$y[n] = \sum_k h[k]x[n-k].$$
+
+
+Deep-learning “convolution” often computes something closer to
+
+$$y[n] = \sum_k w[k]x[n+k]$$
+
+
+depending on indexing and padding conventions.
+So if you want exact textbook convolution ordering, you may need to flip the kernel.
+A good student observation is:
+
+“The operation is still linear and shift structured, but the coefficient indexing convention differs.”
+Exactly.
+Slide 24: System identification by gradient descent
+The deck's FIR demo has target taps
+
+
+$$\boxed{ [0.15, \; 0.50, \; 0.25, \; -0.10] }$$
+
+
+and the learned taps converge to nearly the same values.
+This is a simple system-identification problem.
+Imagine that the actual system is
+
+
+$$h_{\text{true}}[k].$$
+
+
+We feed a known input
+
+
+$$x[n]$$
+
+
+through the system and observe
+
+
+$$y[n].$$
+
+
+Our model has unknown coefficients
+
+
+$$h[k].$$
+
+
+We calculate
+
+
+$$\hat{y}[n]$$
+
+
+and the loss
+
+
+$$L.$$
+
+
+Autograd calculates
+
+
+$$\nabla_h L.$$
+
+
+Then gradient descent updates
+
+$$\boxed{ h^{(m+1)} = h^{(m)} - \eta\nabla_h L }$$
+
+
+until the modeled filter matches the target system.
+The key teaching statement from the slide is excellent:
+
+Autograd did not “understand filters.”
+It simply differentiated the operations you programmed.
+That is exactly what students need to understand before neural networks arrive.
+A useful question: Is this “machine learning”?
+Yes.
+The model contains parameters
+
+
+$$h[k]$$
+
+
+that are learned from data by minimizing an objective.
+So even though the model is “just an FIR filter,” it satisfies the core ML pattern:
+
+
+$$\boxed{ \text{parameterized model} + \text{data} + \text{loss} + \text{optimization} }$$
+
+
+This helps demystify neural networks.
+Slide 25: Common failure modes
+The deck emphasizes that many early PyTorch mistakes are bookkeeping mistakes.
+These are worth turning into diagnosis questions.
+
+Wrong axis order
+Expected:
+
+
+$$(N,C,L)$$
+
+
+received:
+
+
+$$(N,L,C).$$
+
+
+Good diagnosis:
+
+“The numerical data are present, but the layer is interpreting time samples as channels.”
+Mixed device
+Input on CPU:
+
+
+$$x \in \text{CPU memory}$$
+
+
+parameters on GPU:
+
+
+$$\theta \in \text{GPU memory}.$$
+
+
+The operation cannot proceed because the operands are not in compatible memory spaces.
+Gradient accumulation
+Symptom:
+Training becomes unstable or parameter updates become unexpectedly large.
+Likely cause:
+Forgot
+
+```python
+optimizer.zero_grad()
+
+```
+
+Detached graph
+Symptom:
+A parameter's gradient is `None` even though you expect it to affect the loss.
+Likely cause:
+An intermediate tensor was detached or created under `no_grad()`.
+In-place operation
+An in-place modification can overwrite a value autograd needs for the backward pass.
+While learning, functional-style code is safer:
+
+```python
+y = x + 1
+
+```
+
+rather than aggressively modifying tensors in place.
+Homework 1: Tensor shapes
+The deck asks students to assign sensible shapes.
+Good answers are:
+
+One mono clip, $16000$ samples
+
+
+$$\boxed{(16000,)}$$
+
+
+rank:
+
+
+$$\boxed{1}$$
+
+
+$32$ stereo clips
+
+
+$$\boxed{(32,2,16000)}$$
+
+
+rank:
+
+
+$$\boxed{3}$$
+
+
+One STFT
+
+
+$$\boxed{(257,101)}$$
+
+
+possibly complex.
+Rank:
+
+
+$$\boxed{2}$$
+
+
+Batch of $32$ one-channel spectrograms
+
+
+$$\boxed{(32,1,257,101)}$$
+
+
+rank:
+
+
+$$\boxed{4}$$
+
+
+The important thing is not just the numbers. Students should state what each axis means.
+Homework 2: Broadcasting gains
+Given
+
+
+$$\text{x.shape} = (24,2,8000),$$
+
+
+we want
+
+
+$$g_L=0.5$$
+
+
+and
+
+
+$$g_R=1.2.$$
+
+
+Use
+
+
+$$\boxed{ \text{g.shape} = (1,2,1) }$$
+
+
+with
+
+```python
+g = torch.tensor([0.5, 1.2]).view(1,2,1)
+y = x * g
+
+```
+
+The result has shape
+
+
+$$\boxed{(24,2,8000)}.$$
+
+
+Homework 3: Filterbank multiplication
+Given
+
+
+$$\mathbf{P} \in \mathbb{R}^{257\times100}$$
+
+
+and
+
+
+$$\mathbf{W} \in \mathbb{R}^{40\times257},$$
+
+
+compute
+
+$$\boxed{ \mathbf{E} = \mathbf{W}\mathbf{P} }$$
+
+
+with
+
+
+$$\mathbf{E} \in \mathbb{R}^{40\times100}.$$
+
+
+Interpretation:
+$40$ filterbank bands by
+$100$ time frames.
+The solution in the appendix gives exactly this interpretation.
+Homework 4: Chain rule
+The problem uses
+
+
+$$u=2\theta-3$$
+
+
+and
+
+
+$$L=(u+1)^2.$$
+
+
+First simplify:
+
+$$u+1 = 2\theta-2.$$
+
+
+Then
+
+
+$$L=(2\theta-2)^2.$$
+
+
+By the chain rule,
+
+$$\frac{dL}{d\theta} = 2(2\theta-2)\cdot2.$$
+
+
+Therefore,
+
+$$\boxed{ \frac{dL}{d\theta} = 8\theta-8 }$$
+
+
+At
+
+
+$$\theta=4,$$
+
+$$\frac{dL}{d\theta} = 32-8 = \boxed{24}.$$
+
+
+The instructor appendix confirms this result.
+Homework 5: Accumulation
+For
+
+
+$$L=x^2$$
+
+
+at
+
+
+$$x=3,$$
+
+
+the derivative is
+
+$$\frac{dL}{dx} = 2x = 6.$$
+
+
+First backward:
+
+
+$$\boxed{6}$$
+
+
+Second backward without clearing:
+
+
+$$\boxed{12}$$
+
+
+because PyTorch accumulates gradients.
+The solution appendix states exactly this.
+Homework 6: FIR gradient interpretation
+The key result is
+
+$$\boxed{ \frac{\partial L}{\partial h[r]} = \frac{2}{N}\sum_n e[n]x[n-r]. }$$
+
+
+The strongest interpretation is:
+
+“The gradient for each tap is proportional to the correlation between the current output error and the input sequence delayed to that tap.”
+That is the DSP meaning of backpropagation through an FIR filter. The deck's solution appendix makes the same point.
+Weekly quiz: Good answers
+The quiz asks several very good conceptual questions.
+
+Q1
+$16$ mono clips, each $4000$ samples, using $(N,C,L)$:
+
+
+$$\boxed{(16,1,4000)}$$
+
+
+Q2
+For input shape
+
+
+$$(8,2,1000),$$
+
+
+one independent gain per channel should have shape
+
+
+$$\boxed{(1,2,1)}.$$
+
+
+Q3
+Every PyTorch tensor automatically tracks gradients.
+Answer:
+
+
+$$\boxed{\text{False}}$$
+
+
+A floating-point or complex tensor typically tracks gradients only when
+
+`requires_grad=True`
+or when it is downstream from such a tensor.
+Q5
+Why is reverse-mode autodiff appropriate for modern ML?
+Good answer:
+
+“Because one scalar loss depends on many parameters. Reverse mode computes all components of $\nabla_\theta L$ efficiently in a single backward traversal.”
+That matches the instructor solution.
+Q6
+What happens if gradients are never cleared?
+Good answer:
+
+“They accumulate across iterations, so later updates use the sum of old and new gradients rather than just the current gradient.”
+Again, exactly the intended concept.
+The most important conceptual connection to DSP
+I would make this connection very explicit near the end of the lecture.
+Traditional DSP often looks like
+
+
+$$x[n] \rightarrow H \rightarrow y[n]$$
+
+
+where the system $H$ is known.
+Modern ML often looks like
+
+
+$$x \rightarrow f(x;\theta) \rightarrow \hat{y}$$
+
+
+where the system contains unknown parameters
+
+
+$$\theta.$$
+
+
+Then we define
+
+
+$$L(\hat{y},y)$$
+
+
+and compute
+
+
+$$\nabla_\theta L.$$
+
+
+So the fundamental change is not:
+
+“We stopped doing signal processing and started doing machine learning.”
+It is:
+
+
+$$\boxed{ \text{We made some signal-processing operations parameterized and differentiable.} }$$
+
+
+That is a much more coherent transition for ECE students.
+What I would expect a senior student to know
+By the end of the lecture, a strong senior should be able to explain:
+$(N,C,L)$
+and why axis order matters;
+how broadcasting works;
+why a filterbank can be written as
+
+
+$$\mathbf{E}=\mathbf{W}\mathbf{P};$$
+
+
+what
+
+`requires_grad=True`
+does;
+why
+
+`loss.backward()`
+computes gradients;
+and why gradients need to be cleared between training iterations.
+What I would expect a first-year graduate student to know
+In addition, I would want the graduate student to be able to derive:
+
+$$\frac{dL}{d\theta} = \frac{dL}{du}\frac{du}{d\theta},$$
+
+explain why reverse-mode autodiff is efficient for
+
+$$L:\mathbb{R}^{P}\rightarrow\mathbb{R},$$
+
+derive
+
+$$\frac{\partial L}{\partial h[r]} = \frac{2}{N}\sum_n e[n]x[n-r],$$
+
+and recognize that this FIR gradient has the same error-times-input structure that appears in classical adaptive filtering.
+One sentence students should leave with
+The best answer to the minute-paper question at the end of the deck would be something like:
+
+“A tensor that merely contains a signal stores numerical samples and metadata, while a tensor participating in a computational graph also retains the differentiable relationships needed to compute how a final loss changes with respect to upstream parameters.”
+That captures the entire lecture. The deck itself summarizes the same progression: tensors store familiar DSP data with shape/dtype/device metadata, tensor operations express vectorized DSP, autograd constructs a dynamic graph, and unknown DSP parameters can then be optimized from
+
+$$\nabla_{\theta}L.$$
+
+-------------------
+
+Week 13, Lecture 26
+
+Prompt: Can you create slides and python code for this 75 minute class of a DSP and ML course for a combined senior and first year Electrical and Computer Engineering class? The DSP textbook is Discrete-Time Signal Processing by Oppenheim and Schafer. The ML textbook is Machine Learning with PyTorch and Scikit-Learn by Raschka. Add some homework problems with solutions and a weekly quiz with solutions as well. Please write math expressions in LaTeX.
+
+Chat GPT (Medium):
+
+ Created. I kept Lecture 26 as a direct continuation of Lecture 25, with engineered DSP features feeding a small, inspectable MLP rather than jumping immediately to raw-audio deep learning.
+
+### Files
+
+* [Complete Lecture 26 instructor package](sandbox:/mnt/data/week13_lecture26/Week13_Lecture26_Instructor_Package.zip)
+* [PowerPoint deck — 41 slides](sandbox:/mnt/data/week13_lecture26/Week13_Lecture26_MLPs_Signal_Classification.pptx)
+* [Microsoft PowerPoint-compatible version](sandbox:/mnt/data/week13_lecture26/Week13_Lecture26_MLPs_Signal_Classification_Microsoft_PowerPoint.pptx)
+* [Jupyter notebook](sandbox:/mnt/data/week13_lecture26/notebooks/Lecture26_MLP_Signal_Classification.ipynb)
+* [Executed and verified notebook](sandbox:/mnt/data/week13_lecture26/notebooks/Lecture26_MLP_Signal_Classification_executed.ipynb)
+* [Standalone Python code](sandbox:/mnt/data/week13_lecture26/lecture26_mlp_signal_classification.py)
+* [Homework, quiz, and complete solutions](sandbox:/mnt/data/week13_lecture26/Lecture26_Homework_Quiz_Solutions.md)
+* [Teaching-flow README](sandbox:/mnt/data/week13_lecture26/README.txt)
+
+The Microsoft-compatible deck was reopened and re-saved through Office Open XML and rendered successfully afterward. The executed notebook contains **no execution errors**.
+
+The 75-minute lecture is organized as follows:
+
+**Architecture, about 20 minutes.** Students begin with an eight-element DSP feature vector containing spectral centroid, ZCR, spectral roll-off, RMS energy, spectral flux, and three MFCCs. The basic layer is developed from
+
+[
+\mathbf{y}
+==========
+
+f!\left(
+\mathbf{W}\mathbf{x}+\mathbf{b}
+\right),
+]
+
+with explicit shape reasoning for single examples and minibatches. The deck then shows algebraically why multiple linear layers without an activation still collapse to one affine map:
+
+[
+\mathbf{W}_2
+\left(
+\mathbf{W}_1\mathbf{x}+\mathbf{b}_1
+\right)
++\mathbf{b}_2
+=============
+
+\left(
+\mathbf{W}_2\mathbf{W}_1
+\right)\mathbf{x}
++
+\left(
+\mathbf{W}_2\mathbf{b}_1+\mathbf{b}_2
+\right).
+]
+
+That motivates ReLU,
+
+[
+\operatorname{ReLU}(z)=\max(0,z),
+]
+
+as the ingredient that allows genuinely nonlinear decision regions.
+
+**Loss and optimization, about 25 minutes.** The output layer produces three raw logits. Softmax is introduced as
+
+[
+p_k
+===
+
+\frac{e^{z_k}}
+{\displaystyle\sum_{j=1}^{K}e^{z_j}},
+]
+
+and multiclass cross-entropy as
+
+[
+L=-\log p_y
+]
+
+or, over a minibatch,
+
+[
+L
+=
+
+-\frac{1}{N}
+\sum_{i=1}^{N}
+\log p_{i,y_i}.
+]
+
+A numerical example using
+
+[
+\mathbf{z}
+==========
+
+[2,1,0]
+]
+
+gives
+
+[
+p_0\approx0.665
+]
+
+and
+
+[
+L\approx0.408.
+]
+
+The deck explicitly emphasizes that `nn.CrossEntropyLoss()` expects **raw logits**, so students should not apply `softmax` in the network before the loss.
+
+Gradient descent is tied back to Lecture 25 through
+
+[
+\theta_{t+1}
+============
+
+## \theta_t
+
+\eta\nabla_{\theta}L,
+]
+
+and Adam is introduced through its first- and second-moment estimates so students understand that `optimizer.step()` is doing more than simply multiplying by a fixed learning rate.
+
+**PyTorch training loop, about 30 minutes.** Each operation gets its own slide before the complete loop is shown:
+
+```python
+logits = model(xb)
+loss = criterion(logits, yb)
+
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()
+```
+
+The conceptual interpretation is:
+
+[
+\boxed{
+\text{predict}
+\rightarrow
+\text{measure error}
+\rightarrow
+\text{clear stale gradients}
+\rightarrow
+\text{compute current gradients}
+\rightarrow
+\text{update parameters}
+}
+]
+
+The slides also distinguish
+
+[
+\texttt{loss.backward()}
+]
+
+from
+
+[
+\texttt{optimizer.step()},
+]
+
+which is a distinction students frequently blur: the first **computes gradients**, while the second **changes parameters**.
+
+The code uses the same synthetic Kick/Snare/Cymbal DSP feature dataset from Week 12. The MLP is
+
+[
+8
+\rightarrow
+16
+\rightarrow
+8
+\rightarrow
+3
+]
+
+with ReLU hidden activations, cross-entropy loss, and Adam. The notebook includes training-loss curves, train/test accuracy curves, logits versus probabilities, confusion-matrix evaluation, and gradient-shape inspection.
+
+The synthetic dataset is intentionally clean, so the trained MLP can reach essentially perfect held-out classification. I call that out explicitly in the slides rather than presenting it as representative of real audio; the deck contrasts it with the overlap, microphone effects, room effects, performer variability, and session leakage that students should expect in actual signal-classification problems.
+
+The package also contains **7 homework problems** with worked solutions and a **6-question weekly quiz** with solutions. The homework covers layer shapes, why nonlinear activations are necessary, ReLU, hand calculation of cross-entropy, a gradient-descent update, training-loop reasoning, and why scaling heterogeneous DSP features matters. All mathematical expressions in the instructional material are rendered in LaTeX-style notation.
+
+-------------------------
+
+Week 13, Lecture 26
+
+Explain in more detail what's going on here and what good answers and/or examples are. Please use LaTeX for all math expressions
+
+Chat GPT:
+
+Absolutely. Lecture 26 is the point where the pieces from Lecture 25 become a complete learning system.
+
+The core conceptual pipeline is
+
+[
+\boxed{
+\text{DSP features}
+\rightarrow
+\text{MLP}
+\rightarrow
+\text{logits}
+\rightarrow
+\text{cross-entropy loss}
+\rightarrow
+\nabla_{\theta}L
+\rightarrow
+\text{Adam update}
+}
+]
+
+The deck explicitly frames the lecture this way: Lecture 25 gave students tensors and gradients; Lecture 26 asks **what computation should be differentiated, and how does that computation become a classifier?** 
+
+---
+
+# Slides 2–3: From a signal to an MLP input
+
+The important first step is that this lecture is **not yet classifying raw audio samples**.
+
+Instead, the DSP front end has already converted each recording into engineered features such as:
+
+[
+\text{spectral centroid},
+]
+
+[
+\text{zero-crossing rate},
+]
+
+[
+\text{spectral roll-off},
+]
+
+[
+\text{RMS energy},
+]
+
+[
+\text{spectral flux},
+]
+
+and several MFCCs.
+
+The deck uses eight features total, so one audio clip becomes a vector
+
+[
+\boxed{
+\mathbf{x}\in\mathbb{R}^{8}
+}
+]
+
+and a minibatch of (N) clips becomes
+
+[
+\boxed{
+\mathbf{X}\in\mathbb{R}^{N\times 8}.
+}
+]
+
+The three output classes are Cymbal, Kick, and Snare, so the network eventually produces three values per example. 
+
+This is a good point to make the DSP/ML division explicit:
+
+> DSP determines **what information we present to the classifier**. The MLP learns **how to combine that information to separate the classes**.
+
+For example, an engineer might already suspect that a cymbal tends to have:
+
+[
+\text{high spectral centroid},
+]
+
+[
+\text{high zero-crossing rate},
+]
+
+and broadband spectral energy.
+
+But instead of manually writing the classification rule, the MLP learns combinations of these quantities.
+
+---
+
+# Slide 4: What is one MLP layer actually doing?
+
+The fundamental layer is
+
+[
+\boxed{
+\mathbf{z}
+==========
+
+\mathbf{W}\mathbf{x}
++
+\mathbf{b}
+}
+]
+
+followed by an activation
+
+[
+\boxed{
+\mathbf{h}
+==========
+
+f(\mathbf{z}).
+}
+]
+
+For one hidden neuron,
+
+[
+z_j
+===
+
+\sum_{i=1}^{D}W_{ji}x_i+b_j.
+]
+
+So every neuron takes a weighted combination of the input features.
+
+Suppose
+
+[
+\mathbf{x}
+==========
+
+\begin{bmatrix}
+\text{centroid}\
+\text{ZCR}\
+\text{rolloff}\
+\text{RMS}\
+\text{flux}\
+\text{MFCC}_1\
+\text{MFCC}_2\
+\text{MFCC}_3
+\end{bmatrix}.
+]
+
+One hidden unit might effectively learn something resembling
+
+[
+z_1
+===
+
+0.8(\text{centroid})
++
+0.5(\text{ZCR})
+---------------
+
+0.2(\text{RMS})
++
+0.7(\text{flux})
++\cdots+b_1.
+]
+
+That neuron is therefore detecting a **learned combination of DSP characteristics** rather than one individual feature.
+
+The deck describes (W) as mixing the input features, (b) as shifting the affine boundary, and (f(\cdot)) as providing the nonlinear behavior required for complex decision regions. 
+
+---
+
+# What does the bias do?
+
+Students often understand weights better than bias.
+
+Consider the one-dimensional case:
+
+[
+z=wx+b.
+]
+
+The decision point where
+
+[
+z=0
+]
+
+is
+
+[
+wx+b=0,
+]
+
+so
+
+[
+x=-\frac{b}{w}.
+]
+
+Without bias,
+
+[
+b=0,
+]
+
+and the boundary is forced through the origin.
+
+With bias, the boundary can move.
+
+In multiple dimensions, the equation
+
+[
+\mathbf{w}^{T}\mathbf{x}+b=0
+]
+
+defines a hyperplane.
+
+The vector
+
+[
+\mathbf{w}
+]
+
+controls its orientation, while
+
+[
+b
+]
+
+controls its offset.
+
+A good student answer to
+
+> “Why do we need a bias?”
+
+is:
+
+> “Without the bias, every affine boundary would be constrained to pass through the origin. The bias lets the network shift the threshold independently of the feature origin.”
+
+---
+
+# Slide 5: Shape reasoning
+
+The first layer is
+
+[
+\operatorname{Linear}(8,16).
+]
+
+For one input,
+
+[
+\mathbf{x}\in\mathbb{R}^{8}.
+]
+
+The weight matrix is
+
+[
+\boxed{
+\mathbf{W}\in\mathbb{R}^{16\times 8}
+}
+]
+
+and the bias is
+
+[
+\boxed{
+\mathbf{b}\in\mathbb{R}^{16}.
+}
+]
+
+Thus,
+
+[
+\mathbf{z}
+==========
+
+\mathbf{W}\mathbf{x}
++
+\mathbf{b}
+\in
+\mathbb{R}^{16}.
+]
+
+For a minibatch,
+
+[
+\mathbf{X}
+\in
+\mathbb{R}^{N\times 8},
+]
+
+PyTorch effectively computes
+
+[
+\boxed{
+\mathbf{Z}
+==========
+
+\mathbf{X}\mathbf{W}^{T}
++
+\mathbf{b}
+}
+]
+
+so
+
+[
+\mathbf{Z}
+\in
+\mathbb{R}^{N\times16}.
+]
+
+The deck explicitly uses the shapes
+
+[
+(N,8)\rightarrow(N,16)
+]
+
+and notes that `Linear(8,16)` contains
+
+[
+16\cdot8+16
+===========
+
+\boxed{144}
+]
+
+trainable parameters. 
+
+A good question is:
+
+> “Why is the PyTorch weight shape ((16,8)), not ((8,16))?”
+
+Good answer:
+
+> “PyTorch stores one row of weights per output neuron. Each of the 16 neurons needs 8 input weights.”
+
+---
+
+# Slide 6: ReLU
+
+The activation is
+
+[
+\boxed{
+\operatorname{ReLU}(z)=\max(0,z).
+}
+]
+
+For
+
+[
+\mathbf{z}
+==========
+
+\begin{bmatrix}
+-2\
+-0.5\
+0\
+1.2\
+4
+\end{bmatrix},
+]
+
+we obtain
+
+[
+\boxed{
+\operatorname{ReLU}(\mathbf{z})
+===============================
+
+\begin{bmatrix}
+0\
+0\
+0\
+1.2\
+4
+\end{bmatrix}.
+}
+]
+
+The derivative is
+
+[
+\frac{d}{dz}\operatorname{ReLU}(z)
+==================================
+
+\begin{cases}
+0, & z<0,\
+1, & z>0.
+\end{cases}
+]
+
+At
+
+[
+z=0,
+]
+
+the mathematical derivative is not unique, so implementations use a subgradient convention. The deck correctly emphasizes ReLU's cheap, piecewise-linear nature and its ability to create different affine behavior in different feature-space regions. 
+
+---
+
+# Why is ReLU so important?
+
+This is probably the most important architecture question in the lecture.
+
+Suppose we stack two affine layers but **do not use a nonlinear activation**.
+
+First layer:
+
+[
+\mathbf{h}
+==========
+
+\mathbf{W}_1\mathbf{x}
++
+\mathbf{b}_1.
+]
+
+Second layer:
+
+[
+\mathbf{y}
+==========
+
+\mathbf{W}_2\mathbf{h}
++
+\mathbf{b}_2.
+]
+
+Substitute:
+
+[
+\mathbf{y}
+==========
+
+\mathbf{W}_2
+\left(
+\mathbf{W}_1\mathbf{x}
++
+\mathbf{b}_1
+\right)
++
+\mathbf{b}_2.
+]
+
+Expanding,
+
+[
+\mathbf{y}
+==========
+
+\mathbf{W}_2\mathbf{W}_1\mathbf{x}
++
+\mathbf{W}_2\mathbf{b}_1
++
+\mathbf{b}_2.
+]
+
+Define
+
+[
+\mathbf{W}_{\mathrm{eq}}
+========================
+
+\mathbf{W}_2\mathbf{W}_1
+]
+
+and
+
+[
+\mathbf{b}_{\mathrm{eq}}
+========================
+
+\mathbf{W}_2\mathbf{b}_1+\mathbf{b}_2.
+]
+
+Then
+
+[
+\boxed{
+\mathbf{y}
+==========
+
+\mathbf{W}*{\mathrm{eq}}\mathbf{x}
++
+\mathbf{b}*{\mathrm{eq}}.
+}
+]
+
+So two affine layers have collapsed into **one affine layer**.
+
+The same argument applies to 100 affine layers.
+
+The deck makes exactly this point and gives the strong answer: “The composition of affine maps is affine; ReLU breaks that collapse.” 
+
+---
+
+# What is a really good answer to “Why do we need ReLU?”
+
+Weak answer:
+
+> “Because neural networks need activation functions.”
+
+Better answer:
+
+> “Without nonlinear activations, multiple layers collapse into one affine transformation.”
+
+Excellent answer:
+
+> “ReLU creates different affine regimes depending on which hidden units are active. The resulting network is piecewise affine, so the overall class boundaries can be nonlinear even though each local region is linear.”
+
+That is the deeper idea.
+
+---
+
+# Piecewise-linear interpretation
+
+Suppose one ReLU unit computes
+
+[
+h=\max(0,\mathbf{w}^{T}\mathbf{x}+b).
+]
+
+The feature space is divided into two regions:
+
+[
+\mathbf{w}^{T}\mathbf{x}+b\leq0
+]
+
+and
+
+[
+\mathbf{w}^{T}\mathbf{x}+b>0.
+]
+
+In the first region,
+
+[
+h=0.
+]
+
+In the second,
+
+[
+h=\mathbf{w}^{T}\mathbf{x}+b.
+]
+
+With many ReLU units, different combinations of units switch on and off in different areas.
+
+So the network becomes a collection of locally affine functions stitched together.
+
+That is why the slide's phrase
+
+> “piecewise-linear decision surface”
+
+is much better than thinking of neurons as biological metaphors.
+
+---
+
+# Slide 8: The actual network
+
+The deck uses
+
+[
+\boxed{
+8\rightarrow16\rightarrow8\rightarrow3
+}
+]
+
+with ReLU after both hidden layers. 
+
+So:
+
+[
+\mathbf{x}\in\mathbb{R}^{8}
+]
+
+becomes
+
+[
+\mathbf{h}_1
+============
+
+\operatorname{ReLU}
+\left(
+\mathbf{W}_1\mathbf{x}+\mathbf{b}_1
+\right),
+]
+
+with
+
+[
+\mathbf{h}_1\in\mathbb{R}^{16}.
+]
+
+Then
+
+[
+\mathbf{h}_2
+============
+
+\operatorname{ReLU}
+\left(
+\mathbf{W}_2\mathbf{h}_1+\mathbf{b}_2
+\right),
+]
+
+with
+
+[
+\mathbf{h}_2\in\mathbb{R}^{8}.
+]
+
+Finally,
+
+[
+\mathbf{z}
+==========
+
+\mathbf{W}_3\mathbf{h}_2+\mathbf{b}_3,
+]
+
+with
+
+[
+\boxed{
+\mathbf{z}\in\mathbb{R}^{3}.
+}
+]
+
+Those final three numbers are the **logits**.
+
+---
+
+# Parameter count
+
+Layer 1:
+
+[
+8\cdot16+16
+===========
+
+144.
+
+]
+
+Layer 2:
+
+[
+16\cdot8+8
+==========
+
+136.
+
+]
+
+Layer 3:
+
+[
+8\cdot3+3
+=========
+
+27.
+
+]
+
+Total:
+
+[
+144+136+27
+==========
+
+\boxed{307}.
+]
+
+This is useful to emphasize because the model is small enough that students can actually understand every parameter group.
+
+---
+
+# Slides 9–10: What does the PyTorch module mean?
+
+The code is essentially:
+
+```python
+self.net = nn.Sequential(
+    nn.Linear(8,16),
+    nn.ReLU(),
+    nn.Linear(16,8),
+    nn.ReLU(),
+    nn.Linear(8,3),
+)
+```
+
+The input has shape
+
+[
+(N,8)
+]
+
+and the output has shape
+
+[
+(N,3).
+]
+
+The deck emphasizes **no softmax in the network** because `CrossEntropyLoss` expects raw logits. 
+
+A strong shape answer for a minibatch of (64) examples is:
+
+[
+\boxed{
+\mathbf{X}:(64,8)
+}
+]
+
+first weight matrix:
+
+[
+\boxed{
+\mathbf{W}_1:(16,8)
+}
+]
+
+and hidden output:
+
+[
+\boxed{
+\mathbf{H}_1:(64,16).
+}
+]
+
+That matches the concept check in the deck. 
+
+---
+
+# Slide 11: What exactly is a logit?
+
+Suppose the network returns
+
+[
+\boxed{
+\mathbf{z}
+==========
+
+\begin{bmatrix}
+2\
+1\
+0
+\end{bmatrix}.
+}
+]
+
+These are **not probabilities**.
+
+They do not need to satisfy
+
+[
+z_k\geq0
+]
+
+and do not need to sum to
+
+[
+1.
+]
+
+A logit is simply an unconstrained score.
+
+The predicted class can already be found from
+
+[
+\boxed{
+\hat y
+======
+
+\operatorname*{arg,max}_{k} z_k.
+}
+]
+
+Since softmax preserves ordering,
+
+[
+\operatorname*{arg,max}_k z_k
+=============================
+
+\operatorname*{arg,max}_k p_k.
+]
+
+The deck stresses this distinction and the rule to feed raw logits into `nn.CrossEntropyLoss()`. 
+
+---
+
+# Softmax
+
+To interpret logits as probabilities,
+
+[
+\boxed{
+p_k
+===
+
+\frac{e^{z_k}}
+{\displaystyle\sum_{j=1}^{K}e^{z_j}}.
+}
+]
+
+For
+
+[
+\mathbf{z}
+==========
+
+[2,1,0],
+]
+
+we calculate
+
+[
+e^2\approx7.389,
+]
+
+[
+e^1\approx2.718,
+]
+
+and
+
+[
+e^0=1.
+]
+
+The denominator is
+
+[
+7.389+2.718+1
+=============
+
+11.107.
+]
+
+Therefore,
+
+[
+p_0
+===
+
+\frac{7.389}{11.107}
+\approx
+\boxed{0.665}.
+]
+
+Similarly,
+
+[
+p_1\approx0.245
+]
+
+and
+
+[
+p_2\approx0.090.
+]
+
+Notice
+
+[
+p_0+p_1+p_2=1.
+]
+
+---
+
+# Slides 12–13: Cross-entropy
+
+For one sample with correct class (y),
+
+[
+\boxed{
+L=-\ln p_y.
+}
+]
+
+The deck emphasizes two limiting cases. 
+
+If
+
+[
+p_y\rightarrow1,
+]
+
+then
+
+[
+-\ln p_y\rightarrow0.
+]
+
+So a confident correct prediction gives very small loss.
+
+If
+
+[
+p_y\rightarrow0,
+]
+
+then
+
+[
+-\ln p_y\rightarrow\infty.
+]
+
+So a confident wrong prediction receives a large penalty.
+
+---
+
+# Worked example
+
+If class (0) is correct and
+
+[
+p_0\approx0.6652,
+]
+
+then
+
+[
+L
+=
+
+-\ln(0.6652)
+\approx
+\boxed{0.4076}.
+]
+
+That is the worked result in the deck. 
+
+Interpretation:
+
+> The model favors the correct class, but only moderately. The loss is below (1), but not close to zero.
+
+---
+
+# Useful comparison
+
+Suppose
+
+[
+p_y=0.9.
+]
+
+Then
+
+[
+L=-\ln(0.9)\approx0.105.
+]
+
+If
+
+[
+p_y=0.5,
+]
+
+then
+
+[
+L=-\ln(0.5)\approx0.693.
+]
+
+If
+
+[
+p_y=0.1,
+]
+
+then
+
+[
+L=-\ln(0.1)\approx2.303.
+]
+
+So cross-entropy penalizes increasing confidence in the wrong answer quite strongly.
+
+---
+
+# Why cross-entropy rather than classification accuracy?
+
+This is an important extension.
+
+Accuracy changes discretely.
+
+Suppose the true class is class (0).
+
+Prediction A:
+
+[
+\mathbf{p}
+==========
+
+[0.34,0.33,0.33].
+]
+
+Prediction B:
+
+[
+\mathbf{p}
+==========
+
+[0.99,0.005,0.005].
+]
+
+Both are technically correct and both give accuracy
+
+[
+100%.
+]
+
+But they clearly do not represent equally good models.
+
+Cross-entropy distinguishes them:
+
+[
+L_A
+===
+
+-\ln(0.34)
+\approx1.079,
+]
+
+whereas
+
+[
+L_B
+===
+
+-\ln(0.99)
+\approx0.010.
+]
+
+So cross-entropy gives a smooth learning signal.
+
+---
+
+# Good answer to “Why not optimize accuracy directly?”
+
+> “Accuracy is piecewise constant with respect to the weights and therefore does not provide useful gradients. Cross-entropy is differentiable and measures the quality of the class probabilities, not just whether the top class happened to be correct.”
+
+That is an excellent graduate-level answer.
+
+---
+
+# Slide 14: Why not call softmax yourself?
+
+The deck says:
+
+[
+\texttt{logits}:(N,3)
+]
+
+and
+
+[
+\texttt{labels}:(N,)
+]
+
+with labels such as
+
+[
+\text{Cymbal}\rightarrow0,
+\qquad
+\text{Kick}\rightarrow1,
+\qquad
+\text{Snare}\rightarrow2.
+]
+
+`CrossEntropyLoss` expects integer class indices rather than one-hot targets in the standard use case. 
+
+The correct pattern is:
+
+```python
+logits = model(x)
+loss = criterion(logits, y)
+```
+
+not:
+
+```python
+prob = torch.softmax(model(x), dim=1)
+loss = criterion(prob, y)
+```
+
+Why?
+
+Because PyTorch's cross-entropy combines a numerically stable log-softmax with negative log-likelihood internally.
+
+A very good answer is:
+
+> “Applying softmax first is redundant and can make the numerical calculation less stable. `CrossEntropyLoss` is designed to operate directly on logits.”
+
+---
+
+# Slide 15: The beautiful cross-entropy gradient
+
+One of the strongest mathematical points in the lecture is the derivative of softmax cross-entropy with respect to logits.
+
+For each class (k),
+
+[
+\boxed{
+\frac{\partial L}{\partial z_k}
+===============================
+
+p_k-\mathbb{1}[k=y].
+}
+]
+
+The deck states the interpretation: for the true class the derivative becomes (p_y-1), while for every wrong class it is (p_k). 
+
+Let's see why this is intuitive.
+
+Suppose
+
+[
+\mathbf{p}
+==========
+
+[0.665,0.245,0.090]
+]
+
+and true class is (0).
+
+Then
+
+[
+\frac{\partial L}{\partial z_0}
+===============================
+
+# 0.665-1
+
+\boxed{-0.335}.
+]
+
+For class (1),
+
+[
+\frac{\partial L}{\partial z_1}
+===============================
+
+0.245.
+]
+
+For class (2),
+
+[
+\frac{\partial L}{\partial z_2}
+===============================
+
+0.090.
+]
+
+Gradient descent updates parameters in the negative-gradient direction.
+
+Because the correct logit's gradient is negative, gradient descent tends to **increase** (z_0).
+
+Because the incorrect logits have positive gradients, gradient descent tends to **decrease** (z_1) and (z_2).
+
+So cross-entropy is doing exactly what we want:
+
+[
+\boxed{
+\text{raise the correct score, lower the competing scores}.
+}
+]
+
+---
+
+# Slide 16: Gradient descent
+
+The basic parameter update is
+
+[
+\boxed{
+\theta_{t+1}
+============
+
+## \theta_t
+
+\eta
+\nabla_{\theta}L.
+}
+]
+
+Here,
+
+[
+\theta
+]
+
+means **all** trainable parameters:
+
+[
+\mathbf{W}_1,
+\mathbf{b}_1,
+\mathbf{W}_2,
+\mathbf{b}_2,
+\mathbf{W}_3,
+\mathbf{b}_3.
+]
+
+The learning rate is
+
+[
+\eta.
+]
+
+The deck summarizes the consequences appropriately:
+
+large
+
+[
+\eta
+]
+
+can produce overshooting or instability;
+
+small
+
+[
+\eta
+]
+
+can make learning painfully slow. 
+
+---
+
+# Simple numerical update
+
+Suppose
+
+[
+\theta_t=1.5,
+]
+
+[
+\eta=0.02,
+]
+
+and
+
+[
+\frac{\partial L}{\partial\theta}=4.
+]
+
+Then
+
+[
+\theta_{t+1}
+============
+
+## 1.5
+
+0.02(4).
+]
+
+Therefore,
+
+[
+\boxed{
+\theta_{t+1}=1.42.
+}
+]
+
+That is also one of the homework problems in the deck. 
+
+---
+
+# Why negative gradient?
+
+The gradient
+
+[
+\nabla_{\theta}L
+]
+
+points toward the local direction of greatest **increase** in the loss.
+
+Therefore,
+
+[
+-\nabla_{\theta}L
+]
+
+points toward the local direction of steepest decrease.
+
+A strong student answer:
+
+> “Gradient descent uses the negative gradient because the gradient itself points uphill.”
+
+---
+
+# Slide 17: What is Adam doing?
+
+Adam is more sophisticated than
+
+[
+\theta_{t+1}
+============
+
+## \theta_t
+
+\eta g_t.
+]
+
+The deck introduces two running quantities. 
+
+The first moment estimate is approximately
+
+[
+\boxed{
+m_t
+===
+
+\beta_1m_{t-1}
++
+(1-\beta_1)g_t
+}
+]
+
+where
+
+[
+g_t
+===
+
+\nabla_{\theta}L_t.
+]
+
+This behaves somewhat like momentum: it smooths the direction of recent gradients.
+
+The second moment estimate is
+
+[
+\boxed{
+v_t
+===
+
+\beta_2v_{t-1}
++
+(1-\beta_2)g_t^2.
+}
+]
+
+This tracks gradient scale.
+
+After bias correction, Adam uses an update approximately of the form
+
+[
+\boxed{
+\theta_{t+1}
+============
+
+## \theta_t
+
+\eta
+\frac{\hat m_t}
+{\sqrt{\hat v_t}+\epsilon}.
+}
+]
+
+---
+
+# Intuition for Adam
+
+Suppose one parameter repeatedly has very large gradients while another has tiny gradients.
+
+Plain gradient descent applies the same global learning rate (\eta).
+
+Adam adapts the effective step size according to each parameter's gradient history.
+
+A good answer to
+
+> “Why use Adam?”
+
+is:
+
+> “Adam combines momentum-like averaging of gradients with adaptive scaling based on recent squared-gradient magnitude.”
+
+A bad answer would be:
+
+> “Adam is always better.”
+
+The deck correctly says Adam is a strong default, **not a guarantee**. 
+
+---
+
+# Slide 18: `backward()` versus `step()`
+
+This distinction is absolutely fundamental.
+
+The deck separates the responsibilities clearly. 
+
+`loss.backward()` computes
+
+[
+\boxed{
+\nabla_{\theta}L
+}
+]
+
+and stores those derivatives in
+
+```python
+parameter.grad
+```
+
+It does **not** change the network parameters.
+
+`optimizer.step()` reads those gradients and updates the parameters according to Adam's rule.
+
+So:
+
+[
+\boxed{
+\texttt{backward()}=\text{differentiate}
+}
+]
+
+whereas
+
+[
+\boxed{
+\texttt{step()}=\text{change parameters}.
+}
+]
+
+This is probably the single most important answer students should give correctly.
+
+---
+
+# Slides 19–25: The five-step training loop
+
+The deck gives:
+
+[
+\boxed{
+1.\ \text{forward}
+}
+]
+
+[
+\boxed{
+2.\ \text{loss}
+}
+]
+
+[
+\boxed{
+3.\ \text{zero gradients}
+}
+]
+
+[
+\boxed{
+4.\ \text{backward}
+}
+]
+
+[
+\boxed{
+5.\ \text{update}.
+}
+]
+
+
+
+Let's unpack each.
+
+---
+
+# Step 1: Forward
+
+```python
+logits = model(xb)
+```
+
+Suppose minibatch size is (B).
+
+Then
+
+[
+\mathbf{X}_b
+\in
+\mathbb{R}^{B\times8}.
+]
+
+The network computes
+
+[
+\mathbf{H}_1
+============
+
+\operatorname{ReLU}
+\left(
+\mathbf{X}_b\mathbf{W}_1^{T}
++
+\mathbf{b}_1
+\right),
+]
+
+then
+
+[
+\mathbf{H}_2
+============
+
+\operatorname{ReLU}
+\left(
+\mathbf{H}_1\mathbf{W}_2^{T}
++
+\mathbf{b}_2
+\right),
+]
+
+and finally
+
+[
+\mathbf{Z}
+==========
+
+\mathbf{H}_2\mathbf{W}_3^{T}
++
+\mathbf{b}_3.
+]
+
+Thus,
+
+[
+\boxed{
+\mathbf{Z}\in\mathbb{R}^{B\times3}.
+}
+]
+
+During this forward pass, autograd records the operations required for the later backward pass. No parameter update has happened yet. 
+
+---
+
+# Step 2: Compute the loss
+
+```python
+loss = criterion(logits, yb)
+```
+
+For a minibatch of size (B),
+
+[
+\boxed{
+L
+=
+
+-\frac{1}{B}
+\sum_{i=1}^{B}
+\ln p_{i,y_i}.
+}
+]
+
+This produces one scalar.
+
+That scalar summarizes how well the entire minibatch is being classified.
+
+The deck also makes an important distinction:
+
+[
+\boxed{
+\text{loss is a training objective}
+}
+]
+
+while
+
+[
+\boxed{
+\text{accuracy is an evaluation metric}.
+}
+]
+
+They are related, but they are not the same quantity. 
+
+---
+
+# Example where loss improves but accuracy does not
+
+Suppose four samples are all already classified correctly.
+
+Initially their correct-class probabilities are
+
+[
+[0.51,0.52,0.53,0.54].
+]
+
+Accuracy:
+
+[
+100%.
+]
+
+After training, probabilities become
+
+[
+[0.90,0.91,0.92,0.93].
+]
+
+Accuracy is still
+
+[
+100%.
+]
+
+But cross-entropy has decreased dramatically.
+
+So a falling loss can represent meaningful improvement even when accuracy is unchanged.
+
+---
+
+# Step 3: Clear gradients
+
+```python
+optimizer.zero_grad()
+```
+
+PyTorch accumulates gradients.
+
+Suppose the previous minibatch left
+
+[
+g_{\mathrm{old}}
+]
+
+in the parameter's `.grad`.
+
+Then calling `backward()` again produces
+
+[
+g_{\mathrm{old}}+g_{\mathrm{new}}.
+]
+
+Normally that is not what we want.
+
+Therefore we reset before computing the current minibatch gradient. The deck distinguishes intentional gradient accumulation from accidental accumulation. 
+
+A good answer is:
+
+> “`zero_grad()` clears stale parameter-gradient buffers so the next backward pass represents the current minibatch rather than a sum over unrelated previous minibatches.”
+
+---
+
+# Could accumulation ever be intentional?
+
+Yes.
+
+Suppose GPU memory allows batch size
+
+[
+B=32
+]
+
+but you want an effective batch size of
+
+[
+128.
+]
+
+You could accumulate gradients over four minibatches before calling `optimizer.step()`.
+
+Conceptually,
+
+[
+g_{\text{effective}}
+====================
+
+g_1+g_2+g_3+g_4.
+]
+
+Then perform one update.
+
+So gradient accumulation itself is not wrong.
+
+**Unintended** gradient accumulation is wrong.
+
+---
+
+# Step 4: Backward
+
+```python
+loss.backward()
+```
+
+Now PyTorch traverses the graph backward.
+
+The path is conceptually
+
+[
+L
+\rightarrow
+\text{cross-entropy}
+\rightarrow
+\text{logits}
+\rightarrow
+\text{output layer}
+\rightarrow
+\text{ReLU}
+\rightarrow
+\text{hidden layer}
+\rightarrow
+\cdots
+]
+
+and it computes
+
+[
+\boxed{
+\nabla_{\theta}L.
+}
+]
+
+Those gradients are stored in `.grad` tensors.
+
+Again:
+
+[
+\boxed{
+\texttt{backward() does not update parameters}.
+}
+]
+
+The deck explicitly stresses this. 
+
+---
+
+# Step 5: Update
+
+```python
+optimizer.step()
+```
+
+Adam reads the gradients,
+
+[
+\nabla_\theta L,
+]
+
+updates its internal moment estimates, and changes
+
+[
+\theta_t
+]
+
+to
+
+[
+\theta_{t+1}.
+]
+
+Before `step()`:
+
+[
+\theta_t
+\quad\text{and}\quad
+\nabla_\theta L.
+]
+
+After `step()`:
+
+[
+\boxed{
+\theta_{t+1}.
+}
+]
+
+The gradients themselves remain until cleared. A new forward pass is required before predictions reflect the updated weights. 
+
+---
+
+# The complete loop
+
+The full idiom is:
+
+```python
+for epoch in range(num_epochs):
+    model.train()
+
+    for xb, yb in train_loader:
+        logits = model(xb)
+        loss = criterion(logits, yb)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+```
+
+The deck correctly asks students to distinguish what repeats and what persists. 
+
+Every minibatch gets:
+
+[
+\text{new input},
+]
+
+[
+\text{new forward computation},
+]
+
+[
+\text{new loss},
+]
+
+[
+\text{new gradients}.
+]
+
+What persists?
+
+[
+\boxed{
+\text{model parameters}
+}
+]
+
+and
+
+[
+\boxed{
+\text{Adam optimizer state}.
+}
+]
+
+---
+
+# What is an epoch?
+
+Suppose training contains
+
+[
+N_{\text{train}}=1000
+]
+
+samples and batch size is
+
+[
+B=50.
+]
+
+Then one epoch contains approximately
+
+[
+\frac{1000}{50}
+===============
+
+20
+]
+
+minibatch updates.
+
+So:
+
+[
+\boxed{
+1\text{ epoch}
+==============
+
+1\text{ pass through the training set}.
+}
+]
+
+If we train for 100 epochs, the model sees each training observation approximately 100 times, though batching and shuffling change the order.
+
+---
+
+# Slide 26: Evaluation is not training
+
+Evaluation code is:
+
+```python
+model.eval()
+
+with torch.no_grad():
+    logits = model(X_test)
+    pred = logits.argmax(dim=1)
+```
+
+The deck explains both pieces. 
+
+`model.eval()` switches any layers with different train/test behavior—such as dropout or batch normalization—into evaluation mode.
+
+`torch.no_grad()` tells PyTorch not to record gradient history.
+
+That saves memory and computation because we are not going to call
+
+```python
+loss.backward()
+```
+
+during inference.
+
+---
+
+# Validation versus test
+
+A very important experimental-design point:
+
+Use the **training set** to fit parameters.
+
+Use the **validation set** for decisions such as
+
+[
+\text{hidden layer size},
+]
+
+[
+\text{learning rate},
+]
+
+[
+\text{number of epochs},
+]
+
+or architecture.
+
+Use the **test set** once, at the end, to estimate final performance.
+
+If you keep tuning based on test-set accuracy, then the test set is effectively becoming part of training.
+
+---
+
+# Slide 27: DSP/ML hygiene
+
+This slide may actually be more important than another neural-network equation.
+
+The deck highlights standardization, stratification, and data leakage. 
+
+## Feature scaling
+
+Your DSP features can have wildly different scales.
+
+For example,
+
+[
+\text{centroid}\approx3000\text{ Hz},
+]
+
+while
+
+[
+\text{ZCR}\approx0.1.
+]
+
+Without scaling, some parameters may experience much larger gradients than others.
+
+Standardization gives
+
+[
+\boxed{
+z_j
+===
+
+\frac{x_j-\mu_j}{\sigma_j}.
+}
+]
+
+Then each standardized feature has approximately
+
+[
+\mu_j=0
+]
+
+and
+
+[
+\sigma_j=1.
+]
+
+This tends to improve optimization conditioning.
+
+As before:
+
+[
+\mu_j,\sigma_j
+]
+
+must be estimated from training data only.
+
+---
+
+# Audio leakage example
+
+Suppose one original 10-second recording produces 500 feature frames.
+
+If you randomly place 400 of those frames into training and 100 into test, then the model has essentially heard the same microphone, room, performer, gain setting, and noise realization in both datasets.
+
+The test performance can look excellent.
+
+But the model may have learned:
+
+[
+\text{recording identity}
+]
+
+instead of
+
+[
+\text{instrument identity}.
+]
+
+The stronger experimental split is often by original recording, speaker, performer, session, subject, or device—whatever nuisance factor must generalize.
+
+The deck makes this warning explicit: a neural network cannot rescue a flawed split and may simply learn the leakage more effectively. 
+
+---
+
+# Slides 28–30: How to interpret training results
+
+The synthetic data are intentionally well separated, so the MLP can approach nearly perfect classification. The deck explicitly warns students not to overgeneralize from that demonstration. 
+
+A useful way to show different curve patterns is:
+
+## Healthy learning
+
+Training loss:
+
+[
+\downarrow
+]
+
+Validation loss:
+
+[
+\downarrow
+]
+
+Training accuracy:
+
+[
+\uparrow
+]
+
+Validation accuracy:
+
+[
+\uparrow.
+]
+
+---
+
+## Overfitting
+
+Training loss continues:
+
+[
+\downarrow
+]
+
+but validation loss begins:
+
+[
+\uparrow.
+]
+
+Meanwhile,
+
+[
+A_{\text{train}}\gg A_{\text{val}}.
+]
+
+That suggests the model is learning training-specific detail.
+
+---
+
+## Underfitting
+
+Both training and validation accuracy stay low.
+
+Possible causes:
+
+[
+\text{model too simple},
+]
+
+[
+\text{learning rate inappropriate},
+]
+
+[
+\text{insufficient training},
+]
+
+or simply poor features.
+
+---
+
+# Confusion matrix
+
+Accuracy answers:
+
+> “How many predictions were correct?”
+
+A confusion matrix answers:
+
+> “Which classes were confused with which?”
+
+The deck stresses this distinction. 
+
+Suppose we obtain:
+
+[
+\begin{array}{c|ccc}
+& \text{Kick} & \text{Snare} & \text{Cymbal}\
+\hline
+\text{Kick} & 45 & 4 & 1\
+\text{Snare} & 5 & 40 & 5\
+\text{Cymbal} & 0 & 3 & 47
+\end{array}
+]
+
+The kick/cymbal distinction looks easy.
+
+But kick and snare are occasionally confused.
+
+An engineering question follows:
+
+> “Which DSP features might overlap between kick and snare?”
+
+Possible answer:
+
+> “Both may have strong transient energy, so onset-related features alone may not discriminate them. Spectral centroid, spectral envelope, or MFCC structure may be needed.”
+
+That's much more informative than quoting one overall accuracy number.
+
+---
+
+# Slide 31: Diagnose the broken loop
+
+The code omits:
+
+```python
+optimizer.zero_grad()
+```
+
+The deck's strong answer is:
+
+> “The code may still run, but the update no longer represents the gradient of just the current minibatch.” 
+
+That distinction matters.
+
+A weak answer:
+
+> “It crashes.”
+
+Usually it does not.
+
+A better answer:
+
+> “Gradients accumulate.”
+
+Excellent answer:
+
+> “Because PyTorch accumulates `.grad`, each minibatch's gradient is added to previous minibatch gradients. Therefore the optimizer update reflects stale plus current sensitivity unless accumulation is deliberately intended.”
+
+---
+
+# Homework 1: Shapes
+
+Given:
+
+[
+N=64,
+]
+
+[
+D_{\text{in}}=8,
+]
+
+and
+
+[
+D_{\text{hidden}}=16,
+]
+
+the input is
+
+[
+\boxed{(64,8)}.
+]
+
+The weight matrix is
+
+[
+\boxed{(16,8)}.
+]
+
+The bias is
+
+[
+\boxed{(16,)}.
+]
+
+The hidden output is
+
+[
+\boxed{(64,16)}.
+]
+
+These are the instructor answers in the deck. 
+
+---
+
+# Homework 2: Why ReLU?
+
+The full derivation should be
+
+[
+\mathbf{h}
+==========
+
+\mathbf{W}_1\mathbf{x}
++
+\mathbf{b}_1,
+]
+
+[
+\mathbf{y}
+==========
+
+\mathbf{W}_2\mathbf{h}
++
+\mathbf{b}_2,
+]
+
+so
+
+[
+\mathbf{y}
+==========
+
+\mathbf{W}_2\mathbf{W}_1\mathbf{x}
++
+\mathbf{W}_2\mathbf{b}_1
++
+\mathbf{b}_2.
+]
+
+Therefore,
+
+[
+\boxed{
+\mathbf{y}
+==========
+
+\mathbf{W}*{\mathrm{eq}}\mathbf{x}
++
+\mathbf{b}*{\mathrm{eq}}.
+}
+]
+
+Good explanation:
+
+> “Without a nonlinear activation, depth does not increase the class of functions beyond affine maps. ReLU introduces piecewise-affine behavior and allows nonlinear decision regions.”
+
+---
+
+# Homework 3: ReLU
+
+For
+
+[
+\mathbf{z}
+==========
+
+[-2,-0.5,0,1.2,4]^T,
+]
+
+[
+\boxed{
+\operatorname{ReLU}(\mathbf{z})
+===============================
+
+[0,0,0,1.2,4]^T.
+}
+]
+
+For
+
+[
+z<0,
+]
+
+[
+\boxed{
+\operatorname{ReLU}'(z)=0.
+}
+]
+
+For
+
+[
+z>0,
+]
+
+[
+\boxed{
+\operatorname{ReLU}'(z)=1.
+}
+]
+
+At (z=0), use the chosen subgradient convention. 
+
+---
+
+# Homework 4: Cross-entropy
+
+For
+
+[
+\mathbf{z}=[2,1,0],
+]
+
+[
+p_0
+===
+
+\frac{e^2}{e^2+e+1}
+\approx
+0.6652.
+]
+
+Thus,
+
+[
+\boxed{
+L=-\ln(0.6652)\approx0.4076.
+}
+]
+
+This matches the deck's solution. 
+
+---
+
+# Homework 5: Update
+
+Given
+
+[
+\theta=1.5,
+]
+
+[
+\eta=0.02,
+]
+
+and
+
+[
+\frac{\partial L}{\partial\theta}=4,
+]
+
+then
+
+[
+\theta_{\text{next}}
+====================
+
+# 1.5-0.02(4)
+
+\boxed{1.42}.
+]
+
+---
+
+# Homework 6: Five-step loop
+
+A strong answer should contain both syntax and conceptual purpose.
+
+[
+\boxed{1.\ \text{Forward}}
+]
+
+Compute logits from current parameters.
+
+[
+\boxed{2.\ \text{Loss}}
+]
+
+Reduce prediction error to a scalar objective.
+
+[
+\boxed{3.\ \text{Clear}}
+]
+
+Remove stale gradients.
+
+[
+\boxed{4.\ \text{Backward}}
+]
+
+Compute
+
+[
+\nabla_{\theta}L.
+]
+
+[
+\boxed{5.\ \text{Step}}
+]
+
+Use the optimizer to modify
+
+[
+\theta.
+]
+
+If `zero_grad()` is omitted, gradients accumulate across minibatches. 
+
+---
+
+# Homework 7: Why scaling matters
+
+A good answer:
+
+> “An MLP is trained through gradient-based optimization. If one feature has values around (5000) and another around (0.05), the optimization geometry can be poorly conditioned. Standardization puts features on comparable numerical scales and often leads to more stable and efficient learning.”
+
+A stronger answer adds:
+
+> “The scaler must be fit only on training data; otherwise validation/test statistics leak into the model.”
+
+---
+
+# Quiz Q1
+
+Batch size:
+
+[
+32.
+]
+
+Features per example:
+
+[
+8.
+]
+
+Input shape:
+
+[
+\boxed{(32,8)}.
+]
+
+---
+
+# Quiz Q2
+
+Why do two affine layers collapse?
+
+[
+\mathbf{W}_2
+(
+\mathbf{W}_1\mathbf{x}+\mathbf{b}_1
+)
++\mathbf{b}_2
+=============
+
+(\mathbf{W}_2\mathbf{W}_1)\mathbf{x}
++
+(\mathbf{W}_2\mathbf{b}_1+\mathbf{b}_2).
+]
+
+Therefore they are equivalent to one affine transformation.
+
+Good answer:
+
+> “Composition of affine transformations remains affine; without an activation, adding depth cannot create nonlinear decision boundaries.”
+
+The instructor appendix gives essentially this answer. 
+
+---
+
+# Quiz Q3
+
+Should the network apply softmax before `CrossEntropyLoss`?
+
+[
+\boxed{\text{No}.}
+]
+
+Good answer:
+
+> “Return raw logits. `CrossEntropyLoss` internally performs a numerically stable log-softmax plus negative log-likelihood.”
+
+That is exactly the deck's answer. 
+
+---
+
+# Quiz Q4
+
+Given
+
+[
+p_y=0.8,
+]
+
+[
+L=-\ln(0.8)
+]
+
+so
+
+[
+\boxed{
+L\approx0.223.
+}
+]
+
+
+
+---
+
+# Quiz Q5
+
+What does
+
+```python
+loss.backward()
+```
+
+do?
+
+Weak answer:
+
+> “It trains the model.”
+
+Not precise enough.
+
+Good answer:
+
+> “It performs reverse-mode automatic differentiation through the forward computational graph and computes the gradient of the scalar loss with respect to upstream learnable parameters.”
+
+Mathematically,
+
+[
+\boxed{
+\nabla_{\theta}L.
+}
+]
+
+The result is stored in parameter `.grad` tensors. 
+
+---
+
+# Quiz Q6
+
+Difference between `backward()` and `step()`:
+
+[
+\boxed{
+\texttt{backward()}
+\rightarrow
+\text{compute gradients}
+}
+]
+
+whereas
+
+[
+\boxed{
+\texttt{step()}
+\rightarrow
+\text{update parameters using those gradients}.
+}
+]
+
+This distinction is central to the whole lecture.
+
+---
+
+# One especially useful connection back to Lecture 25
+
+In Lecture 25, students learned:
+
+[
+L
+\rightarrow
+\nabla_{\theta}L.
+]
+
+But (\theta) was something simple, such as FIR taps.
+
+Now,
+
+[
+\theta
+======
+
+{
+\mathbf{W}_1,\mathbf{b}_1,
+\mathbf{W}_2,\mathbf{b}_2,
+\mathbf{W}_3,\mathbf{b}_3
+}.
+]
+
+Nothing fundamental changed about autograd.
+
+The graph just got bigger.
+
+That is an important demystification:
+
+> A neural network is not using a different kind of calculus. It is simply a larger composition of differentiable tensor operations.
+
+---
+
+# One connection to classical classifiers from Week 12
+
+This comparison is worth making explicitly.
+
+A linear SVM forms something like
+
+[
+f(\mathbf{x})
+=============
+
+\mathbf{w}^{T}\mathbf{x}+b.
+]
+
+An MLP begins with the same kind of affine transformation:
+
+[
+\mathbf{z}_1
+============
+
+\mathbf{W}_1\mathbf{x}+\mathbf{b}_1.
+]
+
+But then it adds
+
+[
+\operatorname{ReLU}
+]
+
+and additional learned affine transformations.
+
+So conceptually:
+
+[
+\boxed{
+\text{linear classifier}
++
+\text{learned nonlinear feature transformations}
+================================================
+
+\text{MLP}.
+}
+]
+
+This is a very useful bridge for students who already understand SVMs.
+
+---
+
+# What I would expect a senior student to understand
+
+By the end of the lecture, a strong senior should be able to explain:
+
+[
+\mathbf{z}
+==========
+
+\mathbf{W}\mathbf{x}+\mathbf{b},
+]
+
+why ReLU is necessary,
+
+why the last layer has three logits,
+
+why those logits should not be softmaxed before `CrossEntropyLoss`,
+
+what cross-entropy measures,
+
+and the five-step loop:
+
+[
+\boxed{
+\text{forward}
+\rightarrow
+\text{loss}
+\rightarrow
+\text{zero}
+\rightarrow
+\text{backward}
+\rightarrow
+\text{step}.
+}
+]
+
+---
+
+# What I would expect a first-year graduate student to understand
+
+In addition, I would want the graduate student to be able to derive:
+
+[
+\mathbf{W}_2
+(
+\mathbf{W}_1\mathbf{x}+\mathbf{b}_1
+)
++\mathbf{b}_2
+=============
+
+\mathbf{W}*{\mathrm{eq}}\mathbf{x}
++
+\mathbf{b}*{\mathrm{eq}},
+]
+
+explain why ReLU creates piecewise-affine regions,
+
+derive or at least interpret
+
+[
+\boxed{
+\frac{\partial L}{\partial z_k}
+===============================
+
+p_k-\mathbb{1}[k=y],
+}
+]
+
+understand the distinction between
+
+[
+\nabla_{\theta}L
+]
+
+and the optimizer update, and explain why experimental design—particularly scaling and leakage control—is just as important for an MLP as for SVMs or random forests.
+
+---
+
+# The one-minute summary I would want from students
+
+A very good end-of-class answer would be:
+
+> “An MLP takes engineered DSP features and repeatedly applies learned affine transformations and nonlinear activations. The final layer produces class logits. Cross-entropy turns those logits and the true class into a differentiable scalar loss. `loss.backward()` computes the gradient of that loss with respect to all trainable weights and biases, and Adam uses those gradients in `optimizer.step()` to update the network. Repeating this over minibatches trains a nonlinear classifier.”
+
+That captures the entire lecture and matches the synthesis at the end of the deck: affine layers plus nonlinear activations create flexible decision functions, cross-entropy supplies the scalar objective, autograd computes the gradients, and Adam turns those gradients into parameter updates. 
+
+-------------------------------
+
+Week 13, Lecture 26, LaTeX math
+
+Please convert all math expressions to LaTeX. Do not change anything else.
+
+Gemini Flash Lite:
+
+
+
