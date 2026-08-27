@@ -1880,4 +1880,720 @@
 #
 # That progression is very strong pedagogically because each new idea solves a limitation of the previous viewpoint rather than appearing as an isolated mathematical topic.
 
+# %% [markdown]
+# ## Week 1, Lectures 1 and 2, Exit Tickets
+#
+# What are good exit ticket questions with answers for these lectures?
+#
+# ChatGPT (Medium):
+#
+# Yes. For these two Week 1 lectures, the best exit tickets should check whether students understood the **conceptual hinge** of the lecture, not whether they can grind through a long calculation in the last three minutes.
+#
+# Lecture 1 emphasizes LTI properties, the impulse-response argument, and convolution; Lecture 2 moves that same LTI structure into the frequency domain through complex exponential eigenfunctions and the DTFT.  
+#
+# ## Lecture 1 — Signals, LTI Systems, and Convolution
+#
+# ### 1. Why does the impulse response completely characterize an LTI system?
+#
+# **Question**
+#
+# > In one or two sentences, explain why knowing (h[n]), the response of an LTI system to (\delta[n]), is enough to determine the response to any input (x[n]).
+#
+# **Good answer**
+#
+# Any discrete-time signal can be written as
+#
+#
+# $$x[n] =
+# \sum_{k=-\infty}^{\infty}
+# x[k]\delta[n-k].$$
+#
+#
+# By linearity, the response to a scaled impulse is scaled, and by time invariance the response to $\delta[n-k]$ is $h[n-k]$. Therefore,
+#
+#
+# $$y[n] =
+# \sum_{k=-\infty}^{\infty}
+# x[k]h[n-k] =
+# x[n]*h[n].$$
+#
+#
+# **What you are looking for**
+#
+# A strong answer mentions **both linearity and time invariance**, not simply “because convolution uses $h[n]$.”
+#
+# This is the conceptual hinge of Lecture 1 and is explicitly emphasized in the slides. 
+#
+# ---
+#
+# ### 2. Which system property is being used?
+#
+# **Question**
+#
+# For an LTI system,
+#
+#
+# $$T{\delta[n-k]}=h[n-k].$$
+#
+#
+# Which property gives this result?
+#
+# A. Linearity
+# B. Time invariance
+# C. Causality
+# D. Stability
+#
+# **Answer**
+#
+#
+# $$\boxed{\text{B. Time invariance}}$$
+#
+#
+# Because
+#
+#
+# $$T{\delta[n]}=h[n],$$
+#
+#
+# shifting the input by (k) shifts the output by the same amount.
+#
+# **Extension**
+#
+# Ask:
+#
+# > Where does linearity enter the convolution derivation?
+#
+# Good answer:
+#
+# It lets us scale each shifted impulse by $x[k]$ and add all the responses.
+#
+# This matches the lecture's existing concept check. 
+#
+# ---
+#
+# ### 3. Predict before computing
+#
+# **Question**
+#
+# Let
+#
+#
+# $$x[n]=[1,2,1]$$
+#
+#
+# and
+#
+#
+# $$h[n]=[1,-1],$$
+#
+#
+# with both starting at (n=0).
+#
+# Without doing the full convolution, what is the output length?
+#
+# **Answer**
+#
+#
+# $$L_y=L_x+L_h-1$$
+#
+#
+# so
+#
+#
+# $$L_y=3+2-1=4.$$
+#
+#
+# Thus,
+#
+#
+# $$\boxed{L_y=4}.$$
+#
+#
+# **Why this is a good exit ticket**
+#
+# It checks whether students understand support and indexing rather than just arithmetic. The worked example in the lecture explicitly uses the same sanity check. 
+#
+# ---
+#
+# ### 4. Classify a system and justify one property
+#
+# **Question**
+#
+# Consider
+#
+#
+# $$y[n]=|x[n]|.$$
+#
+#
+# Is the system:
+#
+# * linear?
+# * time invariant?
+# * causal?
+# * BIBO stable?
+#
+# Briefly justify one answer.
+#
+# **Answer**
+#
+# * Linear: **No**
+# * Time invariant: **Yes**
+# * Causal: **Yes**
+# * BIBO stable: **Yes**
+#
+# A good justification for nonlinearity is
+#
+#
+# $$|ax[n]|\neq a|x[n]|$$
+#
+#
+# for general negative or complex (a).
+#
+# A good stability explanation is that if
+#
+#
+# $$|x[n]|\leq B,$$
+#
+#
+# then
+#
+#
+# $$|y[n]|=|x[n]|\leq B.$$
+#
+#
+# This classification is consistent with the system-property exercise in the lecture. 
+#
+# ---
+#
+# ### 5. Causality and the impulse response
+#
+# **Question**
+#
+# For an LTI system, what condition on $h[n]$ guarantees causality?
+#
+# **Answer**
+#
+#
+# $$\boxed{
+# h[n]=0,\qquad n<0.
+# }$$
+#
+#
+# **Good explanation**
+#
+# A causal output at time $n_0$ cannot depend on future input values. If $h[n]$ were nonzero for negative $n$, the convolution sum could involve input samples with indices greater than the current output index.
+#
+# The lecture states this condition explicitly. 
+#
+# ---
+#
+# ### 6. BIBO stability
+#
+# **Question**
+#
+# For an LTI system, what condition on $h[n]$ guarantees BIBO stability?
+#
+# **Answer**
+#
+#
+# $$\boxed{
+# \sum_{n=-\infty}^{\infty}|h[n]|<\infty.
+# }$$
+#
+#
+# **Good explanation**
+#
+# If
+#
+#
+# $$|x[n]|\leq B_x,$$
+#
+#
+# then
+#
+#
+# $$|y[n]| =
+# \left|
+# \sum_k x[k]h[n-k]
+# \right|
+# \leq
+# B_x\sum_k|h[k]|.$$
+#
+#
+# Therefore the output remains bounded if $h[n]$ is absolutely summable. 
+#
+# ---
+#
+# ### 7. DSP-to-ML bridge
+#
+# **Question**
+#
+# What is the main similarity between an FIR filter and a 1-D convolution layer in a neural network?
+#
+# **Good answer**
+#
+# Both compute local weighted sums of neighboring samples. In classical DSP, the weights are the filter coefficients
+#
+#
+# $$h[k],$$
+#
+#
+# while in a neural network the kernel weights are typically learned from data.
+#
+# An even stronger answer mentions that deep-learning libraries commonly implement **cross-correlation** rather than textbook convolution, so the kernel orientation differs. 
+#
+# ---
+#
+# ### 8. Why do stacked linear convolution layers collapse?
+#
+# **Question**
+#
+# Suppose two convolution layers are cascaded with no nonlinear activation between them. What is the equivalent system?
+#
+# **Answer**
+#
+# Another single convolution whose impulse response is
+#
+#
+# $$\boxed{
+# h_{\text{eq}}[n] =
+# h_1[n]*h_2[n].
+# }$$
+#
+#
+# Because convolution is associative,
+#
+#
+# $$x*h_1*h_2 =
+# x*(h_1*h_2).$$
+#
+#
+# **ML connection**
+#
+# This previews why nonlinear activations are necessary in neural networks. The lecture makes exactly this connection. 
+#
+# ---
+#
+# ## Lecture 2 — Eigenfunctions and the DTFT
+#
+# ### 1. Why does a sinusoid keep its frequency?
+#
+# **Question**
+#
+# Why can an LTI system change the amplitude and phase of a sinusoid but not its frequency?
+#
+# **Good answer**
+#
+# Complex exponentials are eigenfunctions of LTI systems:
+#
+#
+# $$x[n] =
+# e^{j\omega_0 n}$$
+#
+#
+# produces
+#
+#
+# $$y[n] =
+# H(e^{j\omega_0})
+# e^{j\omega_0 n}.$$
+#
+#
+# The multiplier
+#
+#
+# $$H(e^{j\omega_0})$$
+#
+#
+# can change magnitude and phase, but the factor
+#
+#
+# $$e^{j\omega_0 n}$$
+#
+#
+# remains at the same frequency.
+#
+# This is also the exit-ticket prompt already suggested at the end of the deck.  
+#
+# ---
+#
+# ### 2. What is the eigenvalue?
+#
+# **Question**
+#
+# For input
+#
+#
+# $$x[n]=e^{j\omega n},$$
+#
+#
+# what is the eigenvalue of an LTI system?
+#
+# **Answer**
+#
+#
+# $$\boxed{
+# H(e^{j\omega}) =
+# \sum_{k=-\infty}^{\infty}
+# h[k]e^{-j\omega k}.}$$
+#
+#
+# This is the DTFT of the impulse response.
+#
+# A strong answer also says:
+#
+# > $H(e^{j\omega})$ is the system's frequency response at frequency $\omega$.
+#
+# ---
+#
+# ### 3. Why is the DTFT $2\pi$-periodic?
+#
+# **Question**
+#
+# Explain why
+#
+#
+# $$X(e^{j(\omega+2\pi)}) =
+# X(e^{j\omega}).$$
+#
+#
+# **Good answer**
+#
+# Because for integer $n$,
+#
+#
+# $$e^{-j(\omega+2\pi)n} =
+# e^{-j\omega n}e^{-j2\pi n}=
+# e^{-j\omega n},$$
+#
+#
+# since
+#
+#
+# $$e^{-j2\pi n}=1.$$
+#
+#
+# Therefore discrete-time frequencies separated by $2\pi$ are indistinguishable. The lecture explicitly uses this as the reason for DTFT periodicity. 
+#
+# ---
+#
+# ### 4. Convert normalized frequency to physical frequency
+#
+# **Question**
+#
+# At
+#
+#
+# $$f_s=48\text{ kHz},$$
+#
+#
+# what physical frequency corresponds to
+#
+#
+# $$\omega=\frac{\pi}{2}?$$
+#
+#
+# Use
+#
+#
+# $$\omega =
+# 2\pi\frac{f}{f_s}.$$
+#
+#
+# **Answer**
+#
+#
+# $$f = \frac{\omega}{2\pi}f_s =
+# \frac{\pi/2}{2\pi}(48,000)$$
+#
+#
+# so
+#
+#
+# $$\boxed{
+# f=12\text{ kHz}.}$$
+#
+#
+# The lecture uses this exact correspondence. 
+#
+# ---
+#
+# ### 5. What does a delay do in frequency?
+#
+# **Question**
+#
+# If
+#
+#
+# $$y[n]=x[n-n_0],$$
+#
+#
+# what happens to the DTFT?
+#
+# **Answer**
+#
+#
+# $$\boxed{
+# Y(e^{j\omega}) =
+# e^{-j\omega n_0}
+# X(e^{j\omega}).}$$
+#
+#
+# Therefore,
+#
+#
+# $$|Y(e^{j\omega})| =
+# |X(e^{j\omega})|$$
+#
+#
+# and the phase changes by
+#
+#
+# $$-\omega n_0.$$
+#
+#
+# **Good interpretation**
+#
+# A pure delay does not change spectral magnitude; it adds linear phase. 
+#
+# ---
+#
+# ### 6. Convolution theorem
+#
+# **Question**
+#
+# Complete the statement:
+#
+# If
+#
+#
+# $$y[n]=x[n]*h[n],$$
+#
+#
+# then in the frequency domain
+#
+#
+# $$\boxed{?}$$
+#
+#
+# **Answer**
+#
+#
+# $$\boxed{
+# Y(e^{j\omega}) =
+# X(e^{j\omega})H(e^{j\omega}).}$$
+#
+#
+# **Follow-up**
+#
+# Why is this useful?
+#
+# Good answer:
+#
+# > Convolution, which is a sum over shifted products in time, becomes pointwise multiplication in frequency.
+#
+# This is one of the central simplifications emphasized in the lecture. 
+#
+# ---
+#
+# ### 7. Predict low-pass behavior without plotting
+#
+# **Question**
+#
+# Consider
+#
+#
+# $$H(e^{j\omega}) =
+# \frac{1}{1-0.9e^{-j\omega}}.$$
+#
+#
+# Where is
+#
+#
+# $$|H(e^{j\omega})|$$
+#
+#
+# largest?
+#
+# A. Near $\omega=0$
+# B. Near $\omega=\pi/2$
+# C. Near $\omega=\pi$
+# D. Constant for all $\omega$
+#
+# **Answer**
+#
+#
+# $$\boxed{\text{A. Near }\omega=0}$$
+#
+#
+# At
+#
+#
+# $$\omega=0,$$
+#
+#
+# the denominator is
+#
+#
+# $$1-0.9=0.1,$$
+#
+#
+# which is very small, producing a large magnitude.
+#
+# At
+#
+#
+# $$\omega=\pi,$$
+#
+#
+# the denominator is
+#
+#
+# $$1+0.9=1.9.$$
+#
+#
+# So the response has strong low-frequency emphasis. This is the same reasoning used in the deck's concept check. 
+#
+# ---
+#
+# ### 8. Difference equation to frequency response
+#
+# **Question**
+#
+# Given
+#
+#
+# $$y[n] =
+# 0.5y[n-1]+x[n],$$
+#
+#
+# derive
+#
+#
+# $$H(e^{j\omega}).$$
+#
+#
+# **Answer**
+#
+# Using
+#
+#
+# $$y[n]
+# \leftrightarrow
+# Y(e^{j\omega})$$
+#
+#
+# and
+#
+#
+# $$y[n-1]
+# \leftrightarrow
+# e^{-j\omega}Y(e^{j\omega}),$$
+#
+#
+# we obtain
+#
+#
+# $$Y(e^{j\omega}) =
+# 0.5e^{-j\omega}Y(e^{j\omega})+
+# X(e^{j\omega}).$$
+#
+#
+# Thus,
+#
+#
+# $$Y(e^{j\omega})
+# \left(
+# 1-0.5e^{-j\omega}
+# \right) =
+# X(e^{j\omega}),$$
+#
+#
+# so
+#
+#
+# $$\boxed{
+# H(e^{j\omega}) =
+# \frac{Y(e^{j\omega})}{X(e^{j\omega})} =
+# \frac{1}
+# {1-0.5e^{-j\omega}}.
+# }$$
+#
+#
+# That is the one-pole example used throughout the second half of the lecture. 
+#
+# ---
+#
+# ### 9. DTFT versus DFT versus FFT
+#
+# **Question**
+#
+# Give one sentence distinguishing the DTFT, DFT, and FFT.
+#
+# **Good answer**
+#
+# > The DTFT is a continuous-frequency, $2\pi$-periodic transform of a discrete-time sequence; the DFT samples a finite sequence at a finite set of frequency bins; the FFT is an efficient algorithm for computing the DFT.
+#
+# The deck explicitly warns against collapsing these three terms into one concept. 
+#
+# ---
+#
+# ### 10. DSP-to-ML bridge
+#
+# **Question**
+#
+# What is the connection between the DTFT and a spectrogram used as input to a machine-learning model?
+#
+# **Good answer**
+#
+# A spectrogram applies a frequency transform to short, windowed sections of a signal and stacks the resulting local spectra over time. Thus,
+#
+#
+# $$x[n]
+# \rightarrow
+# \text{windowed segment}
+# \rightarrow
+# \text{local spectrum}
+# \rightarrow
+# \text{spectrogram}.$$
+#
+#
+# The ML model then learns patterns in this structured time-frequency representation.
+#
+# A stronger answer adds:
+#
+# > The spectrogram's structure is determined by DSP choices such as window length, sampling rate, and frequency resolution before the ML model ever sees the data.
+#
+# That is the exact bridge highlighted near the end of Lecture 2. 
+#
+# ---
+#
+# ## My preferred exit-ticket set
+#
+# If you want only **three questions per lecture**, I would use these.
+#
+# For **Lecture 1**:
+#
+# 1. Why does (h[n]) completely characterize an LTI system?
+# 2. For a convolution of sequences of lengths (5) and (4), what is the full-output length, and why?
+# 3. What is the connection between an FIR filter and a neural-network convolution kernel?
+#
+# For **Lecture 2**:
+#
+# 1. Why can an LTI system change the amplitude and phase of a sinusoid but not its frequency?
+# 2. Why is the DTFT (2\pi)-periodic?
+# 3. For
+#
+#
+# $$H(e^{j\omega}) =
+# \frac{1}{1-0.9e^{-j\omega}},$$
+#
+#
+# would you expect low-pass or high-pass behavior? Explain without plotting.
+#
+# Those six questions are short enough to answer in roughly **3–5 minutes**, but they reveal whether students understood the central reasoning of the two lectures rather than merely remembering formulas.
+#
+# ----------------
+#
+
 # %%
