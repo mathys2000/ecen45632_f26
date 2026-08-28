@@ -150,51 +150,42 @@
 #
 # The deck develops the ideal lowpass filter from the inverse DTFT rather than just quoting the sinc:
 #
-# [
-# h_d[n]
-# ======
 #
+# $$h_d[n] =
 # \frac{1}{2\pi}
 # \int_{-\omega_c}^{\omega_c}
-# e^{j\omega n},d\omega
-# ]
+# e^{j\omega n},d\omega$$
+#
 #
 # leading to
 #
-# [
-# h_d[n]
-# ======
 #
+# $$h_d[n] =
 # \frac{\sin(\omega_c n)}{\pi n},
-# \qquad n\neq 0,
-# ]
+# \qquad n\neq 0,$$
+#
 #
 # with
 #
-# [
-# h_d[0]
-# ======
 #
-# \frac{\omega_c}{\pi}.
-# ]
+# $$h_d[0] =
+# \frac{\omega_c}{\pi}.$$
+#
 #
 # It then connects symmetry to linear phase,
 #
-# [
-# H(e^{j\omega})
-# ==============
 #
-# e^{-j\omega(N-1)/2}A(\omega),
-# ]
+# $$H(e^{j\omega}) =
+# e^{-j\omega(N-1)/2}A(\omega),$$
+#
 #
 # and therefore to constant group delay,
 #
-# [
-# \tau_g
-# ======
 #
-# \frac{N-1}{2}.
-# ]
+# $$\tau_g =
+# \frac{N-1}{2}.$$
+#
+# ---
 #
 # The window section compares Rectangular, Bartlett, Hann, Hamming, and Blackman windows with numerical main-lobe/sidelobe intuition and actual frequency-response plots.
 #
@@ -202,106 +193,92 @@
 #
 # The PyTorch section explicitly shows why textbook convolution,
 #
-# [
-# y[n]
-# ====
 #
-# \sum_k h[k]x[n-k],
-# ]
+# $$y[n] =
+# \sum_k h[k]x[n-k],$$
+#
 #
 # requires the fixed FIR taps to be reversed when implemented using the `Conv1d` cross-correlation convention.
 #
 # The numerical demonstration verifies NumPy DSP convolution against PyTorch with a maximum float32 difference of about
 #
-# [
-# 3.6\times10^{-7}.
-# ]
+#
+# $$3.6\times10^{-7}.$$
+#
+# ---
 #
 # ## Lecture 8 highlights
 #
 # The IIR lecture compares Butterworth, Chebyshev I, Chebyshev II, and elliptic analog prototypes and develops the Butterworth magnitude relationship
 #
-# [
-# \left|H_c(j\Omega)\right|^2
-# ===========================
 #
+# $$\left|H_c(j\Omega)\right|^2 =
 # \frac{1}
-# {1+\left(\frac{\Omega}{\Omega_c}\right)^{2N}}.
-# ]
+# {1+\left(\frac{\Omega}{\Omega_c}\right)^{2N}}.$$
+#
 #
 # The bilinear-transform section develops
 #
-# [
-# s
-# =
 #
-# \frac{2}{T}
+# $$s = \frac{2}{T}
 # \frac{1-z^{-1}}
-# {1+z^{-1}}
-# ]
+# {1+z^{-1}}$$
+#
 #
 # and explicitly shows why
 #
-# [
-# \operatorname{Re}{s}<0
-# ]
+#
+# $$\operatorname{Re}{s}<0$$
+#
 #
 # maps to
 #
-# [
-# |z|<1.
-# ]
+#
+# $$|z|<1.$$
+#
 #
 # The frequency-warping derivation leads to
 #
-# [
-# \boxed{
-# \Omega
-# ======
 #
+# $$\boxed{
+# \Omega =
 # \frac{2}{T}
-# \tan\left(\frac{\omega}{2}\right)
-# }
-# ]
+# \tan\left(\frac{\omega}{2}\right)}$$
+#
 #
 # and then to the prewarping procedure.
 #
 # A worked example uses
 #
-# [
-# \omega_c=0.4\pi,
-# \qquad T=1,
-# ]
+#
+# $$\omega_c=0.4\pi,
+# \qquad T=1,$$
+#
 #
 # giving
 #
-# [
-# \Omega_c
-# ========
 #
+# $$\Omega_c =
 # 2\tan(0.2\pi)
 # \approx
-# 1.4531\ \text{rad/s}.
-# ]
+# 1.4531\ \text{rad/s}.$$
+#
 #
 # The resulting digital Butterworth design produces a measured (-3\text{ dB}) frequency of approximately
 #
-# [
-# 0.3999\pi,
-# ]
+#
+# $$0.3999\pi,$$
+#
 #
 # which provides a nice numerical confirmation of the prewarping calculation.
 #
 # The `filtfilt` section also goes beyond simply saying “zero phase.” It shows that forward-backward filtering gives
 #
-# [
-# H_{\mathrm{fb}}(e^{j\omega})
-# ============================
 #
-# # H(e^{j\omega})H(e^{-j\omega})
+# $$H_{\mathrm{fb}}(e^{j\omega}) =
+# H(e^{j\omega})H(e^{-j\omega}) =
+# |H(e^{j\omega})|^2,$$
 #
-# |H(e^{j\omega})|^2,
-# ]
 #
 # so students see that the magnitude response is **squared**, the effective attenuation changes, and the operation is noncausal.
 #
@@ -310,6 +287,7 @@
 # All displayed mathematical equations in the decks are rendered from LaTeX, and I used the Microsoft-compatible PowerPoint versions as the primary files.
 #
 # ---------------------
+#
 
 # %% [markdown]
 # ## Week 4, Lecture 7, LaTeX math
@@ -330,7 +308,11 @@
 #
 # The lecture explicitly frames FIR design and neural 1-D convolution as the same local weighted-sum operation with different sources for the coefficients: classical DSP designs them; ML may learn them.
 # Below is how I would explain the lecture in class, including what strong student answers should sound like and which examples are especially useful.
-# Slides 3–6: FIR versus IIR from a DSP/ML perspective
+#
+# ---
+#
+# ### Slides 3–6: FIR versus IIR from a DSP/ML perspective
+#
 # The deck begins with the structural distinction:
 #
 #
@@ -354,6 +336,7 @@
 # The deck emphasizes that FIR filters can have exact linear phase when the taps possess the required symmetry, whereas IIR filters usually achieve sharper magnitude responses with fewer coefficients but generally have nonlinear phase.
 #
 # Why should ML students care about linear phase?
+#
 # Suppose an audio transient contains several frequency components.
 # If the filter has linear phase, all passband frequency components experience the same delay.
 # If the filter has nonlinear phase, different frequencies arrive at different times.
@@ -370,7 +353,11 @@
 #
 # or frame-localized features.
 # The deck makes this exact point and wisely cautions not to oversell linear phase: not every ML task requires it.
-# Slide 4: Why symmetric FIR taps imply linear phase
+#
+# ---
+#
+# ### Slide 4: Why symmetric FIR taps imply linear phase
+#
 # Suppose the FIR impulse response has length $N$ and satisfies
 #
 #
@@ -405,7 +392,11 @@
 #
 # which is constant.
 # The lecture describes this as every passband component being delayed by the same number of samples.
-# Slide 5: Group delay
+#
+# ---
+#
+# ### Slide 5: Group delay
+#
 # For a symmetric FIR with
 #
 #
@@ -425,26 +416,38 @@
 #
 # “The filter has no phase distortion.”
 # That is too vague.
+#
 # A better answer is:
 #
 # “The phase is linear in frequency, so the group delay is constant.”
 # The best answer is the one already highlighted in the deck:
 #
 # “Linear phase does not mean zero delay. It means a delay that is approximately constant with frequency.”
-# Slide 6: What does nonlinear phase do to a transient?
+#
+# ---
+#
+# ### Slide 6: What does nonlinear phase do to a transient?
+#
 # The deck asks a very good concept question: two filters have nearly the same magnitude response, but one has constant group delay and the other does not. What can differ?
+#
 # A weak answer:
 #
 # “The phase differs.”
 # True, but not enough.
+#
 # A good answer:
 #
 # “The time-domain waveform shape can differ even if the magnitude spectra are almost the same.”
+#
 # A strong answer:
 #
 # “Frequency components can emerge with different delays, which can smear or reshape a transient. That can shift peaks or alter onset structure and therefore affect time-localized ML features.”
 # That is exactly the type of explanation I would look for.
-# Slides 7–9: Ideal lowpass filter
+#
+# ---
+#
+# ### Slides 7–9: Ideal lowpass filter
+#
 # The ideal lowpass response is
 #
 #
@@ -523,7 +526,11 @@
 #
 # Negative-time coefficients would require future input samples in a direct real-time implementation.
 # The lecture explicitly lists those two problems and then motivates the practical solution: truncate, shift, and window.
-# Slide 10: Center first, then shift
+#
+# ---
+#
+# ### Slide 10: Center first, then shift
+#
 # Suppose we want an FIR of order $M$, so the number of taps is
 #
 #
@@ -574,7 +581,11 @@
 #
 # The deck emphasizes that this shift changes phase but not the magnitude response.
 # That is an important distinction.
-# Slides 11–12: Gibbs phenomenon
+#
+# ---
+#
+# ### Slides 11–12: Gibbs phenomenon
+#
 # This is one of the most commonly misunderstood parts of FIR design.
 # Suppose we simply truncate the ideal sinc with a rectangular window:
 #
@@ -597,14 +608,23 @@
 #
 # “Make the filter longer and the Gibbs ripple disappears.”
 # It does not. A longer rectangular window narrows the oscillation region, but the limiting peak overshoot does not vanish.
+#
 # What is a good answer to “What does increasing $N$ do?”
+#
 # Weak answer:
 #
 # “It reduces ripple.”
 # Not quite.
+#
 # Better answer:
 #
-# “For rectangular truncation, increasing $N$ makes the transition narrower.” Strong answer:  “The oscillations are compressed closer to the discontinuity, but the peak Gibbs overshoot remains approximately fixed. Filter length and sidelobe level are different design controls.” That is exactly the distinction highlighted in the deck. Slide 13: The window method The basic window-method equation is 
+# “For rectangular truncation, increasing $N$ makes the transition narrower.” Strong answer:  “The oscillations are compressed closer to the discontinuity, but the peak Gibbs overshoot remains approximately fixed. Filter length and sidelobe level are different design controls.” That is exactly the distinction highlighted in the deck.
+#
+# ---
+#
+# ### Slide 13: The window method
+#
+# The basic window-method equation is 
 #
 # $$\boxed{
 # h_w[n]
@@ -633,6 +653,7 @@
 #
 # A smoother taper in time reduces sidelobes but broadens the main lobe. The deck states this design intuition directly.
 # Why does a wider window main lobe produce a wider filter transition?
+#
 # The ideal lowpass has a sharp edge.
 # When convolved with the window spectrum, that edge gets blurred.
 # A narrow window main lobe blurs the edge less.
@@ -650,12 +671,16 @@
 #
 #
 # This is the core tradeoff.
-# Slides 14–16: Comparing windows
+#
+# ---
+#
+# ### Slides 14–16: Comparing windows
+#
 # The deck compares Rectangular, Bartlett, Hann, Hamming, and Blackman.
 # The approximate values in the lecture are:
 #
 #
-# $$\begin{array}{c\|c\|c} \text{Window} & \text{First sidelobe} & \text{Main-lobe width}\ \hline \text{Rectangular} & -13\text{ dB} & \frac{4\pi}{N}\ \text{Bartlett} & -26\text{ dB} & \frac{8\pi}{N}\ \text{Hann} & -31\text{ dB} & \frac{8\pi}{N}\ \text{Hamming} & -43\text{ dB} & \frac{8\pi}{N}\ \text{Blackman} & -58\text{ dB} & \frac{12\pi}{N} \end{array}$$
+# $$\begin{array}{c|c|c} \text{Window} & \text{First sidelobe} & \text{Main-lobe width}\\ \hline \text{Rectangular} & -13\text{ dB} & \frac{4\pi}{N}\\ \text{Bartlett} & -26\text{ dB} & \frac{8\pi}{N}\\\text{Hann} & -31\text{ dB} & \frac{8\pi}{N}\\ \text{Hamming} & -43\text{ dB} & \frac{8\pi}{N}\\\text{Blackman} & -58\text{ dB} & \frac{12\pi}{N} \end{array}$$
 #
 #
 # as approximate equal-length rules.
@@ -672,14 +697,19 @@
 #
 # “Blackman.”
 # That ignores the specification.
+#
 # Good answer:
 #
 # “There is no universally best window.”
+#
 # Strong answer:
 #
 # “The choice depends on whether the specification prioritizes transition width or stopband attenuation. A Blackman window gives lower sidelobes but a wider transition, while a rectangular window gives a narrower transition for the same length but much worse sidelobes.”
+#
 # The deck explicitly gives that as the good answer.
+#
 # Hamming versus Hann
+#
 # Students often ask why these two are both needed.
 # A useful qualitative answer:
 #
@@ -688,7 +718,11 @@
 # Hamming does not go exactly to zero at the endpoints.
 # Both have approximately similar main-lobe width for the same $N$, but different sidelobe behavior.
 # The deck specifically notes Hamming's particularly low first sidelobe.
-# Slide 17: Practical 51-tap Hamming lowpass
+#
+# ---
+#
+# ### Slide 17: Practical 51-tap Hamming lowpass
+#
 # The design flow students should internalize is:
 #
 #
@@ -717,13 +751,18 @@
 #
 # Then shift and verify the actual response.
 # The deck says Hamming is chosen because we accept a somewhat wider transition in exchange for much better sidelobe rejection than rectangular truncation.
+#
 # A strong student answer to
 #
 # “Why Hamming?”
 # would be:
 #
 # “Because the design can tolerate some transition broadening, and the Hamming window gives significantly lower sidelobes than a rectangular window.”
-# Slide 18: Filter length
+#
+# ---
+#
+# ### Slide 18: Filter length
+#
 # Increasing $N$ generally narrows the transition for a fixed window family.
 # But there are costs:
 #
@@ -741,7 +780,9 @@
 #
 # increased delay.
 # The ML analogy is also useful:
+#
 # A longer Conv1d kernel gives a larger receptive field and, if trainable, more parameters.
+#
 # Good example: delay cost
 # At sampling rate
 #
@@ -783,7 +824,11 @@
 #
 # Now latency may matter significantly.
 # That is a good practical way to connect the math to implementation.
-# Slide 19: Choosing the right design knob
+#
+# ---
+#
+# ### Slide 19: Choosing the right design knob
+#
 # The deck gives three concept prompts.
 #
 # Case A
@@ -793,18 +838,25 @@
 # Use a stronger taper such as Blackman, or increase $N$.
 # Why?
 # Because a stronger window lowers sidelobes.
+#
 # Case B
 # Transition must be very narrow, but moderate ripple is acceptable.
 # Good answer:
 #
 # A rectangular window gives a narrower main lobe for the same $N$, or increase $N$.
+#
 # Case C
 # Relative waveform timing must be preserved.
+#
 # Good answer:
 #
 # Use a linear-phase FIR or another phase-preserving method.
 # The phrase “another phase-preserving method” is useful because FIR is not the only possible strategy.
-# Slides 20–22: FIR and PyTorch Conv1d
+#
+# ---
+#
+# ### Slides 20–22: FIR and PyTorch Conv1d
+#
 # The classical FIR equation is
 #
 #
@@ -813,7 +865,9 @@
 #
 # That is a sliding dot product.
 # This is the same local arithmetic used in Conv1d.
+#
 # The deck's central ML bridge is exactly this: DSP designs $h[k]$, while ML can make the corresponding coefficients trainable.
+#
 # Important subtlety: PyTorch uses cross-correlation ordering
 # PyTorch Conv1d computes the deep-learning convention, which is closer to
 #
@@ -831,17 +885,24 @@
 # Therefore, to reproduce textbook convolution with Conv1d, reverse the taps.
 # The deck explicitly says to left-pad by $M$ and flip the coefficient order.
 # Good answer to “Is PyTorch doing convolution wrong?”
+#
 # Bad answer:
 #
 # “Yes, technically.”
+#
 # Better answer:
 #
 # “It uses cross-correlation ordering, which deep-learning libraries conventionally call convolution.”
 # Strong answer:
 #
 # “The local weighted-sum structure is the same. Since neural kernels are usually learned, the flip convention is not operationally important during learning; it matters mainly when reproducing a known DSP impulse response exactly.”
+#
 # That is a very good senior/graduate-level explanation.
-# Slide 22: Fixed FIR in PyTorch
+#
+# ---
+#
+# ### Slide 22: Fixed FIR in PyTorch
+#
 # The deck uses
 #
 # h = torch.tensor(h_np, dtype=torch.float32)
@@ -863,7 +924,11 @@
 #
 #
 # The deck explains that the same coefficients can either remain fixed or become trainable depending on whether gradients are allowed to update them.
-# Slide 23: Tensor dimensions
+#
+# ---
+#
+# ### Slide 23: Tensor dimensions
+#
 # For Conv1d,
 #
 #
@@ -881,7 +946,11 @@
 #
 #
 # The deck treats these dimensions as carrying physical meaning, which is exactly the right way to teach it.
-# Slide 24: Why NumPy convolution and PyTorch agree
+#
+# ---
+#
+# ### Slide 24: Why NumPy convolution and PyTorch agree
+#
 # If the coefficient flip and padding are handled correctly, both implement the same linear system.
 # Therefore,
 #
@@ -901,7 +970,11 @@
 # It is:
 #
 # Same impulse response, same input, same signal-processing result.
-# Slide 25: Designed versus learned taps
+#
+# ---
+#
+# ### Slide 25: Designed versus learned taps
+#
 # This is one of the most important conceptual slides.
 # Classical FIR design:
 #
@@ -923,8 +996,11 @@
 #
 # and let backpropagation choose the coefficients.
 # The deck correctly states that the arithmetic is the same; the source of the weights is what changes.
+#
 # A very useful comparison for students
+#
 # Suppose the task is denoising speech before classification.
+#
 # Classical approach:
 # Design a known lowpass or bandpass filter with specified:
 #
@@ -938,10 +1014,15 @@
 #
 # Learned approach:
 # Give a Conv1d layer enough taps and let the classification loss choose the kernel.
+#
 # Hybrid approach:
 # Initialize the kernel as a speech-band FIR and let training adjust it.
 # This lets students see three different engineering philosophies.
-# Slide 26: DSP versus ML vocabulary
+#
+# ---
+#
+# ### Slide 26: DSP versus ML vocabulary
+#
 # The deck maps:
 #
 #
@@ -961,8 +1042,13 @@
 #
 #
 # Calling a window “kernel regularization” is only an analogy. A DSP window is a deterministic spectral-design tool.
+#
 # That distinction is worth preserving.
-# Homework 1: Ideal lowpass derivation
+#
+# ---
+#
+# ### Homework 1: Ideal lowpass derivation
+#
 # A complete strong answer should show
 #
 #
@@ -993,7 +1079,11 @@
 #
 #
 # The instructor solution confirms this.
-# Homework 2: Rectangular versus Hamming
+#
+# ---
+#
+# ### Homework 2: Rectangular versus Hamming
+#
 # A good answer should say:
 # Rectangular:
 #
@@ -1029,7 +1119,11 @@
 #
 # Increasing rectangular-window length narrows the Gibbs region but does not eliminate the peak overshoot.
 # That is exactly the instructor solution.
-# Homework 3: Linear phase proof
+#
+# ---
+#
+# ### Homework 3: Linear phase proof
+#
 # A strong answer starts from symmetry:
 #
 #
@@ -1053,11 +1147,15 @@
 # and therefore
 #
 #
-# $$\boxed{ \tau_g \frac{N-1}{2}. }$$
+# $$\boxed{ \tau_g = \frac{N-1}{2}. }$$
 #
 #
 # The instructor appendix summarizes exactly this logic.
-# Homework 4: Convolution and kernel flip
+#
+# ---
+#
+# ### Homework 4: Convolution and kernel flip
+#
 # Given
 #
 #
@@ -1090,10 +1188,15 @@
 #
 # which matches the deck solution.
 # The PyTorch kernel must be flipped because Conv1d uses correlation ordering.
-# Good exit-ticket questions for this lecture
+#
+# ---
+#
+# ### Good exit-ticket questions for this lecture
+#
 # If I wanted only three:
 #
 # 1. Why does a symmetric FIR have linear phase?
+#
 # Good answer:
 #
 # Because symmetry lets the DTFT be written as a real amplitude term multiplied by
@@ -1109,15 +1212,20 @@
 #
 #
 # 2. Why does a smoother window reduce sidelobes but widen the transition?
+#
 # Good answer:
 #
 # Smoother time-domain tapering lowers the window spectrum's sidelobes, but its main lobe becomes wider. Since the desired response is convolved with the window spectrum, that wider main lobe broadens the filter transition.
+#
 # 3. What does neural Conv1d add to a classical FIR?
+#
 # Good answer:
 #
 # It does not change the local multiply-and-sum operation. It embeds it in a trainable model so the coefficients can be learned from a loss.
 # That final answer is exactly the minute-paper answer in the deck.
+#
 # What I would expect a senior student to know
+#
 # A strong senior should be able to:
 # derive
 #
@@ -1134,10 +1242,15 @@
 #
 #
 # and explain how Conv1d relates to FIR filtering.
+#
 # What I would expect a first-year graduate student to know
+#
 # In addition, I would expect them to explain:
+#
 # why time-domain truncation causes frequency-domain convolution,
+#
 # why Gibbs overshoot does not vanish merely by increasing rectangular-window length,
+#
 # why a real symmetric FIR factors as
 #
 #
@@ -1145,9 +1258,16 @@
 #
 #
 # and why the classical window method should be treated as a deterministic design constraint rather than literally equated with ML regularization.
-# The lecture closes with exactly these four ideas: symmetric FIRs provide constant group delay, the ideal brick-wall response produces an infinite sinc, windowing trades sidelobe suppression against transition width, and Conv1d performs the same local weighted sum with coefficients that may be fixed or learned.
+#
+# The lecture closes with exactly these four ideas:
+#
+# * symmetric FIRs provide constant group delay,
+# * the ideal brick-wall response produces an infinite sinc,
+# * windowing trades sidelobe suppression against transition width, and
+# * Conv1d performs the same local weighted sum with coefficients that may be fixed or learned.
 #
 # ------------------------
+#
 
 # %% [markdown]
 # ## Week 4, Lecture 8, LaTeX math
@@ -1166,7 +1286,8 @@
 #
 # The lecture's deeper purpose is not just to teach a formula for converting $s$-domain filters into $z$-domain filters. It is to show that filter design choices change the data distribution seen by a machine-learning model—especially through phase, causality, and train/deployment mismatch.
 #
-# Slides 3–8: Why use an IIR at all?
+# ### Slides 3–8: Why use an IIR at all?
+#
 # An IIR filter usually has a recursive form such as
 #
 # $$y[n] = \sum_{k=0}^{M} b_k x[n-k] - \sum_{r=1}^{N} a_r y[n-r]$$
@@ -1177,18 +1298,22 @@
 #
 # allow a relatively low-order filter to create a sharp frequency response.
 # That is the main attraction.
+#
 # For comparable magnitude specifications, an IIR filter can often use far fewer coefficients than an FIR filter. The cost is that poles now matter, numerical sensitivity matters, and the phase is generally nonlinear.
+#
 # A good answer to
 #
 # “Why would I choose an IIR instead of an FIR?”
 # is:
 #
 # “If I need a sharp magnitude response with low computational cost and can tolerate nonlinear phase, an IIR can be much more efficient.”
+#
 # A stronger answer adds:
 #
 # “But because the recursion introduces poles, I also have to worry about stability and implementation sensitivity.”
 #
 # What nonlinear phase means here
+#
 # Recall that group delay is
 #
 # $$\boxed{ \tau_g(\omega) = -\frac{d}{d\omega} \angle H(e^{j\omega}) }$$
@@ -1212,14 +1337,16 @@
 # or short-time spectral dynamics.
 # The deck explicitly makes this ML preprocessing connection.
 #
-# Slides 4–8: Analog prototypes
+# ---
+#
+# ### Slides 4–8: Analog prototypes
+#
 # The classical approach is:
 #
 # Instead of designing every digital IIR filter from scratch, start with a well-understood analog prototype.
 # The deck compares four common families.
 #
-# Butterworth
-# Butterworth is maximally flat in the passband.
+# **Butterworth** Butterworth is maximally flat in the passband.
 # Its magnitude-squared response is
 #
 # $$\boxed{ \vert{}H_c(j\Omega)\vert{}^2 = \frac{1}{1+ \left( \frac{\Omega}{\Omega_c} \right)^{2N}} }$$
@@ -1269,24 +1396,31 @@
 # $$\boxed{ 20\text{ dB/decade} }$$
 #
 # of asymptotic attenuation.
+#
 # The deck also warns that higher order increases implementation complexity and numerical sensitivity.
 #
-# Good answer: Why not always use very high order?
+# Good question: Why not always use very high order?
+#
 # Weak answer:
 #
 # “Because it costs more.”
+#
 # Better answer:
 #
 # “Higher order gives a sharper transition, but it increases implementation complexity and can make direct-form coefficient realizations numerically sensitive.”
+#
 # Strong answer:
 #
 # “For moderate or high orders, I should generally implement the digital IIR as cascaded second-order sections rather than one large direct-form polynomial.”
+#
 # That is exactly the implementation habit recommended in the deck.
 #
 # Butterworth, Chebyshev, elliptic: what are we trading?
+#
 # The deck's table is really about where we allow approximation error.
 #
-# Butterworth
+# **Butterworth**
+#
 # Passband:
 #
 # $$\text{monotonic}$$
@@ -1298,7 +1432,8 @@
 # Advantage:
 # smooth response.
 #
-# Chebyshev I
+# **Chebyshev I**
+#
 # Passband:
 #
 # $$\text{equiripple}$$
@@ -1309,7 +1444,8 @@
 #
 # The allowed passband ripple buys a sharper transition.
 #
-# Chebyshev II
+# **Chebyshev II**
+#
 # Passband:
 #
 # $$\text{monotonic}$$
@@ -1320,7 +1456,8 @@
 #
 # Now the ripple is spent in the stopband.
 #
-# Elliptic
+# **Elliptic**
+#
 # Passband:
 #
 # $$\text{equiripple}$$
@@ -1335,6 +1472,7 @@
 # The deck gives three scenarios.
 #
 # Smooth calibration response
+#
 # If passband amplitude must be smooth and some transition width is acceptable:
 #
 # $$\boxed{\text{Butterworth}}$$
@@ -1352,9 +1490,13 @@
 # $$\boxed{\text{Elliptic}}$$
 #
 # is often the most aggressive classical choice.
+#
 # The important answer is not just the filter name. Students should state which constraint they are spending.
 #
-# Slides 9–12: What must the analog-to-digital map preserve?
+# ---
+#
+# ### Slides 9–12: What must the analog-to-digital map preserve?
+#
 # The deck asks what a useful mapping from the analog $s$-plane to the digital $z$-plane should preserve.
 # We want at least three things.
 #
@@ -1382,7 +1524,10 @@
 # We do not want infinitely many analog frequencies folding onto one digital frequency.
 # The bilinear transform accomplishes this—but frequency spacing becomes nonlinear.
 #
-# Slide 10: Bilinear transform
+# ---
+#
+# ### Slide 10: Bilinear transform
+#
 # The substitution is
 #
 # $$\boxed{ s = \frac{2}{T} \frac{1-z^{-1}}{1+z^{-1}} }$$
@@ -1402,7 +1547,10 @@
 #
 # The bilinear transform avoids analog-frequency aliasing, but introduces warping instead.
 #
-# Slides 11–12: Why stability is preserved
+# ---
+#
+# ### Slides 11–12: Why stability is preserved
+#
 # Let
 #
 # $$s = \sigma + j\Omega.$$
@@ -1446,6 +1594,7 @@
 # That gives the desired boundary mapping.
 #
 # Homework pole-mapping example
+#
 # The deck later uses
 #
 # $$s = -2 + j3, \qquad T = 0.1.$$
@@ -1468,7 +1617,10 @@
 #
 # So a stable analog pole mapped to a stable digital pole, exactly as expected.
 #
-# Slides 13–15: Frequency mapping
+# ---
+#
+# ### Slides 13–15: Frequency mapping
+#
 # Set
 #
 # $$s = j\Omega$$
@@ -1512,6 +1664,7 @@
 # This is the central warping equation of the lecture.
 #
 # What the mapping means
+#
 # At
 #
 # $$\omega = 0,$$
@@ -1544,17 +1697,23 @@
 # The price is severe frequency compression near Nyquist.
 #
 # Good answer to “What is frequency warping?”
+#
 # Weak answer:
 #
 # “The frequencies change.”
+#
 # Better answer:
 #
 # “The bilinear transform maps analog frequency to digital frequency nonlinearly.”
+#
 # Strong answer:
 #
 # “Equal spacing in analog frequency does not remain equally spaced digitally. The mapping is nearly linear near DC but becomes strongly compressed as digital frequency approaches $\pi$.”
 #
-# Slides 16–18: Prewarping
+# ---
+#
+# ### Slides 16–18: Prewarping
+#
 # Suppose the digital specification requires a cutoff at
 #
 # $$\omega_c.$$
@@ -1568,6 +1727,7 @@
 # $$\boxed{ \Omega_c = \frac{2}{T} \tan \left( \frac{\omega_c}{2} \right). }$$
 #
 # That is prewarping.
+#
 # The deck gives the design sequence:
 #
 # $$\boxed{ \text{digital spec} \rightarrow \text{prewarp} \rightarrow \text{analog prototype} \rightarrow \text{bilinear transform}. }$$
@@ -1609,10 +1769,13 @@
 # The deck emphasizes this exact comparison.
 #
 # Good answer to “Why do we prewarp?”
+#
 # “Because the bilinear transform preserves ordering but not linear frequency spacing. Prewarping chooses the analog critical frequency whose nonlinear mapping lands exactly at the desired digital critical frequency.”
+#
 # That is the key idea.
 #
 # Multiple critical frequencies
+#
 # For a bandpass or bandstop specification, there may be several important frequencies:
 #
 # $$\omega_1, \omega_2, \ldots.$$
@@ -1623,7 +1786,10 @@
 #
 # That is an important extension beyond the single-cutoff example.
 #
-# Slides 18–20: Full design workflow
+# ---
+#
+# ### Slides 18–20: Full design workflow
+#
 # The deck summarizes the practical workflow as:
 # Start with digital specifications:
 #
@@ -1688,7 +1854,10 @@
 #
 # That is excellent evidence that the prewarp step did what it was supposed to do.
 #
-# Slides 21–22: IIR phase
+# ---
+#
+# ### Slides 21–22: IIR phase
+#
 # The same efficient recursive structure that gives sharp magnitude response usually creates nonlinear phase.
 # So
 #
@@ -1700,9 +1869,11 @@
 # $$\tau_g(\omega) = -\frac{d}{d\omega} \angle H(e^{j\omega})$$
 #
 # is not constant.
+#
 # A good class question is:
 #
 # “If the magnitude response is exactly what I want, why should I care about phase?”
+#
 # Good answer:
 #
 # “Because a signal is reconstructed from both magnitude and phase relationships among frequency components. Frequency-dependent delay can change waveform shape even if the spectral magnitude looks good.”
@@ -1724,7 +1895,10 @@
 #
 # Does the downstream model care about absolute timing, relative timing, or only long-term spectral statistics?
 #
-# Slides 23–25: Forward-backward filtering
+# ---
+#
+# ### Slides 23–25: Forward-backward filtering
+#
 # This is one of the most important ML-preprocessing sections.
 # Suppose one causal filtering pass has frequency response
 #
@@ -1771,6 +1945,7 @@
 # A very common misconception is:
 #
 # “`filtfilt` gives me the same filter but with zero phase.”
+#
 # Not exactly.
 # One pass:
 #
@@ -1795,12 +1970,15 @@
 # The deck makes this warning explicit.
 #
 # Good answer to “What does `filtfilt` buy?”
+#
 # Weak answer:
 #
 # “Zero phase.”
+#
 # Better answer:
 #
 # “It cancels phase distortion.”
+#
 # Strong answer:
 #
 # “Forward-backward filtering cancels the net phase for a real-coefficient filter, but it also squares the magnitude response and is noncausal because the backward pass uses future samples.”
@@ -1819,7 +1997,10 @@
 #
 # The deck makes this explicit.
 #
-# Slides 26–27: Why this matters for ML
+# ---
+#
+# ### Slides 26–27: Why this matters for ML
+#
 # This is arguably the most important part for the combined DSP/ML course.
 # Suppose you create the training dataset using
 #
@@ -1839,13 +2020,15 @@
 # This is train/serve skew.
 # The deck warns about exactly this issue.
 #
-# Good answer to the minute-paper question
+# **Good answer to the minute-paper question**
+#
 # The wrap-up asks:
 #
 # Why can zero-phase offline preprocessing give misleading confidence about streaming deployment?
 # A strong answer:
 #
 # “Because forward-backward filtering uses future samples and produces a different effective magnitude response than a causal one-pass filter. A classifier trained on those offline features may therefore see a different input distribution when deployed in real time.”
+#
 # That is the answer I would want.
 #
 # Boundary effects
@@ -1856,7 +2039,10 @@
 # Therefore beginning/end samples can behave differently from the interior.
 # The deck explicitly lists boundary transients as a caveat.
 #
-# Slide 27: Where a fixed IIR fits in an ML pipeline
+# ---
+#
+# ### Slide 27: Where a fixed IIR fits in an ML pipeline
+#
 # The deck proposes:
 #
 # $$\boxed{ \text{raw signal} \rightarrow \text{fixed IIR} \rightarrow \text{DSP features} \rightarrow \text{classifier} }$$
@@ -1872,25 +2058,34 @@
 # But the important question is:
 #
 # Is it really nuisance energy?
+#
 # If the supposedly unwanted band actually carries class information, filtering can hurt performance.
 # So preprocessing is an inductive assumption.
 #
 # Good answer to “Should I always clean the signal before ML?”
+#
 # No.
+#
 # A strong answer is:
 #
 # “Only if I have reason to believe the removed component is nuisance variation rather than predictive signal. The assumption should be validated on held-out data.”
+#
 # That is a much better ML engineering answer than “yes, cleaner is better.”
 #
-# Slide 28: FIR, IIR, `filtfilt`, or learned front end?
+# ---
+#
+# ### Slide 28: FIR, IIR, `filtfilt`, or learned front end?
+#
 # The deck's comparison is useful.
 #
 # Linear-phase FIR
+#
 # Strength:
 #
 # $$\text{controlled phase}$$
 #
 # and finite support.
+#
 # Cost:
 #
 # $$\text{more taps}$$
@@ -1899,15 +2094,18 @@
 # Best when waveform alignment matters.
 #
 # IIR
+#
 # Strength:
 #
 # $$\text{sharp response with few coefficients}.$$
 #
 # Cost:
+#
 # nonlinear phase and feedback.
 # Best when efficient causal preprocessing matters.
 #
 # `filtfilt` IIR
+#
 # Strength:
 #
 # $$\text{zero-phase offline filtering}.$$
@@ -1922,13 +2120,20 @@
 # Best for offline dataset preparation when deployment assumptions match.
 #
 # Learned Conv1d
+#
 # Strength:
+#
 # task-adaptive front end.
+#
 # Cost:
+#
 # needs data and validation.
 # Best for end-to-end learning.
 #
-# Homework 5: Butterworth
+# ---
+#
+# ### Homework 5: Butterworth
+#
 # For a fourth-order Butterworth,
 #
 # $$N = 4.$$
@@ -1963,7 +2168,10 @@
 #
 # This matches the instructor solution.
 #
-# Homework 6: Stability mapping
+# ---
+#
+# ### Homework 6: Stability mapping
+#
 # Given
 #
 # $$s = -2 + j3, \qquad T = 0.1,$$
@@ -1986,7 +2194,10 @@
 #
 # the digital pole is stable.
 #
-# Homework 7: Prewarp
+# ---
+#
+# ### Homework 7: Prewarp
+#
 # Given
 #
 # $$\omega_c = 0.4\pi$$
@@ -2003,7 +2214,10 @@
 #
 # This is the analog cutoff that should be used for the prototype.
 #
-# Homework 8: `filtfilt`
+# ---
+#
+# ### Homework 8: `filtfilt`
+#
 # A full-credit answer should mention four things:
 #
 # Phase cancellation:
@@ -2021,7 +2235,10 @@
 # offline training features may not match causal deployment features.
 # The instructor solution states these same points.
 #
-# Quiz Q5: Butterworth cutoff
+# ---
+#
+# ### Quiz Q5: Butterworth cutoff
+#
 # At
 #
 # $$\Omega = \Omega_c,$$
@@ -2032,13 +2249,18 @@
 #
 # $$\boxed{-3.01\text{ dB}}.$$
 #
-# Quiz Q6: Warping equation
+# ---
+#
+# ## Quiz Q6: Warping equation
 #
 # $$\boxed{ \Omega = \frac{2}{T} \tan \left( \frac{\omega}{2} \right) }$$
 #
 # This should become almost automatic by the end of the lecture.
 #
-# Quiz Q7: Should $\Omega_c = 0.6\pi/T$?
+# ---
+#
+# ### Quiz Q7: Should $\Omega_c = 0.6\pi/T$?
+#
 # No.
 # For
 #
@@ -2050,7 +2272,10 @@
 #
 # The reason is that the bilinear transform's frequency mapping is nonlinear.
 #
-# Quiz Q8: Main benefit and limitation of `filtfilt`
+# ---
+#
+# ### Quiz Q8: Main benefit and limitation of `filtfilt`
+#
 # Benefit:
 #
 # $$\boxed{ \text{zero net phase distortion} }$$
@@ -2063,7 +2288,10 @@
 #
 # The magnitude is also squared, and edge handling can matter.
 #
-# One subtle point worth emphasizing: bilinear transform versus impulse invariance
+# ---
+#
+# One subtle point worth emphasizing: **bilinear transform versus impulse invariance**
+#
 # Students often mix these up.
 # Impulse invariance approximately samples the analog impulse response:
 #
@@ -2089,17 +2317,22 @@
 #
 # That contrast helps students remember why prewarping exists.
 #
-# Another useful question: Does the bilinear transform preserve filter type?
+# Another useful question: **Does the bilinear transform preserve filter type?**
+#
 # For the usual lowpass prototype transformation, yes in the qualitative sense: DC maps to DC and infinite analog frequency maps toward Nyquist.
 # But exact frequency spacing is not preserved.
 # So a better answer is:
 #
 # “It preserves the ordering and one-to-one nature of the frequency axis, but not linear spacing.”
 #
-# Good exit-ticket questions
+# ---
+#
+# ### Good exit-ticket questions
+#
 # If you want only three for Lecture 8, I would use these.
 #
 # 1. Why does the bilinear transform preserve stability?
+#
 # Good answer:
 #
 # Analog poles with
@@ -2117,6 +2350,7 @@
 # the negative real part makes the numerator magnitude smaller than the denominator magnitude.
 #
 # 2. Why is prewarping necessary?
+#
 # Good answer:
 #
 # Because
@@ -2126,9 +2360,11 @@
 # is nonlinear, so an unwarped analog cutoff does not map to the intended digital cutoff.
 #
 # 3. Why can `filtfilt` create a problem for ML deployment?
+#
 # Good answer:
 #
 # It is noncausal and future-aware, so a model trained on forward-backward-filtered data may see a different feature distribution when deployed with real-time causal preprocessing.
+#
 # A strong answer also mentions
 #
 # $$\vert{}H\vert{}^2$$
@@ -2136,6 +2372,7 @@
 # and boundary effects.
 #
 # What I would expect a senior student to understand
+#
 # A strong senior should be able to:
 # compare the classical analog prototype families,
 # use
@@ -2150,17 +2387,20 @@
 # perform a simple prewarp calculation, and explain the difference between causal IIR filtering and `filtfilt`.
 #
 # What I would expect a first-year graduate student to understand
+#
 # In addition, I would want them to explain:
-# why the analog $j\Omega$ axis maps onto the digital unit circle,
-# why the entire infinite analog frequency axis fits into
+#
+# * why the analog $j\Omega$ axis maps onto the digital unit circle,
+# * why the entire infinite analog frequency axis fits into
 #
 # $$-\pi < \omega < \pi,$$
 #
-# why the bilinear transform eliminates analog-frequency aliasing at the cost of warping,
-# why second-order sections are preferable for higher-order implementations,
-# and why preprocessing assumptions are part of the ML model even when the preprocessing itself is “classical DSP.”
+# * why the bilinear transform eliminates analog-frequency aliasing at the cost of warping,
+# * why second-order sections are preferable for higher-order implementations, and
+# * why preprocessing assumptions are part of the ML model even when the preprocessing itself is “classical DSP.”
 #
 # The one-minute synthesis
+#
 # A strong student summary would be:
 #
 # “IIR filters use feedback to achieve sharp magnitude selectivity efficiently, but their phase is generally nonlinear. Classical analog prototypes such as Butterworth, Chebyshev, and elliptic filters provide systematic magnitude-response tradeoffs. The bilinear transform maps a stable analog prototype into a stable digital filter, but the analog and digital frequency axes are related nonlinearly, so critical frequencies must be prewarped. In ML preprocessing, causal IIR filters can reshape timing, while forward-backward filtering cancels phase at the cost of noncausality and a squared magnitude response, so preprocessing must be consistent between training and deployment.”
@@ -2168,6 +2408,7 @@
 # That captures the lecture very well and matches the wrap-up themes in the deck.
 #
 # -----------------------
+#
 
 # %% [markdown]
 # Yes. For these two lectures, I would use exit tickets that test the **main design insight** from each class rather than repeat the weekly quiz.
@@ -2186,12 +2427,10 @@
 #
 # For a symmetric FIR,
 #
-# [
-# \tau_g
-# ======
 #
-# \frac{N-1}{2}
-# ]
+# $$\tau_g =
+# \frac{N-1}{2}$$
+#
 #
 # is constant, so frequency components in the passband experience the same delay. Their relative timing is preserved, which reduces waveform smearing. 
 #
@@ -2207,12 +2446,10 @@
 #
 # The ideal lowpass filter has
 #
-# [
-# h_d[n]
-# ======
 #
-# \frac{\sin(\omega_c n)}{\pi n}.
-# ]
+# $$h_d[n] =
+# \frac{\sin(\omega_c n)}{\pi n}.$$
+#
 #
 # Why is this not directly implementable in a real-time system?
 #
@@ -2246,9 +2483,9 @@
 #
 # **Answer**
 #
-# [
-# \boxed{\text{Blackman}}
-# ]
+#
+# $$\boxed{\text{Blackman}}$$
+#
 #
 # is a reasonable choice because it has substantially lower sidelobes, at the cost of a wider main lobe and therefore a wider transition. 
 #
@@ -2262,28 +2499,26 @@
 #
 # **Question**
 #
-# If you increase (N) while keeping the same window family, what usually improves, and what gets worse?
+# If you increase $N$ while keeping the same window family, what usually improves, and what gets worse?
 #
 # **Good answer**
 #
-# Increasing (N) generally narrows the transition band, but increases:
+# Increasing $N$ generally narrows the transition band, but increases:
 #
-# [
-# \text{computation},
-# ]
 #
-# [
-# \text{memory},
-# ]
+# $$\text{computation},$$
+#
+#
+#
+# $$\text{memory},$$
+#
 #
 # and for a linear-phase FIR,
 #
-# [
-# \tau_g
-# ======
 #
-# \frac{N-1}{2}.
-# ]
+# $$\tau_g =
+# \frac{N-1}{2}.$$
+#
 #
 # So delay increases too. 
 #
@@ -2299,12 +2534,10 @@
 #
 # Textbook convolution uses
 #
-# [
-# y[n]
-# ====
 #
-# \sum_k h[k]x[n-k],
-# ]
+# $$y[n] =
+# \sum_k h[k]x[n-k],$$
+#
 #
 # while PyTorch `Conv1d` uses a cross-correlation ordering. Therefore the FIR coefficients must be reversed to reproduce textbook convolution exactly. 
 #
@@ -2346,9 +2579,9 @@
 #
 # **Answer**
 #
-# [
-# \boxed{\text{Butterworth}}
-# ]
+#
+# $$\boxed{\text{Butterworth}}$$
+#
 #
 # because it is monotonic and maximally flat in the passband. 
 #
@@ -2356,15 +2589,15 @@
 #
 # If some passband ripple is acceptable to sharpen the transition:
 #
-# [
-# \boxed{\text{Chebyshev I}}
-# ]
+#
+# $$\boxed{\text{Chebyshev I}}$$
+#
 #
 # If ripple is acceptable in both bands and minimum order matters:
 #
-# [
-# \boxed{\text{Elliptic}}.
-# ]
+#
+# $$\boxed{\text{Elliptic}}.$$
+#
 #
 # ---
 #
@@ -2378,25 +2611,23 @@
 #
 # The inverse bilinear map is
 #
-# [
-# z
-# =
 #
+# $$z =
 # \frac{1+\frac{sT}{2}}
-# {1-\frac{sT}{2}}.
-# ]
+# {1-\frac{sT}{2}}.$$
+#
 #
 # If
 #
-# [
-# \operatorname{Re}{s}<0,
-# ]
+#
+# $$\operatorname{Re}{s}<0,$$
+#
 #
 # then the mapped point satisfies
 #
-# [
-# |z|<1.
-# ]
+#
+# $$|z|<1.$$
+#
 #
 # Therefore the analog left-half plane maps inside the digital unit circle. 
 #
@@ -2412,15 +2643,12 @@
 #
 # Because the bilinear frequency relation is nonlinear:
 #
-# [
-# \boxed{
-# \Omega
-# ======
 #
+# $$\boxed{
+# \Omega =
 # \frac{2}{T}
-# \tan\left(\frac{\omega}{2}\right)
-# }
-# ]
+# \tan\left(\frac{\omega}{2}\right)}$$
+#
 #
 # so the desired digital edge must be mapped to its corresponding analog frequency before designing the prototype. 
 #
@@ -2432,17 +2660,17 @@
 #
 # For
 #
-# [
-# \omega_c=0.4\pi,
+#
+# $$\omega_c=0.4\pi,
 # \qquad
-# T=1,
-# ]
+# T=1,$$
+#
 #
 # should the analog prototype use
 #
-# [
-# \Omega_c=0.4\pi?
-# ]
+#
+# $$\Omega_c=0.4\pi?$$
+#
 #
 # **Answer**
 #
@@ -2450,14 +2678,12 @@
 #
 # Use
 #
-# [
-# \Omega_c
-# ========
 #
+# $$\Omega_c =
 # 2\tan(0.2\pi)
 # \approx
-# \boxed{1.4531}.
-# ]
+# \boxed{1.4531}.$$
+#
 #
 # The lecture’s worked design shows that this maps back to approximately the intended digital cutoff after the bilinear transform. 
 #
@@ -2473,14 +2699,11 @@
 #
 # For real-coefficient filters,
 #
-# [
-# \boxed{
-# H_{\text{fb}}(e^{j\omega})
-# ==========================
 #
-# |H(e^{j\omega})|^2
-# }
-# ]
+# $$\boxed{
+# H_{\text{fb}}(e^{j\omega}) =
+# |H(e^{j\omega})|^2}$$
+#
 #
 # so:
 #
@@ -2537,3 +2760,5 @@
 #
 # ------------------------
 #
+
+# %%
