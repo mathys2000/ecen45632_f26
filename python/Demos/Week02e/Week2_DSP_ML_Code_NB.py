@@ -64,8 +64,8 @@ print("NumPy", np.__version__, "| PyTorch", torch.__version__)
 # A sample is **not** a little rectangle and it is not an approximation to the analog waveform. Mathematically, it is the exact value of the continuous-time signal at one instant. The approximation enters when we try to infer the values *between* samples without enough bandwidth information.
 
 # %%
-f0 = 900.0
-fs = 4000.0
+f0, fs = 900.0, 4000.0
+
 t, xc, n, tn, xn = sample_sinusoid(f0, fs, duration_s=0.006)
 
 plt.plot(t * 1000, xc, label=r"$x_c(t)$")
@@ -76,6 +76,29 @@ plt.legend(); plt.show()
 
 omega0 = 2*np.pi*f0/fs
 print(f"Digital frequency: omega0 = {omega0:.3f} rad/sample = {omega0/np.pi:.3f} pi rad/sample")
+
+# %%
+f00, fs = 900.0, 4000.0
+
+t, xc, n, tn, xn = sample_sinusoid(f00, fs, duration_s=0.004)
+
+plt.plot(t * 1000, xc, label=r"$x_c(t)$")
+plt.stem(tn * 1000, xn, basefmt=" ", label=r"$x[n]$")
+
+f01, fs = 3100.0, 4000.0
+t, xc, n, tn, xn = sample_sinusoid(f01, fs, duration_s=0.004)
+
+plt.plot(t * 1000, xc, label=r"$x_c(t)$")
+plt.stem(tn * 1000, xn, basefmt=" ", label=r"$x[n]$")
+
+plt.xlabel("time (ms)"); plt.ylabel("amplitude")
+plt.title(f"{f00:.0f} Hz, {f01:.0f} Hz sinusoids sampled at {fs:.0f} Hz")
+plt.legend(); plt.show()
+
+omega00 = 2*np.pi*f00/fs
+print(f"Digital frequency: omega00 = {omega00:.3f} rad/sample = {omega00/np.pi:.3f} pi rad/sample")
+omega01 = 2*np.pi*f01/fs
+print(f"Digital frequency: omega01 = {omega01:.3f} rad/sample = {omega01/np.pi:.3f} pi rad/sample")
 
 # %% [markdown]
 # ## 2. Aliasing is non-uniqueness
