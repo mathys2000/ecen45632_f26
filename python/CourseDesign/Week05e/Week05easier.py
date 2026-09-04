@@ -1702,18 +1702,14 @@
 # and symmetric coefficients:
 #
 # $$
-# h[n]
-# ====
-#
+# h[n] =
 # h[M-n].
 # $$
 #
 # Its frequency response is
 #
 # $$
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # \sum_{n=0}^{M}
 # h[n]e^{-j\omega n}.
 # $$
@@ -1723,8 +1719,7 @@
 # For one pair,
 #
 # $$
-# h[n]e^{-j\omega n}
-# +
+# h[n]e^{-j\omega n}+
 # h[M-n]e^{-j\omega(M-n)}.
 # $$
 #
@@ -1747,9 +1742,8 @@
 #
 # Factor out the midpoint delay:
 #
-# # $$
-#
-# h[n]
+# $$
+# h[n] =
 # e^{-j\omega M/2}
 # \left(
 # e^{j\omega(M/2-n)}
@@ -1761,17 +1755,14 @@
 # Using
 #
 # $$
-# e^{j\theta}+e^{-j\theta}
-# ========================
-#
+# e^{j\theta}+e^{-j\theta} =
 # 2\cos\theta,
 # $$
 #
 # we obtain
 #
-# # $$
-#
-# 2h[n]
+# $$
+# 2h[n] =
 # e^{-j\omega M/2}
 # \cos
 # \left(
@@ -1785,9 +1776,7 @@
 #
 # $$
 # \boxed{
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # e^{-j\omega M/2}
 # A(\omega)
 # }
@@ -1799,11 +1788,8 @@
 #
 # $$
 # \boxed{
-# \tau_g
-# ======
-#
-# # \frac{M}{2}
-#
+# \tau_g =
+# \frac{M}{2} =
 # \frac{N-1}{2}.
 # }
 # $$
@@ -1833,31 +1819,24 @@
 # Now suppose
 #
 # $$
-# h[n]
-# ====
-#
+# h[n] =
 # -h[M-n].
 # $$
 #
 # Pairing gives
 #
 # $$
-# h[n]e^{-j\omega n}
-# ------------------
-#
+# h[n]e^{-j\omega n} =
 # h[n]e^{-j\omega(M-n)}.
 # $$
 #
 # Factor again:
 #
-# # $$
-#
-# h[n]
+# $$
+# h[n] =
 # e^{-j\omega M/2}
 # \left(
-# e^{j\theta}
-# -----------
-#
+# e^{j\theta} -
 # e^{-j\theta}
 # \right),
 # $$
@@ -1865,9 +1844,7 @@
 # where
 #
 # $$
-# \theta
-# ======
-#
+# \theta =
 # \omega
 # \left(
 # \frac{M}{2}-n
@@ -1877,9 +1854,7 @@
 # Using
 #
 # $$
-# e^{j\theta}-e^{-j\theta}
-# ========================
-#
+# e^{j\theta}-e^{-j\theta} =
 # 2j\sin\theta,
 # $$
 #
@@ -1937,9 +1912,7 @@
 # Then
 #
 # $$
-# \tau_g
-# ======
-#
+# \tau_g =
 # \frac{N-1}{2}
 # $$
 #
@@ -2084,9 +2057,7 @@
 # At DC,
 #
 # $$
-# H(e^{j0})
-# =========
-#
+# H(e^{j0}) =
 # \sum_n h[n].
 # $$
 #
@@ -2174,13 +2145,8 @@
 # Group delay:
 #
 # $$
-# \tau_g
-# ======
-#
-# # \frac{5-1}{2}
-#
-# 2.
-#
+# \tau_g =
+# \frac{5-1}{2} = 2.
 # $$
 #
 # ### Example 2
@@ -2297,27 +2263,21 @@
 # Suppose
 #
 # $$
-# z_0
-# ===
-#
+# z_0 =
 # 0.7e^{j0.6}.
 # $$
 #
 # Then the conjugate is
 #
 # $$
-# z_0^*
-# =====
-#
+# z_0^* =
 # 0.7e^{-j0.6}.
 # $$
 #
 # The reciprocal is
 #
 # $$
-# \frac{1}{z_0}
-# =============
-#
+# \frac{1}{z_0} =
 # \frac{1}{0.7}
 # e^{-j0.6}
 # \approx
@@ -2327,9 +2287,7 @@
 # And the reciprocal conjugate is
 #
 # $$
-# \frac{1}{z_0^*}
-# ===============
-#
+# \frac{1}{z_0^*} =
 # 1.4286e^{j0.6}.
 # $$
 #
@@ -2366,9 +2324,7 @@
 # The lecture also states
 #
 # $$
-# H(z)
-# ====
-#
+# H(z) =
 # \pm z^{-M}H(z^{-1}).
 # $$
 #
@@ -2391,9 +2347,7 @@
 # Suppose
 #
 # $$
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # e^{-j\omega M/2}A(\omega),
 # $$
 #
@@ -2434,9 +2388,7 @@
 # The deck writes a multi-channel 1-D convolution as
 #
 # $$
-# y_c[n]
-# ======
-#
+# y_c[n] =
 # b_c
 # +
 # \sum_m
@@ -2656,18 +2608,14 @@
 # For symmetric taps,
 #
 # $$
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # e^{-j\omega M/2}A(\omega).
 # $$
 #
 # Therefore,
 #
 # $$
-# \angle H(e^{j\omega})
-# =====================
-#
+# \angle H(e^{j\omega}) =
 # -\omega\frac{M}{2}
 # $$
 #
@@ -2676,17 +2624,11 @@
 # Hence,
 #
 # $$
-# \tau_g
-# ======
-#
-# *
-#
+# \tau_g =
 # \frac{d}{d\omega}
 # \left(
 # -\omega\frac{M}{2}
-# \right)
-# =======
-#
+# \right) =
 # \boxed{
 # \frac{M}{2}
 # }.
@@ -2702,9 +2644,7 @@
 #
 # $$
 # \boxed{
-# \tau_g
-# ======
-#
+# \tau_g =
 # \frac{N-1}{2}.
 # }
 # $$
@@ -2717,9 +2657,7 @@
 #
 # $$
 # \boxed{
-# \text{Type I}
-# =============
-#
+# \text{Type I} =
 # \text{odd/symmetric}
 # }
 # $$
@@ -2728,9 +2666,7 @@
 #
 # $$
 # \boxed{
-# \text{Type II}
-# ==============
-#
+# \text{Type II} =
 # \text{even/symmetric}
 # }
 # $$
@@ -2743,9 +2679,7 @@
 #
 # $$
 # \boxed{
-# \text{Type III}
-# ===============
-#
+# \text{Type III} =
 # \text{odd/antisymmetric}
 # }
 # $$
@@ -2764,9 +2698,7 @@
 #
 # $$
 # \boxed{
-# \text{Type IV}
-# ==============
-#
+# \text{Type IV} =
 # \text{even/antisymmetric}
 # }
 # $$
@@ -2784,9 +2716,7 @@
 # For
 #
 # $$
-# z_0
-# ===
-#
+# z_0 =
 # 0.7e^{j0.6},
 # $$
 #
@@ -2878,9 +2808,7 @@
 # Mathematically,
 #
 # $$
-# |H(e^{j\omega})|
-# ================
-#
+# |H(e^{j\omega})| =
 # |K|
 # \frac{\prod_i|e^{j\omega}-z_i|}
 # {\prod_k|e^{j\omega}-p_k|}.
@@ -2890,11 +2818,7 @@
 #
 # $$
 # \boxed{
-# \tau_p(\omega)
-# ==============
-#
-# *
-#
+# \tau_p(\omega) =
 # \frac{\angle H(e^{j\omega})}{\omega}
 # }
 # $$
@@ -2903,11 +2827,7 @@
 #
 # $$
 # \boxed{
-# \tau_g(\omega)
-# ==============
-#
-# *
-#
+# \tau_g(\omega) =
 # \frac{d}{d\omega}
 # \angle H(e^{j\omega}).
 # }
@@ -2942,11 +2862,8 @@
 # the group delay is
 #
 # $$
-# \tau_g
-# ======
-#
-# # \frac{21-1}{2}
-#
+# \tau_g =
+# \frac{21-1}{2} =
 # \boxed{10}.
 # $$
 #
@@ -3011,9 +2928,7 @@
 # > Pairing symmetric taps lets the response factor as
 #
 # $$
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # e^{-j\omega M/2}A(\omega),
 # $$
 #
@@ -3056,18 +2971,14 @@
 # derive
 #
 # $$
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # e^{-j\omega M/2}A(\omega),
 # $$
 #
 # explain why
 #
 # $$
-# \tau_g
-# ======
-#
+# \tau_g =
 # \frac{N-1}{2},
 # $$
 #
@@ -3110,7 +3021,7 @@
 #
 
 # %% [markdown]
-# Week 5, Lectures 9 and 10, Exit Tickets
+# ## Week 5, Lectures 9 and 10, Exit Tickets
 #
 # What are good exit ticket questions with answers for these lectures?
 #
@@ -3175,7 +3086,7 @@
 #
 
 # %% [markdown]
-# Week 5, Lectures 9 and 10, Exit Tickets
+# ## Week 5, Lectures 9 and 10, Exit Tickets
 #
 # What are good exit ticket questions with answers for these lectures?
 #
@@ -3198,9 +3109,7 @@
 # The distance from the pole to the unit-circle point $e^{j\omega_0}$ becomes smaller, so the denominator in
 #
 # $$
-# |H(e^{j\omega})|
-# ================
-#
+# |H(e^{j\omega})| =
 # |K|
 # \frac{\prod_i |e^{j\omega}-z_i|}
 # {\prod_k |e^{j\omega}-p_k|}
@@ -3219,18 +3128,14 @@
 # Explain the difference between
 #
 # $$
-# \tau_p(\omega)
-# ==============
-#
+# \tau_p(\omega) =
 # -\frac{\angle H(e^{j\omega})}{\omega}
 # $$
 #
 # and
 #
 # $$
-# \tau_g(\omega)
-# ==============
-#
+# \tau_g(\omega) =
 # -\frac{d}{d\omega}\angle H(e^{j\omega}).
 # $$
 #
@@ -3269,9 +3174,7 @@
 # Suppose
 #
 # $$
-# |H_1(e^{j\omega})|
-# ==================
-#
+# |H_1(e^{j\omega})| =
 # |H_2(e^{j\omega})|
 # $$
 #
@@ -3322,9 +3225,7 @@
 # It can modify phase and group delay while preserving magnitude:
 #
 # $$
-# \tau_{g,\text{tot}}(\omega)
-# ===========================
-#
+# \tau_{g,\text{tot}}(\omega) =
 # \tau_{g,H}(\omega)
 # +
 # \tau_{g,ap}(\omega).
@@ -3378,9 +3279,7 @@
 # Pairing symmetric taps allows the response to be written as
 #
 # $$
-# H(e^{j\omega})
-# ==============
-#
+# H(e^{j\omega}) =
 # e^{-j\omega M/2}A(\omega),
 # $$
 #
@@ -3615,3 +3514,5 @@
 #
 # --------------------------
 #
+
+# %%
