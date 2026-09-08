@@ -1087,7 +1087,7 @@
 # $$
 # \text{lowpass}
 # \rightarrow
-# \downsample.
+# \text{downsample}.
 # $$
 #
 # So one natural CNN modification is
@@ -1099,7 +1099,7 @@
 # \rightarrow
 # \text{lowpass}
 # \rightarrow
-# \downsample.
+# \text{downsample}.
 # $$
 #
 # That is the BlurPool-style design presented in the slides. 
@@ -3058,7 +3058,7 @@
 # --------------------------
 #
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ## Week 6, Lectures 11 and 12, Exit Tickets
 #
 # What are good exit ticket questions with answers for these lectures?
@@ -3080,6 +3080,9 @@
 #
 #
 # * **Answer:** Upsampling by zero insertion introduces $L-1$ zeros between original samples, which reduces the average value of the sequence to $1/L$. A lowpass filter with a unit DC gain would preserve this reduced average rather than restoring the signal. Applying a gain of $L$ (i.e., setting $H_I(e^{j0}) = L$) ensures that the reconstructed sequence preserves the original amplitude, keeping constant inputs constant.
+#
+# ---
+#
 
 # %% [markdown]
 # ## Week 6, Lectures 11 and 12, Exit Tickets
