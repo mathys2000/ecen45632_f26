@@ -1,0 +1,220 @@
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.3
+#   kernelspec:
+#     display_name: Python [conda env:ecen45632]
+#     language: python
+#     name: conda-env-ecen45632-py
+# ---
+
+# %% [markdown]
+# # PS04_Solution_ClaudeAI
+#
+# ClaudeAI solution
+# ---
+#
+
+# %% [markdown]
+# # ECEN 4/5632 — Problem Set 4 Solutions
+#
+# ## Problem 1: Difference Equation to H(z)
+#
+# **Given:** y[n] − 1.4y[n−1] + 0.45y[n−2] = x[n] + x[n−1]
+#
+# ### a) Find H(z)
+#
+# Taking the Z-transform of both sides (assuming zero initial conditions):
+#
+# Y(z)[1 − 1.4z⁻¹ + 0.45z⁻²] = X(z)[1 + z⁻¹]
+#
+# $$H(z) = \frac{1 + z^{-1}}{1 - 1.4z^{-1} + 0.45z^{-2}}$$
+#
+# ### b) Zeros and poles
+#
+# Multiply numerator and denominator by z²:
+#
+# $$H(z) = \frac{z^2 + z}{z^2 - 1.4z + 0.45} = \frac{z(z+1)}{z^2 - 1.4z + 0.45}$$
+#
+# **Zeros:** z = 0 and z = −1
+#
+# **Poles:** solve z² − 1.4z + 0.45 = 0
+#
+# z = [1.4 ± √(1.96 − 1.8)]/2 = [1.4 ± 0.4]/2
+#
+# **Poles:** z = 0.9 and z = 0.5
+#
+# ### c) ROC for the causal system
+#
+# For a causal system, the ROC is the region *outside* the pole of largest magnitude:
+#
+# **ROC: |z| > 0.9**
+#
+# ### d) BIBO stability
+#
+# A causal LTI system is BIBO stable iff the ROC includes the unit circle. Since both poles (0.9 and 0.5) lie strictly inside the unit circle, the causal ROC |z| > 0.9 contains |z| = 1.
+#
+# **Yes — the system is BIBO stable.**
+#
+# ---
+#
+# ## Problem 2: Geometric Frequency-Response Reasoning
+#
+# **Given:** H(z) = (1 + z⁻¹)/(1 − 0.8z⁻¹)
+#
+# ### a) Poles and zeros
+#
+# Writing H(z) = (z + 1)/(z − 0.8):
+#
+# - **Zero:** z = −1
+# - **Pole:** z = 0.8
+#
+# ### b) Geometric evaluation
+#
+# For z = e^{jω} on the unit circle:
+#
+# $$|H(e^{j\omega})| = \frac{|e^{j\omega} - (-1)|}{|e^{j\omega} - 0.8|} = \frac{\text{distance to zero}}{\text{distance to pole}}$$
+#
+# **At ω = 0** (z = 1):
+# - Distance to zero at −1: |1 − (−1)| = 2 (long vector — evaluation point is far from the zero)
+# - Distance to pole at 0.8: |1 − 0.8| = 0.2 (very short vector — evaluation point is right next to the pole)
+# - |H(e^{j0})| = 2 / 0.2 = **10**
+#
+# **At ω = π** (z = −1):
+# - Distance to zero at −1: |−1 − (−1)| = 0 (the evaluation point *sits on top of* the zero)
+# - Distance to pole at 0.8: |−1 − 0.8| = 1.8
+# - |H(e^{jπ})| = 0 / 1.8 = **0**
+#
+# **Sketch description:** Draw the unit circle with the pole marked as an ×  at z = 0.8 (on the positive real axis, inside the circle) and the zero marked as an ○ at z = −1 (on the circle itself, at the leftmost point). At ω = 0, the point z = 1 is close to the pole and far from the zero → short pole-vector, long zero-vector → large gain. At ω = π, the point z = −1 coincides exactly with the zero → zero-vector length is 0 → the response is completely nulled.
+#
+# ### c) Conclusion
+#
+# The gain is large near ω = 0 and drops to exactly zero at ω = π. This is a **lowpass filter**: it passes low frequencies (and even boosts DC) while completely rejecting the Nyquist frequency.
+#
+# ---
+#
+# ## Problem 3: 600 Hz Notch Filter Design (f_s = 9000 Hz)
+#
+# ### a) Pole/zero locations
+#
+# $$\omega_0 = \frac{2\pi f_0}{f_s} = \frac{2\pi (600)}{9000} = \frac{2\pi}{15} \approx 0.4189 \text{ rad} \approx 24^\circ$$
+#
+# **Zeros** (on the unit circle, radius 1, at ±ω₀):
+# $$z = e^{\pm j\omega_0} = \cos(24^\circ) \pm j\sin(24^\circ) \approx 0.9135 \pm j\,0.4067$$
+#
+# **Poles** (radius r = 0.96, same angle):
+# $$z = 0.96\,e^{\pm j\omega_0} \approx 0.8770 \pm j\,0.3904$$
+#
+# This gives the standard second-order notch transfer function:
+#
+# $$H(z) = \frac{1 - 2\cos(\omega_0)z^{-1} + z^{-2}}{1 - 2r\cos(\omega_0)z^{-1} + r^2 z^{-2}}$$
+#
+# ### b) Effect of increasing r from 0.96 to 0.99
+#
+# Moving the poles closer to the unit circle (closer to the zeros) **narrows the notch bandwidth**, making the null much sharper/more selective around exactly 600 Hz while leaving frequencies just outside the notch nearly unaffected. The trade-off: the impulse response rings longer (slower pole decay, since the pole radius is closer to 1), and the filter becomes more sensitive to coefficient quantization/rounding errors — a small perturbation in r or ω₀ has a larger relative effect on the notch shape when r is very close to 1.
+#
+# ---
+#
+# ## Problem 4: Ideal Lowpass FIR Filter
+#
+# ### a) Inverse DTFT
+#
+# $$h_d[n] = \frac{1}{2\pi}\int_{-\omega_c}^{\omega_c} e^{j\omega n}\,d\omega = \frac{\sin(\omega_c n)}{\pi n}, \quad n \neq 0$$
+#
+# $$h_d[0] = \frac{\omega_c}{\pi}$$
+#
+# (This can also be written as $h_d[n] = \dfrac{\omega_c}{\pi}\,\text{sinc}\!\left(\dfrac{\omega_c n}{\pi}\right)$ using the normalized sinc, sinc(x) = sin(πx)/(πx).)
+#
+# ### b) Sketch for ω_c = π/3, n ∈ [−8, 8]
+#
+# $$h_d[0] = \frac{\pi/3}{\pi} = \frac{1}{3} \approx 0.3333$$
+#
+# Selected values (h_d is even, h_d[−n] = h_d[n]):
+#
+# | n | 0 | ±1 | ±2 | ±3 | ±4 | ±5 | ±6 | ±7 | ±8 |
+# |---|---|----|----|----|----|----|----|----|----|
+# | h_d[n] | 0.3333 | 0.2757 | 0.1378 | 0.0000 | −0.0689 | −0.0551 | 0.0000 | 0.0394 | 0.0345 |
+#
+# **Sketch description:** A symmetric, damped-oscillatory "sinc" shape centered at n = 0. Peak of 1/3 at n = 0, decaying envelope ~1/(πn), with exact zero crossings at every third sample (n = ±3, ±6, ...) because sin(nπ/3) = 0 there. The tails extend (in principle) to n = ±∞, oscillating in sign.
+#
+# ### c) Why this can't be an exact real-time FIR filter
+#
+# h_d[n] is **two-sided** (nonzero for n < 0, so it's non-causal) and has **infinite duration** (it never exactly reaches zero for finite n). A real-time FIR filter must have a finite number of taps and can only use present and past inputs (causal). Since h_d[n] is both infinite in length and non-causal, it cannot be implemented exactly — it must be truncated (finite length) and shifted (to be causal), which is the origin of the windowing/Gibbs phenomenon discussed in Problem 5.
+#
+# ### d) Causal shift for N = 61
+#
+# For an odd length N, truncate h_d[n] over n ∈ [−(N−1)/2, (N−1)/2] = [−30, 30], then shift right by (N−1)/2 = 30 samples:
+#
+# $$h[n] = h_d[n - 30], \quad n = 0, 1, \dots, 60$$
+#
+# **Constant group delay = (N − 1)/2 = 30 samples.**
+#
+# ---
+#
+# ## Problem 5: Window Tradeoff (51-tap filters)
+#
+# ### a) Narrower transition band
+# **Filter A (rectangular window)** has the narrower transition band — the rectangular window has the narrowest main lobe of common windows for a given length.
+#
+# ### b) Lower stopband sidelobes
+# **Filter B (Hamming window)** has much lower stopband sidelobes, because the Hamming window's smooth tapering greatly suppresses sidelobe energy compared to the abrupt rectangular truncation.
+#
+# ### c) Approximate first-sidelobe levels
+# - **Rectangular window:** first sidelobe ≈ **−13 dB** relative to the main lobe peak
+# - **Hamming window:** first sidelobe ≈ **−41 to −43 dB** relative to the main lobe peak (minimum stopband attenuation typically quoted around 53 dB)
+#
+# ### d) Why longer rectangular windows don't remove Gibbs overshoot
+#
+# Increasing the rectangular window length N narrows the transition band (compresses the ripple pattern closer to the discontinuity in frequency), but it does **not** reduce the *height* of the overshoot. This is the Gibbs phenomenon: near a discontinuity, truncating a Fourier series produces a fixed **~9% overshoot** of the jump size regardless of how many terms are kept. Increasing N only moves the ripples closer to the discontinuity and increases their density — it does not make the peak overshoot amplitude shrink. To reduce the overshoot itself you need a different (tapered) window, such as Hamming, not just a longer rectangular one.
+#
+# ---
+#
+# ## Problem 6: Symmetry and Linear Phase
+#
+# **Given:** real FIR filter of length N with h[n] = h[N − 1 − n], n = 0, ..., N − 1.
+#
+# ### a) Derivation
+#
+# Let M = (N − 1)/2 (the center of symmetry). Factor out the linear-phase term:
+#
+# $$H(e^{j\omega}) = \sum_{n=0}^{N-1} h[n]e^{-j\omega n} = e^{-j\omega M}\sum_{n=0}^{N-1} h[n]\,e^{-j\omega(n-M)}$$
+#
+# Substitute m = n − M, so the sum runs over m = −M, ..., M (symmetric interval, since N − 1 − M = M). Define g[m] = h[m + M]. Because h[n] = h[N − 1 − n], we get g[m] = g[−m]: the shifted sequence is **even**.
+#
+# $$\sum_{m=-M}^{M} g[m]e^{-j\omega m} = g[0] + \sum_{m=1}^{M} g[m]\left(e^{-j\omega m} + e^{j\omega m}\right) = g[0] + 2\sum_{m=1}^{M} g[m]\cos(\omega m)$$
+#
+# The right-hand side is manifestly **real-valued** — call it A(ω). Therefore:
+#
+# $$H(e^{j\omega}) = e^{-j\omega(N-1)/2}\,A(\omega), \qquad A(\omega) \text{ real}$$
+#
+# which is exactly the required form.
+#
+# ### b) Group delay and relevance to ML feature extraction
+#
+# The phase is $\theta(\omega) = -\omega(N-1)/2$ wherever A(ω) ≠ 0 (A(ω) can go negative, contributing an extra constant π jump, but the *linear* term is unaffected). The group delay is:
+#
+# $$\tau_g(\omega) = -\frac{d\theta(\omega)}{d\omega} = \frac{N-1}{2} \quad \text{(constant, independent of }\omega\text{)}$$
+#
+# **Why this matters for ML feature extraction:** a constant group delay means *every* frequency component of the signal is delayed by exactly the same number of samples — there is no phase distortion, so the filtered waveform is simply a delayed, undistorted copy of the shape that would result from an ideal (zero-delay) filter. In a feature-extraction pipeline (e.g., a filterbank producing multiple sub-band signals, as in MFCC-style audio features), this guarantees that transients, onsets, and relative timing relationships stay aligned across all filter channels — the fixed, known delay (N−1)/2 can simply be subtracted out. Nonlinear-phase filters would smear or shift different frequency components by different amounts, corrupting timing-sensitive features and complicating alignment across channels.
+#
+# ---
+#
+# ## Problem 7: Pole Radius and Time-Domain Decay
+#
+# For a causal system with a complex-conjugate pole pair $p = r e^{\pm j\theta}$, a partial-fraction expansion of H(z) contains terms of the form:
+#
+# $$A\,p^n u[n] + A^*\,p^{*n}u[n] = 2|A|\,r^n\cos(n\theta + \phi)\,u[n]$$
+#
+# **Why the decay is r^n:** each pole contributes an impulse-response term proportional to $p^n = r^n e^{jn\theta}$. The magnitude of this term is $|p|^n = r^n$ exactly, since |p| = r. The angle θ only produces oscillation (a damped sinusoid); it's the magnitude r that controls the decay envelope.
+#
+# **Why r → 1 increases ringing duration:** the "time constant" of the decay behaves like $\tau \approx -1/\ln r$. As r → 1⁻, ln r → 0⁻, so τ → ∞ — the envelope r^n decays more and more slowly, meaning the impulse response keeps oscillating (ringing) for many more samples before becoming negligible.
+#
+# **Why r → 1 sharpens the frequency resonance:** geometrically, $|H(e^{j\omega})|$ near the pole's angle is inversely proportional to the distance from the point $e^{j\omega}$ on the unit circle to the pole. That distance reaches its **minimum value of (1 − r)** exactly at ω = θ. As r → 1, this minimum distance (1 − r) → 0, so the reciprocal-distance factor blows up right at ω = θ, producing a tall, narrow resonance peak — i.e., a high-Q (high-quality-factor) filter.
+#
+# **Connecting the two effects:** both are governed by the same distance (1 − r) of the pole from the unit circle. A pole close to the unit circle is simultaneously (1) close in distance to the point e^{jθ}, producing a sharp/narrow frequency peak, and (2) close to magnitude 1, producing very slow amplitude decay in time. This is a time–bandwidth duality: narrow bandwidth (sharp resonance) and long ringing time are two manifestations of the same underlying geometric fact — the pole sitting near the unit circle. Roughly, the resonance's 3-dB bandwidth $\Delta\omega \approx 2(1-r)$ and the ringing time constant $\tau \approx 1/(1-r)$, so $\Delta\omega \cdot \tau \approx$ constant: you cannot make the resonance arbitrarily sharp without paying for it in longer time-domain ringing, and vice versa.
+
+# %%

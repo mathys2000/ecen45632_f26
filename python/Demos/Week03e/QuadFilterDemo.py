@@ -28,14 +28,14 @@ from scipy.io import wavfile
 
 # %%
 # Read audio signal
-Fs, audio16 = wavfile.read('audio/Zest_8000_mono.wav')
-#Fs, audio16 = wavfile.read('audio/Zest_8000_mono_800tone.wav')
+#Fs, audio16 = wavfile.read('audio/Zest_8000_mono.wav')
+Fs, audio16 = wavfile.read('audio/Zest_8000_mono_800tone.wav')
 audio = audio16.astype(np.float32)/2**15
 tt = np.arange(audio.size)/Fs    # time axis
 
 # %%
 # Parameters
-num_type = 'rez'       # numerator type: 'rez' for real zeros, 'ccz' for complex-conjugate zeros
+num_type = 'ccz'       # numerator type: 'rez' for real zeros, 'ccz' for complex-conjugate zeros
 # 'rez' parameters
 r1z, r2z = 0, -0.3      # numerator r1, r2
 #r1z, r2z = -1, 1      # numerator r1, r2
@@ -45,11 +45,11 @@ r1z, r2z = 0, -0.3      # numerator r1, r2
 rhoz, thz = 1, 36     # numerator rho, theta (deg)
 #rhoz, thz = 1, 180     # numerator rho, theta (deg)
 
-den_type = 'rep'       # Denominator type: 'rep' for real poles, 'ccp' for complex-conjugate poles
+den_type = 'ccp'       # Denominator type: 'rep' for real poles, 'ccp' for complex-conjugate poles
 # 'rep' parameters
 r1p, r2p = 0.4, 0.8    # denominator r1, r2
 # 'ccp' parameters
-rhop, thp = 0.8, 34     # denominator rho, theta (deg)
+rhop, thp = 0.98, 36     # denominator rho, theta (deg)
 
 # %%
 # Generate filter
