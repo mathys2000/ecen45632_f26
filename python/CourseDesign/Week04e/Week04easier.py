@@ -324,13 +324,13 @@
 # An FIR filter of length $N$ has
 #
 #
-# $$y[n] \sum_{k=0}^{N-1} h[k]x[n-k].$$
+# $$y[n] = \sum_{k=0}^{N-1} h[k]x[n-k].$$
 #
 #
 # An IIR filter typically has a recursion such as
 #
 #
-# $$y[n] \sum_{k=0}^{M} b_kx[n-k] \sum_{r=1}^{P} a_ry[n-r].$$
+# $$y[n] = \sum_{k=0}^{M} b_kx[n-k] - \sum_{r=1}^{P} a_ry[n-r].$$
 #
 #
 # The deck emphasizes that FIR filters can have exact linear phase when the taps possess the required symmetry, whereas IIR filters usually achieve sharper magnitude responses with fewer coefficients but generally have nonlinear phase.
@@ -627,11 +627,15 @@
 # The basic window-method equation is 
 #
 # $$\boxed{
-# h_w[n]
+# h_w[n] =
 # h_d[n]w[n].
-# }$$This looks trivial in time, but the important consequence is in frequency:$$\boxed{
+# }$$
+#
+# This looks trivial in time, but the important consequence is in frequency:
+#
+# $$\boxed{
 # H_w(e^{j\omega})
-# \frac{1}{2\pi}
+# =\frac{1}{2\pi}
 # H_d(e^{j\omega})
 # *
 # W(e^{j\omega})

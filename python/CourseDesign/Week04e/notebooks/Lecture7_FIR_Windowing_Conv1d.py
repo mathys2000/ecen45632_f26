@@ -7,9 +7,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.3
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python [conda env:ecen45632]
 #     language: python
-#     name: python3
+#     name: conda-env-ecen45632-py
 # ---
 
 # %% [markdown]
@@ -98,3 +98,5 @@ with torch.no_grad():
 print("learnable by default:",conv.weight.requires_grad)
 conv.weight.requires_grad_(False)
 print("frozen fixed DSP front-end:",conv.weight.requires_grad)
+
+# %%
