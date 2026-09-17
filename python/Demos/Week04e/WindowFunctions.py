@@ -87,6 +87,7 @@ axs.set_title(f'Choice of Window Tradeoff: Transition Width vs. Stopband Ripple'
 axs.set_ylabel(f'$|H(e^{{j\\omega}})|$')
 axs.set_xlabel(f'Normalized frequency $\\omega/\\pi$, $\\omega_c/\\pi$={wc/np.pi}')
 axs.set_ylim([-100, 10])
+#axs.set_xlim([0, 1.0])
 axs.grid(alpha=0.5)
 axs.legend()
 plt.show()
