@@ -33,6 +33,7 @@ fsz2 = (fsz[0], 1.5*fsz[1]/2)
 filts = ['butt', 'cheby1', 'cheby2', 'ellip']
 N = 5           # filter order
 Wc = 1          # cutoff frequency
+#Wc = 1.453085     # prewarp for wc=0.4*pi at T=1
 rp = 1          # passband ripple in dB
 rs = 40         # stopband ripple in dB
 WW = np.logspace(-1, 1, 1000)    # frequency in rad/s
@@ -94,9 +95,11 @@ if 'ellip' in filts:
     ax10.semilogx(WW, 180/np.pi*np.unwrap(np.angle(HjW_ellip)), color='red', label='Elliptic')
 ax10.grid(alpha=0.5)
 ax10.legend()
-ax10.set_xlabel(f'Analog frequency $\\Omega$ [rad/sec], $\\Omega_c$={Wc} [rad/sec]')
+ax10.set_ylabel(f'$\\angle H(j\\Omega)$ [deg, unwrapped]')
+ax10.set_xlabel(f'Analog frequency $\\Omega$ [rad/sec], $\\Omega_c$={Wc:1.3f} [rad/sec]')
 axx1 = fig.add_subplot(axs[:,1])
-axx1.plot(cir.real, cir.imag, '--k', linewidth=0.5)
+axx1.plot(Wc*cir.real, Wc*cir.imag, '--k', linewidth=0.5)
+axx1.axvline(0, color='black', linewidth=0.5)
 if 'butt' in filts:
     axx1.plot(z_butt.real, z_butt.imag, 'o', mec='blue')
     axx1.plot(p_butt.real, p_butt.imag, 'x', mec='blue', label='Butterworth')
@@ -109,7 +112,7 @@ if 'cheby2' in filts:
 if 'ellip' in filts:
     axx1.plot(z_ellip.real, z_ellip.imag, 'o', mec='red')
     axx1.plot(p_ellip.real, p_ellip.imag, 'x', mec='red', label='Elliptic')
-axx1.set_title('Analog Design Pole-Zero Plot')
+axx1.set_title(f'Analog Design Pole-Zero Plot, $\\Omega_c$={Wc:1.3f}')
 axx1.set_ylim([-2, 2])
 axx1.grid(alpha=0.5)
 axx1.set_aspect('equal')
@@ -183,7 +186,8 @@ if 'ellip' in filts:
     ax10.semilogx(ww/np.pi, 180/np.pi*np.unwrap(np.angle(Hejw_ellip)), color='red', label='Elliptic')
 ax10.grid(alpha=0.5)
 ax10.legend()
-ax10.set_xlabel(f'Normalized frequency $\\omega/\\pi$ [rad/sample], $\\omega_c/\\pi$={wc/np.pi:1.4f}')
+ax10.set_ylabel(f'$\\angle H(e^{{j\\omega}})$ [deg, unwrapped]')
+ax10.set_xlabel(f'Normalized frequency $\\omega/\\pi$ [rad/sample], $\\omega_c/\\pi$={wc/np.pi:1.3f}')
 axx1 = fig.add_subplot(axs[:,1])
 axx1.plot(cir.real, cir.imag, '--k', linewidth=0.5)
 if 'butt' in filts:
@@ -198,7 +202,7 @@ if 'cheby2' in filts:
 if 'ellip' in filts:
     axx1.plot(z_ellip_DT.real, z_ellip_DT.imag, 'o', mec='red')
     axx1.plot(p_ellip_DT.real, p_ellip_DT.imag, 'x', mec='red', label='Elliptic')
-axx1.set_title('DT LPF Pole-Zero Plot')
+axx1.set_title(f'DT LPF Pole-Zero Plot, $\\omega_c/\\pi$={wc/np.pi:1.3f}')
 #axx1.set_ylim([-2, 2])
 axx1.grid(alpha=0.5)
 axx1.set_aspect('equal')
@@ -236,7 +240,7 @@ if 'ellip' in filts:
     axs.plot(ww_lin[1:-2]/np.pi, taug_ellip_DT[:-2], color='red', label='Elliptic')
 axs.set_title(f'Group Delay of DT LPFs from Analog Prototypes, N={N}, T={T}')
 axs.set_ylabel(f'Group delay (samples)')
-axs.set_xlabel(f'Normalized frequency $\\omega/\\pi$ [rad/sample], $\\omega_c/\\pi$={wc/np.pi:1.4f}')
+axs.set_xlabel(f'Normalized frequency $\\omega/\\pi$ [rad/sample], $\\omega_c/\\pi$={wc/np.pi:1.3f}')
 axs.grid(alpha=0.5)
 axs.set_ylim([0, 30/T])
 axs.legend()
