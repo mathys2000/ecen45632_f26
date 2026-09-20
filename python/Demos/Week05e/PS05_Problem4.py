@@ -99,7 +99,7 @@ axs[0].axhline(-Ap, color='k', linestyle='--', linewidth=0.7)
 axs[0].axvline(wp/np.pi, color='k', linestyle='--', linewidth=0.7)
 axs[0].axvline(0.955*wp/np.pi, color='r', linestyle='--', linewidth=0.7)
 axs[0].axvline(ws/np.pi, color='k', linestyle='--', linewidth=0.7)
-axs[0].set_title(f'Butterworth LPF, $N$={N}, $\\omega_p/\\pi$={wp/np.pi}, $\\omega_s/\\pi$={ws/np.pi}, T={T}')
+axs[0].set_title(f'Butterworth LPF, $N$={N_np}, $\\omega_p/\\pi$={wp/np.pi}, $\\omega_s/\\pi$={ws/np.pi}, T={T}')
 axs[0].set_ylabel('$|H(e^{{j\\omega}})|$')
 axs[0].grid(alpha=0.5)
 axs[0].set_ylim([-3, 1])
@@ -118,5 +118,17 @@ axs[1].grid(alpha=0.5)
 axs[1].set_ylim([-80, 10])
 axs[1].legend(loc=1)
 plt.show()
+
+# %%
+2*np.tan(0.3*np.pi)
+
+# %%
+print(Wp, Ws)
+
+# %%
+(np.log10(999/(10**0.1-1)))/(2*np.log10(Ws/Wp))
+
+# %%
+np.log10((10**(As/10)-1)/(10**(Ap/10)-1))/(2*np.log10(ws/wp))
 
 # %%
