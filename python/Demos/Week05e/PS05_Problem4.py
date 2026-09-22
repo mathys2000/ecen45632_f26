@@ -120,15 +120,3 @@ axs[1].legend(loc=1)
 plt.show()
 
 # %%
-2*np.tan(0.3*np.pi)
-
-# %%
-print(Wp, Ws)
-
-# %%
-(np.log10(999/(10**0.1-1)))/(2*np.log10(Ws/Wp))
-
-# %%
-np.log10((10**(As/10)-1)/(10**(Ap/10)-1))/(2*np.log10(ws/wp))
-
-# %%
