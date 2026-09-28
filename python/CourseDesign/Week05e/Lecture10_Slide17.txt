@@ -1,0 +1,56 @@
+Lecture 10, Slide 17
+
+Can you explain "multi-channel 1-D convolution as y_c[n]=b_c+\sum_m \sum_{k=0}^{K-1} w_{c,m}[k] x_m[n+k]" in the context of PyTorch conv1d?
+
+Claude Sonnet 5:
+
+This formula is exactly what `torch.nn.Conv1d` computes (strictly speaking it's cross-correlation, not a flipped-kernel convolution, but that's what deep learning calls "convolution").
+
+**Mapping the symbols to PyTorch**
+
+| Symbol | Meaning | PyTorch |
+|---|---|---|
+| `x_m[n]` | Input channel `m` at position `n` | `input[batch, m, n]`, shape `(N, C_in, L)` |
+| `y_c[n]` | Output channel `c` at position `n` | `output[batch, c, n]`, shape `(N, C_out, L_out)` |
+| `w_{c,m}[k]` | Kernel weight for output channel `c`, input channel `m`, tap `k` | `conv.weight[c, m, k]`, shape `(C_out, C_in, K)` |
+| `b_c` | Bias for output channel `c` | `conv.bias[c]`, shape `(C_out,)` |
+| `K` | Kernel size | `kernel_size` |
+
+**What the formula does**
+
+For each output channel `c` and each output position `n`:
+
+1. Take a window of `K` consecutive samples starting at `n` (`x_m[n], ..., x_m[n+K-1]`) from **every** input channel `m`.
+2. Multiply each by its matching weight `w_{c,m}[k]`.
+3. Sum over the window (`k`) **and** over all input channels (`m`).
+4. Add the bias `b_c`.
+
+So each output channel is a weighted combination of all input channels, and each output channel has its own separate set of `C_in × K` weights. Total parameters: `C_out × C_in × K + C_out`.
+
+**Example**
+
+```python
+import torch
+import torch.nn as nn
+
+conv = nn.Conv1d(in_channels=2, out_channels=3, kernel_size=3)
+x = torch.randn(1, 2, 10)        # (batch, C_in, L)
+y = conv(x)                      # (1, 3, 8)
+
+# Manual computation of y[0, c, n]
+c, n = 1, 4
+manual = conv.bias[c] + sum(
+    conv.weight[c, m, k] * x[0, m, n + k]
+    for m in range(2) for k in range(3)
+)
+print(torch.allclose(manual, y[0, c, n]))  # True
+```
+
+**Details the formula omits**
+
+- **Output length:** with no padding, stride 1, dilation 1, `L_out = L - K + 1`. That's why `n + k` never runs past the end of the input. In general: `L_out = floor((L + 2·padding - dilation·(K-1) - 1) / stride + 1)`.
+- **Padding:** the formula assumes `x` is already padded. `padding=p` just pads `x` with zeros on both sides first.
+- **Stride:** with stride `s`, replace `x_m[n+k]` with `x_m[s·n + k]`.
+- **Dilation:** with dilation `d`, replace it with `x_m[n + d·k]`.
+- **Groups:** with `groups=g`, each output channel only sums over its own group of `C_in/g` input channels rather than all `m`. Depthwise conv is the case `groups=C_in`, where each output channel sees exactly one input channel.
+- **Cross-correlation vs. convolution:** true convolution would use `x_m[n-k]`, flipping the kernel. PyTorch doesn't flip, which is why the formula has `n+k`. Since the weights are learned, the distinction doesn't matter in practice.
