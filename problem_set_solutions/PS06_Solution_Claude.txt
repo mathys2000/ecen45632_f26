@@ -1,0 +1,194 @@
+Please create a solution for this problem set
+
+Claude Sonnet 5:
+
+# Problem Set 6 — Solutions
+
+## 1. Conv1d and the sliding dot product
+
+### (a) Relating the DSP convolution to PyTorch cross-correlation
+
+DSP convolution (FIR filter with $M+1$ taps, $h[0],\dots,h[M]$):
+$$y_{DSP}[n]=\sum_{k=0}^{M} h[k]\,x[n-k]$$
+
+PyTorch cross-correlation:
+$$y_{torch}[n]=\sum_{k=0}^{M} w[k]\,x[n+k]$$
+
+Substitute $j = M-k$ (so $k = M-j$) in the DSP sum:
+
+$$y_{DSP}[n]=\sum_{j=0}^{M} h[M-j]\,x[n-(M-j)] = \sum_{j=0}^{M} h[M-j]\,x[(n-M)+j]$$
+
+Compare this to $y_{torch}[m]=\sum_j w[j]\,x[m+j]$ evaluated at $m=n-M$. The two expressions match term-by-term if
+
+$$\boxed{w[k] = h[M-k]}$$
+
+i.e. **the PyTorch kernel is the time-reversed DSP impulse response.**
+
+With this substitution, $y_{DSP}[n] = y_{torch}[n-M]$: PyTorch's un-padded ("valid") output is *shifted left by $M$ samples* relative to the causal DSP output. To make the torch output start at index 0 and align exactly with $y_{DSP}[n]$ for $n=0,\dots,N-1$, you must **left-pad $x$ with $M$ zeros** (and add no right padding). This supplies the "missing" samples $x[-M],\dots,x[-1]=0$ that the causal filter implicitly assumes, and produces an output of the same length $N$ as the input, in valid ("no-padding") mode:
+
+$$L_{out} = (N+M) - (M+1) + 1 = N.$$
+
+### (b) Implementation and comparison
+
+```python
+import numpy as np
+import torch
+import torch.nn.functional as F
+import soundfile as sf
+
+# ---------- 1. Design a Hamming-windowed lowpass FIR ----------
+N  = 51            # number of taps
+M  = N - 1          # 50 -> highest tap index
+wc = np.pi / 3       # cutoff frequency (rad/sample)
+
+n = np.arange(N)
+m = n - M/2.0                     # centered index for linear phase
+h_ideal = np.where(m == 0, wc/np.pi, np.sin(wc*m) / (np.pi*m))
+w_hamming = 0.54 - 0.46*np.cos(2*np.pi*n / M)
+h = (h_ideal * w_hamming).astype(np.float32)
+
+# ---------- 2. Load the chirp ----------
+x, fs = sf.read('chirp_001.wav')
+x = x.astype(np.float32)
+if x.ndim > 1:
+    x = x[:, 0]                    # force mono
+
+# ---------- 3. NumPy reference: causal DSP convolution ----------
+y_np_full = np.convolve(x, h, mode='full')
+y_np = y_np_full[:len(x)]          # causal output, same length as x
+
+# ---------- 4. Equivalent F.conv1d computation ----------
+w = h[::-1].copy()                 # w[k] = h[M-k]
+w_t = torch.from_numpy(w).view(1, 1, -1)     # (out_ch=1, in_ch=1, K)
+x_t = torch.from_numpy(x).view(1, 1, -1)     # (batch=1, in_ch=1, L)
+x_pad = F.pad(x_t, (M, 0))                    # left-pad by M zeros only
+
+y_torch = F.conv1d(x_pad, w_t).view(-1).numpy()
+
+# ---------- 5. Compare ----------
+diff = np.max(np.abs(y_np - y_torch))
+print(f"max abs difference: {diff:.3e}")
+
+# ---------- 6. Save filtered audio for a spectrogram check ----------
+sf.write('chirp_filtered.wav', y_torch, fs)
+```
+
+*(I don't have `chirp_001.wav` in this session, so I can't run this for you, but the code is complete and correct — run it as-is on your file.)*
+
+**Expected result:** `max abs difference` should be on the order of $10^{-6}$–$10^{-7}$, limited only by float32 rounding — the two computations are mathematically identical.
+
+**Evidence the filter works:** Load `chirp_filtered.wav` in Audacity and generate a spectrogram (Analyze → Plot Spectrum, or the spectrogram track view). You should see the chirp's energy tracked clearly up to the cutoff frequency $f_c = \omega_c/(2\pi)\cdot f_s = f_s/6$, and sharply attenuated above that — the sweep should visibly "disappear" once it crosses the cutoff line in the spectrogram, unlike the unfiltered chirp, which sweeps the full band.
+
+### (c) Rebuttal to "conv1d does convolution backwards, so it's a bug"
+
+It's not a bug, just a different (and for ML purposes, more natural) convention. Mathematically, convolution and cross-correlation differ only by flipping the kernel, $w[k]=h[M-k]$, exactly as derived in part (a) — no information or capability is lost, and the two are trivially interconvertible. In classical DSP the kernel $h[k]$ is a *fixed, physically meaningful* impulse response (derived from a difference equation, an analog prototype, etc.), so the flip in the definition matters and must be tracked carefully. In deep learning, however, the kernel $w[k]$ is a set of *learned parameters* with no prior physical meaning — gradient descent will happily learn whichever set of numbers minimizes the loss, whether we call the operation "convolution" or "correlation." Since training and inference both consistently use the same (cross-correlation) definition, and autograd computes the correct corresponding gradients automatically, there is no mismatch anywhere in the pipeline. The "backwards" framing only becomes an issue if you're trying to reuse a *fixed, externally-designed* filter (like the FIR filter in part b) inside a `conv1d` call — and even then, as shown above, it's a one-line fix (flip the kernel, left-pad by $M$), not a bug.
+
+---
+
+## 2. Pole-zero geometry
+
+$$H(z)=\frac{1-0.8z^{-1}}{1+0.5z^{-1}} = \frac{z-0.8}{z+0.5}$$
+
+### (a) Zero and pole
+- **Zero:** $1-0.8z^{-1}=0 \Rightarrow z = 0.8$
+- **Pole:** $1+0.5z^{-1}=0 \Rightarrow z = -0.5$
+
+### (b) Geometric interpretation
+
+Writing $H(z)=\dfrac{z-z_0}{z-p_0}$ with $z_0=0.8,\ p_0=-0.5$, and evaluating on the unit circle $z=e^{j\omega}$:
+
+$$H(e^{j\omega}) = \frac{e^{j\omega}-z_0}{e^{j\omega}-p_0}$$
+
+Each factor $e^{j\omega}-z_0$ (or $e^{j\omega}-p_0$) is literally the vector in the complex plane pointing **from the zero (or pole) location to the point $e^{j\omega}$ on the unit circle**. The magnitude of a complex ratio equals the ratio of magnitudes, so
+
+$$|H(e^{j\omega})| = \frac{|e^{j\omega}-z_0|}{|e^{j\omega}-p_0|} = \frac{\text{distance from } e^{j\omega} \text{ to the zero}}{\text{distance from } e^{j\omega} \text{ to the pole}}$$
+
+For a general $H(z)=k\prod_i (z-z_i)/\prod_j(z-p_j)$, this generalizes directly: the magnitude response at each frequency is $|k|$ times the product of all zero-vector lengths divided by the product of all pole-vector lengths, each measured from the corresponding pole/zero to the point $e^{j\omega}$ on the unit circle.
+
+### (c) Larger near $\omega=0$ or $\omega=\pi$?
+
+- At $\omega=0$ ($z=1$): distance to zero $=|1-0.8|=0.2$ (small); distance to pole $=|1-(-0.5)|=1.5$ (large) → $|H|\approx 0.2/1.5\approx 0.13$.
+- At $\omega=\pi$ ($z=-1$): distance to zero $=|-1-0.8|=1.8$ (large); distance to pole $=|-1-(-0.5)|=0.5$ (small) → $|H|\approx 1.8/0.5=3.6$.
+
+So $|H(e^{j\omega})|$ is **much larger near $\omega=\pi$ than near $\omega=0$** — this is a highpass-leaning response, because the zero sits close to $\omega=0$ on the unit circle (suppressing low frequencies) while the pole sits close to $\omega=\pi$ (boosting high frequencies).
+
+---
+
+## 3. Phase delay and group delay
+
+$\phi(\omega) = -3\omega + 0.4\sin(\omega)$
+
+### (a) Phase delay
+$$\tau_p(\omega) = -\frac{\phi(\omega)}{\omega} = -\frac{-3\omega+0.4\sin\omega}{\omega} = 3 - \frac{0.4\sin(\omega)}{\omega}$$
+
+### (b) Group delay
+$$\tau_g(\omega) = -\frac{d\phi(\omega)}{d\omega} = -\big(-3 + 0.4\cos\omega\big) = 3 - 0.4\cos(\omega)$$
+
+### (c) Why not linear phase
+
+A linear-phase system requires $\phi(\omega)=-\alpha\omega$ (a straight line through the origin with slope $-\alpha$), which gives a **constant** group delay $\tau_g(\omega)=\alpha$ for all $\omega$. Here $\phi(\omega)$ has the extra nonlinear term $0.4\sin(\omega)$, so $\tau_g(\omega)=3-0.4\cos(\omega)$ **varies with $\omega$** (ranging from $2.6$ at $\omega=0$ to $3.4$ at $\omega=\pi$) instead of staying constant. Since different frequency components experience different delays, a signal passed through this system will suffer phase distortion (its frequency components get smeared in time relative to one another) — the defining symptom of a non-linear-phase system.
+
+---
+
+## 4. First-order allpass
+
+$$H_{ap}(z) = \frac{z^{-1}-a}{1-az^{-1}}, \qquad |a|<1,\ a\text{ real}$$
+
+### Magnitude on the unit circle
+
+Evaluate at $z=e^{j\omega}$:
+$$H_{ap}(e^{j\omega}) = \frac{e^{-j\omega}-a}{1-ae^{-j\omega}}$$
+
+Compute $|H_{ap}|^2 = H_{ap}\cdot H_{ap}^{*}$:
+
+**Numerator magnitude squared:**
+$$(e^{-j\omega}-a)(e^{j\omega}-a) = 1 - ae^{-j\omega}-ae^{j\omega}+a^2 = 1+a^2-2a\cos\omega$$
+
+**Denominator magnitude squared:**
+$$(1-ae^{-j\omega})(1-ae^{j\omega}) = 1 - ae^{j\omega}-ae^{-j\omega}+a^2 = 1+a^2-2a\cos\omega$$
+
+The two are **identical**, so
+
+$$|H_{ap}(e^{j\omega})|^2 = \frac{1+a^2-2a\cos\omega}{1+a^2-2a\cos\omega}=1 \quad\Rightarrow\quad |H_{ap}(e^{j\omega})|=1 \ \ \forall\omega$$
+
+### Pole/zero locations and reciprocal relationship
+
+- **Pole:** $1-az^{-1}=0 \Rightarrow z=a$
+- **Zero:** $z^{-1}-a=0 \Rightarrow z=1/a$
+
+Since $|a|<1$, the pole $z=a$ lies **inside** the unit circle, and the zero $z=1/a$ lies at its **reciprocal position, outside** the unit circle, on the same ray from the origin (both real, same sign, here). This zero-is-reciprocal-of-pole geometry is exactly what makes $|H_{ap}(e^{j\omega})|$ constant: the numerator and denominator vector-length ratio (from part 2b's geometric viewpoint) stays fixed at 1 for every point on the unit circle, because reflecting a pole through the unit circle to get $1/a^*$ (here $1/a$ since $a$ is real) is precisely the transformation that preserves distance ratios to every point on the circle. This is the defining pole/zero pattern of a first-order allpass filter.
+
+---
+
+## 5. Inverse system properties
+
+From the pole-zero plot: $H(z)$ is causal, with a **complex-conjugate pole pair** at approximately $0.3\pm j0.65$ (magnitude $\approx\sqrt{0.3^2+0.65^2}\approx 0.72$), a third **pole** near $z\approx-0.75$ on the real axis, and a **complex-conjugate zero pair** at approximately $-0.4\pm j0.4$ (magnitude $\approx\sqrt{0.4^2+0.4^2}\approx 0.57$).
+
+**Is $H(z)$ itself stable?** All three poles lie inside the unit circle ($|0.72|<1$, $|-0.75|<1$), so the causal system $H(z)$ is BIBO stable — consistent with it being given as a "causal system."
+
+**What about the inverse, $H_i(z)=1/H(z)$?** The poles of $H_i(z)$ are the **zeros** of $H(z)$. Since $H(z)$'s zeros are at magnitude $\approx 0.57 < 1$ — i.e., **inside** the unit circle — the poles of $H_i(z)$ are also inside the unit circle.
+
+For $H_i(z)$ to be causal, its ROC must be the exterior of its outermost pole ($|z|>0.57$). Because that outermost pole is inside the unit circle, this causal ROC **includes** the unit circle, so $H_i(z)$ is simultaneously causal **and** stable.
+
+**Conclusion: Yes**, the inverse system can be both causal and stable in this case, because $H(z)$ is *minimum phase* — all of its zeros, not just its poles, lie inside the unit circle. (In general, a causal, stable $H(z)$ has a causal, stable inverse **if and only if** it is minimum phase; if any zero of $H(z)$ were outside the unit circle, the causal inverse would necessarily be unstable, and you'd need a stable-but-noncausal inverse instead.)
+
+---
+
+Want me to put this into a Word document or PDF (with the plots/equations formatted) that you can submit or print?
+
+Yes, please
+
+Claude Sonnet 5:
+
+Exceeded 5 hour limited
+
+-----------------
+
+Can you put the problem set solution into a word document
+
+Claude Sonnet 5:
+
+I already built it — here it is.This looks great. Let me check the remaining pages.Good, the page break works as intended (leaves the rest of page 3 blank before Problem 2 starts on page 4). Let me check the remaining pages quickly.Good, that's expected (end of problem 2, page break before problem 3). Let me check pages 6-8.Minor cosmetic issue: a stray leading comma before "a straight line..." — small fix. Let me check pages 7 and 8 too, then patch that.Everything looks clean and correct. Let me just fix the stray comma on page 6.Formatted Word document with typeset equations, code blocks, and page breaks between problems.
+
+------------------
+
