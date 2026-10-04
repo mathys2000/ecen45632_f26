@@ -179,3 +179,10 @@ plt.tight_layout()
 plt.show()
 
 # %%
+an = 3/7*np.sinc(3/7*np.arange(5))
+print(an)
+
+# %%
+print(32*an)
+
+# %%
