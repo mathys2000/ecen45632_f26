@@ -1,0 +1,231 @@
+{
+  "time_frequency": [
+    {
+      "L": 256,
+      "window_ms": 16.0,
+      "bin_hz": 62.5,
+      "hop_ms": 4.0,
+      "transient_10percent_energy_width_ms": 8.0
+    },
+    {
+      "L": 1024,
+      "window_ms": 64.0,
+      "bin_hz": 15.625,
+      "hop_ms": 16.0,
+      "transient_10percent_energy_width_ms": 32.0
+    },
+    {
+      "L": 4096,
+      "window_ms": 256.0,
+      "bin_hz": 3.90625,
+      "hop_ms": 64.0,
+      "transient_10percent_energy_width_ms": 192.0
+    }
+  ],
+  "windows": [
+    {
+      "window": "boxcar",
+      "null_to_null_hz": 31.25,
+      "peak_sidelobe_db": -13.263647577714902,
+      "enbw_hz": 15.625
+    },
+    {
+      "window": "hann",
+      "null_to_null_hz": 62.5,
+      "peak_sidelobe_db": -31.467626478524792,
+      "enbw_hz": 23.4375
+    },
+    {
+      "window": "hamming",
+      "null_to_null_hz": 62.5,
+      "peak_sidelobe_db": -42.6743663692628,
+      "enbw_hz": 21.294152949245543
+    },
+    {
+      "window": "blackman",
+      "null_to_null_hz": 93.75,
+      "peak_sidelobe_db": -58.10884368817948,
+      "enbw_hz": 26.98058390022675
+    }
+  ],
+  "overlap": [
+    {
+      "overlap_percent": 0,
+      "hop": 1024,
+      "window": "boxcar",
+      "frames": 65,
+      "relative_error": 2.6735228456948584e-16,
+      "min_denominator": 1.0,
+      "max_denominator": 1.0,
+      "elapsed_seconds": 0.04068229999393225
+    },
+    {
+      "overlap_percent": 0,
+      "hop": 1024,
+      "window": "hann",
+      "frames": 65,
+      "expected_failure": "NOLA failure in retained samples",
+      "elapsed_seconds": 0.0032158999238163233
+    },
+    {
+      "overlap_percent": 25.0,
+      "hop": 768,
+      "window": "hann",
+      "frames": 86,
+      "relative_error": 3.7200893184236793e-16,
+      "min_denominator": 0.0428932188134525,
+      "max_denominator": 1.0,
+      "elapsed_seconds": 0.004012899938970804
+    },
+    {
+      "overlap_percent": 50.0,
+      "hop": 512,
+      "window": "hann",
+      "frames": 128,
+      "relative_error": 2.444013099020329e-16,
+      "min_denominator": 0.5,
+      "max_denominator": 1.0,
+      "elapsed_seconds": 0.005510699935257435
+    },
+    {
+      "overlap_percent": 75.0,
+      "hop": 256,
+      "window": "hann",
+      "frames": 255,
+      "relative_error": 2.0087174059560197e-16,
+      "min_denominator": 1.4999999999999993,
+      "max_denominator": 1.5000000000000007,
+      "elapsed_seconds": 0.010108600021339953
+    },
+    {
+      "overlap_percent": 87.5,
+      "hop": 128,
+      "window": "hann",
+      "frames": 509,
+      "relative_error": 1.9368621161930796e-16,
+      "min_denominator": 2.999999999999999,
+      "max_denominator": 3.0000000000000013,
+      "elapsed_seconds": 0.020057399990037084
+    }
+  ],
+  "ola": {
+    "relative_error": 3.267306983317611e-16,
+    "output_samples": 64128,
+    "fft_length": 1024,
+    "group_delay_samples": 64
+  },
+  "ola_block_sweep": [
+    {
+      "B": 128,
+      "nfft": 256,
+      "blocks": 500,
+      "relative_error": 3.486251505589894e-16
+    },
+    {
+      "B": 512,
+      "nfft": 1024,
+      "blocks": 125,
+      "relative_error": 3.267306983317611e-16
+    },
+    {
+      "B": 2048,
+      "nfft": 4096,
+      "blocks": 32,
+      "relative_error": 3.4427220579912124e-16
+    }
+  ],
+  "jammer": {
+    "input_snr_db": -9.241890416521894,
+    "output_snr_db": 17.349087100818082,
+    "stationary_notch_snr_db": -8.481089473614823
+  },
+  "jammer_sweep": [
+    {
+      "L": 256,
+      "width_hz": 30,
+      "output_snr_db": -0.8024310924202096,
+      "jammer_attenuation_db": 8.439462222975777,
+      "clean_relative_error": 0.00024308965005550364
+    },
+    {
+      "L": 256,
+      "width_hz": 60,
+      "output_snr_db": 4.843103849910849,
+      "jammer_attenuation_db": 14.08499339328788,
+      "clean_relative_error": 0.00037779775091329127
+    },
+    {
+      "L": 256,
+      "width_hz": 120,
+      "output_snr_db": 12.481593042684294,
+      "jammer_attenuation_db": 21.72345862836615,
+      "clean_relative_error": 0.0005655553072143046
+    },
+    {
+      "L": 1024,
+      "width_hz": 30,
+      "output_snr_db": 11.76507671056524,
+      "jammer_attenuation_db": 21.007007364925418,
+      "clean_relative_error": 0.0002810228251903903
+    },
+    {
+      "L": 1024,
+      "width_hz": 60,
+      "output_snr_db": 17.349087100818082,
+      "jammer_attenuation_db": 26.590936278608414,
+      "clean_relative_error": 0.000404427480612134
+    },
+    {
+      "L": 1024,
+      "width_hz": 120,
+      "output_snr_db": 19.878447725307534,
+      "jammer_attenuation_db": 29.120208120571572,
+      "clean_relative_error": 0.0005753947233051704
+    },
+    {
+      "L": 4096,
+      "width_hz": 30,
+      "output_snr_db": 11.350648144222896,
+      "jammer_attenuation_db": 20.59250594230059,
+      "clean_relative_error": 0.00027841472515402395
+    },
+    {
+      "L": 4096,
+      "width_hz": 60,
+      "output_snr_db": 17.0753710187401,
+      "jammer_attenuation_db": 26.317142591547835,
+      "clean_relative_error": 0.0004034867182518259
+    },
+    {
+      "L": 4096,
+      "width_hz": 120,
+      "output_snr_db": 19.76949495780763,
+      "jammer_attenuation_db": 29.01121795144676,
+      "clean_relative_error": 0.0005751797356772257
+    }
+  ],
+  "iq_wav_roundtrip_error": 2.3820580951013048e-08,
+  "communications": {
+    "original": {
+      "evm_percent": 0.947661602826916,
+      "ber": 0.0,
+      "waveform_relative_error": 0.0
+    },
+    "coherent": {
+      "evm_percent": 0.9476616028269153,
+      "ber": 0.0,
+      "waveform_relative_error": 2.3268009963511954e-16
+    },
+    "magnitude_only": {
+      "evm_percent": 101.02894144350883,
+      "ber": 0.4990138067061144,
+      "waveform_relative_error": 1.0103187240492075
+    },
+    "frame_phase_reset": {
+      "evm_percent": 127.67102277627777,
+      "ber": 0.5226824457593688,
+      "waveform_relative_error": 1.2816860544023
+    }
+  },
+  "checks": "PASS: identity, expected NOLA failure, real and complex full OLA, QPSK BER"
+}

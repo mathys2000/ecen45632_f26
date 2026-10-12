@@ -1,0 +1,185 @@
+DSP_Week_Project_Assignment.md
+Student.ipynb
+common.py
+
+can you create a python solution for this project?
+
+ClaudeAI Sonnet 5.5:
+
+I'll build `student_dsp.py` first, test it against the supplied checks, then add an experiment script that produces the figures, metrics, and audio.I wrote a working `student_dsp.py` with the four required functions, plus a `run_all.py` that runs every experiment. I ran both in a sandbox against your `common.py`. The figures, the three audio files and `metrics.json` are in `results/`. The notebook cells are still TODO, and the report, the written explanations and the notebook itself are not written.
+
+**Checks that pass**
+- Identity reconstruction error is about 2e-16, and the QPSK result matches the unmodified signal (EVM 0.95%, BER 0).
+- `ola_filter` matches `np.convolve` to about 3e-16 for B = 128, 512 and 2048, including the final partial block and the filter tail.
+- Hann at zero overlap raises a `NOLAError` instead of dividing by zero, and the rectangular zero-overlap control reconstructs correctly.
+
+**What's in `student_dsp.py`**
+- `analysis` and `synthesis` use a periodic window, front and back padding, and squared-window normalization. They return the denominator over the retained samples, and real signals use the one-sided FFT while I/Q uses the full FFT.
+- `ola_filter` picks the FFT size as the next power of two at or above B+M−1.
+- `remove_jammer` uses only the mixture, sample rate and search band. It finds the peak in each frame, smooths the ridge, applies a Gaussian notch with gain floor 0.03, and keeps the complex phases.
+- `apply_mask` lets you freeze the mask and apply it separately to the clean melody and the jammer for evaluation.
+
+**Jammer results (input SNR −9.2 dB)**
+
+| Setup | SNR improvement | Melody error |
+|---|---|---|
+| L=1024, σ=60 Hz | 27 dB | 0.04% |
+| L=1024, σ=120 Hz | 29 dB | 0.06% |
+| L=256, σ=30 Hz | 8 dB | 0.02% |
+| Fixed notch at 2400 Hz | under 2 dB | – |
+
+Both targets (15 dB improvement, under 5% melody error) are met at L=1024 for σ of 60 Hz or more. L=256 needs σ=120 Hz to reach 23 dB. The melody's harmonics all sit below 900 Hz, so the notch barely touches them. That means the "harmonic inside the suppressed band" question is something you'll need to demonstrate with the optional extension, not with this data.
+
+**Other results**
+- **A1:** Hann windows at L=256 do not resolve the 1000 and 1080 Hz tones. At L=1024 the dip between them is about 47 dB deep, and at L=4096 about 85 dB deep.
+- **A1 zero padding:** Going to N=4096 at L=1024 gives the same dip depth, which shows zero padding adds no resolution.
+- **A2:** With rectangular and Hamming windows the strong tone's leakage sits at or above the weak tone's level. Hann and Blackman keep it more than 35 dB below.
+- **C2:** The magnitude-only and random-phase controls give about 100% EVM and about 50% BER.
+
+**Known simplifications**
+- Transient width is measured from frame energy in a low-frequency band at a −10 dB threshold, so it is quantized to the hop size.
+- Each spectrogram is normalized to its own maximum rather than a shared reference.
+- `run_all.py` assumes `common.py` is in the same folder and creates `signals/` and `results/` there.
+
+Files are in `/mnt/user-data/outputs`:
+- student_dsp.py
+- run_all.py
+- results/metrics.json
+
+If this is graded work, treat it as a reference and write up the reasoning in your own words.
+
+-------------
+
+student_dsp.py
+run_all.py
+metrics.json
+
+-------------
+
+What does this statement do: class NOLAError(ValueError):
+    """Raised when sum_m w^2[n-mH] is (numerically) zero on a retained sample."""
+	
+ClaudeAI Sonnet 5.5:
+
+It defines a custom exception type named `NOLAError` that inherits from Python's built-in `ValueError`. The docstring describes when it's meant to be raised.
+
+**Why it exists:** NOLA stands for "nonzero overlap-add." Synthesis divides by the denominator Σₘ w²[n−mH]. If that sum is zero at any retained sample (for example Hann at 0% overlap, where the window is zero at its edges), the division is undefined and some samples can't be reconstructed. Rather than let NumPy emit `inf`/`nan` silently, `synthesis` checks the denominator and raises this error:
+
+```python
+if d.min() <= tol * w.max() ** 2:
+    raise NOLAError("NOLA violated: ...")
+```
+
+**Why a subclass instead of a plain `ValueError`:**
+- You can catch this specific failure without catching unrelated errors:
+  ```python
+  try:
+      y, d = dsp.synthesis(X, meta)
+  except dsp.NOLAError as e:
+      print("Expected NOLA failure:", e)
+  ```
+  This is what `run_all.py` does in the B1 overlap sweep to record the Hann 0% case as a "NOLA failure" row instead of crashing.
+- It still *is* a `ValueError`, so any code that catches `ValueError` generically will also catch it.
+- The name makes tracebacks self-explanatory.
+
+The class body is just the docstring, with no added behavior, because it only needs to be a distinct, named exception type.
+
+------------------
+
+what does "periodic" window mean?
+
+ClaudeAI Sonnet 5.5:
+
+A **periodic** window of length L is a window computed as if it were one period of a longer, periodic sequence, so it divides the cycle into L equal steps. A **symmetric** window is computed so that its first and last samples mirror each other.
+
+For Hann:
+
+- **Symmetric:** w[n] = 0.5 − 0.5 cos(2πn / (L−1)), for n = 0…L−1. The first and last samples are both zero, and the shape is perfectly symmetric about its center.
+- **Periodic:** w[n] = 0.5 − 0.5 cos(2πn / L). Only the first sample is zero. It's what you get by computing a symmetric window of length L+1 and dropping the last sample.
+
+In SciPy this is the `fftbins` flag: `get_window("hann", L, fftbins=True)` gives the periodic version, and `fftbins=False` gives the symmetric one.
+
+**Why periodic is used for STFT and spectral analysis**
+
+1. **Exact overlap-add.** With a periodic Hann at 50% or 75% overlap, the shifted windows sum to exactly a constant. That's why the B1 denominator came out as exactly 1.5 at hop 256 (and 3.0 at hop 128). A symmetric Hann doesn't sum to a constant, so you'd get a small ripple in the reconstruction normalization.
+2. **Matches the DFT.** The DFT treats the frame as one period of a periodic signal. A periodic window fits that assumption, so its transform has the clean main lobe and sidelobes the theory predicts. This is why the A2 window metrics (null-to-null width, ENBW of exactly 1.5 bins for Hann) come out as textbook values.
+
+**When symmetric is used instead:** FIR filter design. There the window shapes an impulse response that should be exactly symmetric to get linear phase, which is why `signal.firwin(129, ..., window="hamming")` uses the symmetric form.
+
+That's also the reason the assignment says "periodic analysis window" for the STFT, but the 129-tap lowpass in B2 is a separate matter.
+
+---------------
+
+def apply_mask(x, G, meta_like):
+    """Apply a frozen mask G (frames x bins) to any equal-length real signal with the same framing."""
+    X, meta = analysis(x, L=meta_like["L"], hop=meta_like["hop"], N=meta_like["N"],
+                       window=meta_like["window"], fs=meta_like["fs"])
+    return synthesis(X * G, meta)[0]
+Question: Where does meta_like get its values from?
+
+ClaudeAI Sonnet 5.5:
+
+`meta_like` is the `meta` dictionary that `analysis` produced when `remove_jammer` analyzed the mixture. It gets passed in by the caller. In `remove_jammer`, it's stored in the diagnostics dict:
+
+```python
+X, meta = analysis(x, L=L, hop=hop, window=window, fs=fs)   # meta created here
+...
+diag = dict(..., G=G, meta=meta, ...)
+return y, diag
+```
+
+and `run_all.py` uses it like this:
+
+```python
+y, dg = dsp.remove_jammer(a["mixture"], L=L, width_hz=w)
+mj = dsp.apply_mask(a["melody"], dg["G"], dg["meta"])   # dg["meta"] is meta_like
+jj = dsp.apply_mask(a["jammer"], dg["G"], dg["meta"])
+```
+
+The original `meta` contains the framing parameters used when the mask was designed: `L`, `hop`, `N`, `window` and `fs`. `apply_mask` reads just those five keys and calls `analysis` with them, so the melody and the jammer are analyzed with the same frame layout as the mixture.
+
+This matters because the mask `G` is a frames × bins array. Entry `G[m, k]` is only meaningful if frame `m` of the new signal covers the same samples as frame `m` of the mixture. The same `L`, `hop`, `N` and `window` give the same bin grid, and the same signal length gives the same padding and frame count, so `X * G` lines up element for element. That's what "frozen" means: the mask was estimated once from the mixture and is never re-estimated for the individual signals.
+
+The name `meta_like` is because it doesn't have to be the exact dict from the mixture's analysis. Any dict with those five keys works. If you passed a signal of a different length, the frame count would differ and `X * G` would fail with a shape mismatch, which is why the docstring says "equal-length."
+
+---------------
+
+Why does the synthesis function multiply the numerator again by w?
+
+ClaudeAI Sonnet 5.5:
+
+That second multiplication is the synthesis window in the formula from the assignment:
+
+$$\widehat{x}[n]=\frac{\sum_m w[n-mH]\,v_m[n-mH]}{\sum_m w^2[n-mH]}$$
+
+In the code it's `np.add.at(num, idx, v * w)`, with `den` accumulating `w ** 2`.
+
+**Why the algebra needs it**
+
+For an unmodified frame, the IFFT returns the windowed input: `v_m[r] = w[r] · x[mH + r]`. If you summed these frames directly, each sample would be
+
+Σₘ w · x = x · Σₘ w
+
+so you'd divide by Σw, and everything would work. But the synthesis window is applied too, so the numerator is
+
+Σₘ w · (w · x) = x · Σₘ w²
+
+and dividing by Σw² gives back exactly `x`. The squared window in the denominator is the tracking of this double application. That is why the B1 denominators were 1.5 and 3.0 for Hann (the sum of the squared window, not the plain window).
+
+**Why bother with a second window instead of just dividing by Σw**
+
+With unmodified frames, both approaches give perfect reconstruction. The difference appears when you modify the spectra, as in the jammer removal:
+
+- A mask changes each frame's content, so the frame edges no longer line up smoothly with their neighbors. The mask can also make a frame's time signal extend past its original edges (time aliasing, especially with a short or zero-padded FFT).
+- Multiplying by the synthesis window tapers each modified frame to zero at its edges before overlap-adding, so the frames blend smoothly and clicks at frame boundaries are suppressed.
+- It's also the least-squares-optimal way to combine modified frames: the weighted combination minimizes the squared error between the output's STFT and the modified STFT (this is the Griffin–Lim result). Dividing by Σw² is what makes that estimate correctly normalized.
+
+So the second window costs nothing for the identity case and improves behavior for the modified case, which is the whole point of the project's jammer and QPSK experiments.
+
+The assignment notes that this normalized synthesis is a reconstruction operation and generally not exact LTI convolution. By contrast, `ola_filter` uses no window at all, because it's exact block convolution with non-overlapping rectangular blocks.
+
+-------------------
+
+
+	
+

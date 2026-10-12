@@ -1,0 +1,522 @@
+I need a DFT/FFT problem set based on the textbook by oppenheim/schafer. The students are senior and first year graduate students in DSP theory and applications class. I want the problem set to demonstrate some of the effects that come from the inherent periodicity of the DFT and also show that padding with zeros increases the resolution of a plot but not the resolution between two closely spaced sinusoidal frequencies.
+
+ChatGPT GPT-6.1 Sol Medium:
+
+I created **six original problems totaling 100 points**, combining derivations with Python experiments. They align with Oppenheim and Schafer’s third-edition chapters on the DFT, FFT computation, and Fourier analysis using the DFT—Chapters 8–10. [pearson.com](https://www.pearson.com/en-us/subject-catalog/p/OppenheimDiscrete-Time-Signal-Processing-3rd-Edition/P200000003226?view=educator\&utm_source=chatgpt.com)
+
+DFT_FFT_Problem_Set.docx[DFT_FFT_Problem_Set.docx](sandbox:/workspace/scratch/d60f7bb0ce25/deliverables/DFT_FFT_Problem_Set.docx) — student assignment with point allocations.
+
+DFT_FFT_Solution_Key.docx[DFT_FFT_Solution_Key.docx](sandbox:/workspace/scratch/d60f7bb0ce25/deliverables/DFT_FFT_Solution_Key.docx) — worked derivations, numerical answers, and grading guidance.
+
+DFT_FFT_Python_Package.zip[DFT_FFT_Python_Package.zip](sandbox:/workspace/scratch/d60f7bb0ce25/deliverables/DFT_FFT_Python_Package.zip) — starter code, tested solution code, reference plots, and both documents.
+
+| Problem | Main concept | Points |
+|---|---|---:|
+| 1 | Periodicity of DFT coefficients and inverse DFT representations | 10 |
+| 2 | Circular delay and samples wrapping around | 15 |
+| 3 | Circular convolution, folded tails, and padding for linear convolution | 20 |
+| 4 | Periodic boundaries, leakage, and windowing | 15 |
+| 5 | Zero padding as interpolation of the same finite-record DTFT | 20 |
+| 6 | Separating closely spaced tones by acquiring a longer record | 20 |
+
+The central experiment uses **400 Hz and 406 Hz tones**. With 128 acquired samples, increasing the FFT length from 128 to 4096 produces a smoother plot of **one broad peak**. Acquiring 1024 samples separates the tones while retaining the same 4096-point FFT and 0.5 Hz frequency grid.
+
+Students must therefore distinguish **frequency-grid spacing, spectral main-lobe width, and actual tone separation**. A graduate extension examines how relative phase affects visible peak separation.
+
+------------------------
+
+Give me more explanation on problem 3d
+
+ChatGPT:
+
+**Problem 3(d) asks you to prove that circular convolution adds together linear-convolution samples whose indices differ by multiples of $N$.** The result is
+
+$$
+\boxed{
+y_N[n]=\sum_{r=-\infty}^{\infty}c[n+rN],
+\qquad 0\leq n<N,
+}
+$$
+
+where $c[n]=(x*h)[n]$ is the ordinary linear convolution, extended by zero outside its support.
+
+For example, when $N=4$, samples $c[0]$, $c[4]$, $c[8]$, and so on all contribute to output sample $y_4[0]$. The derivation explains why the inverse DFT groups those samples together.
+
+**1. Express the frequency-domain product in terms of linear convolution.**
+
+Assume $x$ and $h$ each fit inside an $N$-sample input record, with zeros appended as needed. Their DFT product is
+
+$$
+X_N[k]H_N[k]
+=
+\sum_a\sum_b x[a]h[b]e^{-j2\pi k(a+b)/N}.
+$$
+
+Group the terms according to their total index $m=a+b$. Since
+
+$$
+c[m]=\sum_a x[a]h[m-a],
+$$
+
+we obtain
+
+$$
+X_N[k]H_N[k]
+=
+\sum_{m=-\infty}^{\infty}c[m]e^{-j2\pi km/N}.
+$$
+
+Notice that **$c$ can be longer than $N$**, even though each input fits inside $N$ samples.
+
+**2. Substitute this expression into the inverse DFT.**
+
+The FFT multiplication method produces
+
+$$
+y_N[n]
+=
+\frac{1}{N}\sum_{k=0}^{N-1}
+X_N[k]H_N[k]e^{j2\pi kn/N}.
+$$
+
+Substituting and interchanging the sums gives
+
+$$
+y_N[n]
+=
+\sum_{m=-\infty}^{\infty}c[m]
+\underbrace{
+\frac{1}{N}\sum_{k=0}^{N-1}
+e^{j2\pi k(n-m)/N}
+}_{\text{Which samples does this factor select?}}.
+$$
+
+**3. Apply inverse-DFT orthogonality.**
+
+For any integer $q$,
+
+$$
+\frac{1}{N}\sum_{k=0}^{N-1}e^{j2\pi kq/N}
+=
+\begin{cases}
+1, & q\text{ is a multiple of }N,\\
+0, & \text{otherwise}.
+\end{cases}
+$$
+
+Why?
+
+- If $q=rN$, every exponential equals $1$, so the normalized sum is $1$.
+- Otherwise, let $z=e^{j2\pi q/N}$. Then $z\neq1$, but $z^N=1$. The geometric sum is
+
+$$
+\frac{1}{N}\sum_{k=0}^{N-1}z^k
+=
+\frac{1-z^N}{N(1-z)}
+=0.
+$$
+
+With $q=n-m$, the factor therefore selects precisely those indices satisfying
+
+$$
+m\equiv n\pmod N.
+$$
+
+These indices can be written as $m=n+rN$. Consequently,
+
+$$
+\boxed{
+y_N[n]=\sum_{r=-\infty}^{\infty}c[n+rN].
+}
+$$
+
+**4. Apply the result to the convolution in Problem 3.**
+
+The linear convolution is
+
+$$
+c=[1,\;1,\;2,\;3,\;-1,\;4].
+$$
+
+For $N=4$:
+
+| Output index | Linear-convolution samples that combine | Result |
+|---|---|---:|
+| $0$ | $c[0]+c[4]=1-1$ | $0$ |
+| $1$ | $c[1]+c[5]=1+4$ | $5$ |
+| $2$ | $c[2]$ | $2$ |
+| $3$ | $c[3]$ | $3$ |
+
+Thus,
+
+$$
+y_4=[0,\;5,\;2,\;3].
+$$
+
+The two tail samples have **wrapped around and added to the beginning**. This is time-domain aliasing.
+
+When $N\geq6$, all six linear-convolution samples fit into one period. No two nonzero samples have indices differing by $N$, so the folding introduces no overlapping contributions.
+
+For full credit on 3(d), students should show the inverse-DFT substitution, identify the orthogonality factor, and explain that it selects indices **equal modulo $N$**, yielding the folding sum.
+
+----------------
+
+Explain: The coherent gain of 0.5 for the Hann window
+
+ChatGPT:
+
+**A Hann window has coherent gain $0.5$ because its average value is $0.5$.** When measuring a sinusoid at its exact frequency, the window therefore reduces the Fourier-transform amplitude by a factor of two compared with a rectangular window of the same length.
+
+For the **periodic Hann window** used in the project,
+
+$$
+w[n]=\frac12-\frac12\cos\left(\frac{2\pi n}{L}\right),
+\qquad n=0,\ldots,L-1.
+$$
+
+Coherent gain is defined as
+
+$$
+G_c=\frac{1}{L}\sum_{n=0}^{L-1}w[n].
+$$
+
+Substituting the Hann formula,
+
+$$
+G_c
+=
+\frac12-\frac{1}{2L}
+\sum_{n=0}^{L-1}\cos\left(\frac{2\pi n}{L}\right).
+$$
+
+The cosine samples span one complete period and sum to zero, so
+
+$$
+\boxed{G_c=\frac12},
+\qquad
+\boxed{\sum_{n=0}^{L-1}w[n]=\frac{L}{2}}.
+$$
+
+To understand its effect, consider a complex sinusoid
+
+$$
+x[n]=A e^{j\omega_0 n}.
+$$
+
+Evaluate the windowed transform at $\omega_0$:
+
+$$
+X_w(\omega_0)
+=
+\sum_{n=0}^{L-1}w[n]A e^{j\omega_0 n}e^{-j\omega_0 n}
+=
+A\sum_{n=0}^{L-1}w[n]
+=
+A\frac{L}{2}.
+$$
+
+The transform cancels the sinusoid’s rotating phase, so all contributions add **coherently**. A rectangular window would give $AL$; the Hann gives half that value.
+
+If you divide both transforms by $L$, you obtain:
+
+| Window | Measured amplitude |
+|---|---:|
+| Rectangular | $A$ |
+| Periodic Hann | $A/2$ |
+
+To recover the sinusoid’s amplitude, divide the raw Hann-windowed transform by its window sum:
+
+$$
+\widehat A
+=
+\frac{|X_w(\omega_0)|}{L/2}
+=A.
+$$
+
+Equivalently, multiply an amplitude already normalized by $L$ by $2$. The uncorrected amplitude reduction is
+
+$$
+20\log_{10}(0.5)\approx-6.02\text{ dB}.
+$$
+
+**The $0.5$ is an amplitude gain, not an energy gain.** For a periodic Hann window, the average squared window value is $3/8$, a different quantity.
+
+Also, the *symmetric* Hann window uses $L-1$ in the cosine denominator. Its coherent gain is slightly below $0.5$:
+
+$$
+G_c=\frac{L-1}{2L}.
+$$
+
+Using the actual `w.sum()` handles either convention correctly.
+
+--------------------
+
+Explain "Write the M point DFT of the zero-padded record. Prove that it samples the same finite record DTFT at a denser set of frequencies."
+
+ChatGPT GPT-6.1 Sol Medium:
+
+The statement means: **zero padding changes where we sample the frequency-domain curve, but it does not change the curve itself.**
+
+Suppose the acquired record contains $L$ samples:
+
+$$
+x[0],x[1],\ldots,x[L-1].
+$$
+
+Treat this finite record as zero outside those indices. Its DTFT is
+
+$$
+X(e^{j\omega})
+=
+\sum_{n=0}^{L-1}x[n]e^{-j\omega n}.
+$$
+
+Here $\omega$ is continuous: this expression defines a frequency-domain curve for every frequency, not just at DFT bins.
+
+**Now append zeros to create an $M$-sample record**, where $M>L$:
+
+$$
+z[n]=
+\begin{cases}
+x[n],&0\leq n<L,\\
+0,&L\leq n<M.
+\end{cases}
+$$
+
+The $M$-point DFT of this record is
+
+$$
+Z_M[k]
+=
+\sum_{n=0}^{M-1}z[n]e^{-j2\pi kn/M},
+\qquad k=0,\ldots,M-1.
+$$
+
+Because all the appended samples are zero, their contributions vanish:
+
+$$
+Z_M[k]
+=
+\sum_{n=0}^{L-1}x[n]e^{-j(2\pi k/M)n}.
+$$
+
+Compare this with the DTFT expression. They are identical when $\omega=2\pi k/M$. Therefore,
+
+$$
+\boxed{
+Z_M[k]=X(e^{j\omega})\bigg|_{\omega=2\pi k/M}.
+}
+$$
+
+**That equality is the proof:** the padded DFT evaluates the original finite-record DTFT at a new set of frequencies.
+
+The original $L$-point DFT evaluates the same curve at
+
+$$
+\omega_r=\frac{2\pi r}{L},
+$$
+
+while the padded $M$-point DFT evaluates it at
+
+$$
+\omega_k=\frac{2\pi k}{M}.
+$$
+
+Since $M>L$, the frequency spacing decreases:
+
+$$
+\Delta\omega_{\text{original}}=\frac{2\pi}{L},
+\qquad
+\Delta\omega_{\text{padded}}=\frac{2\pi}{M}.
+$$
+
+For example, with $f_s=2048$ samples/s and $L=128$:
+
+| Transform | Frequency spacing |
+|---|---:|
+| Original 128-point DFT | $2048/128=16$ Hz |
+| Zero-padded 512-point DFT | $2048/512=4$ Hz |
+
+The padded transform places four times as many sample points along the **same spectral curve**. In this integer-factor example, every fourth padded DFT coefficient equals an original coefficient:
+
+$$
+\boxed{Z_{512}[4r]=X_{128}[r].}
+$$
+
+The additional points show the shape between the original bins more clearly. They can reveal a peak location or sidelobes that the coarse grid missed. However, **the main-lobe widths and the overlap between nearby sinusoidal spectra remain unchanged**, because the acquired record—and therefore its DTFT—has not changed.
+
+----------------
+
+Explain "Use the L-point inverse DFT to show that every M-point zero padded DFT value can be calculated from the original L DFT values. 
+Give an explicit interpolation sum."
+
+ChatGPT GPT-6.1 Sol Medium:
+
+The goal is to show that **the original $L$ DFT coefficients already determine every coefficient of the zero-padded $M$-point DFT**. Zero padding produces additional frequency samples through interpolation.
+
+Let the original $L$-point DFT be $X_L[r]$. Its inverse gives the acquired samples:
+
+$$
+x[n]=\frac{1}{L}\sum_{r=0}^{L-1}
+X_L[r]e^{j2\pi rn/L},
+\qquad 0\leq n<L.
+$$
+
+After appending zeros to length $M\geq L$, the $M$-point DFT is
+
+$$
+Z_M[k]=\sum_{n=0}^{L-1}x[n]e^{-j2\pi kn/M}.
+$$
+
+The sum stops at $L-1$ because the remaining samples are zero.
+
+**Substitute the inverse DFT expression for $x[n]$:**
+
+$$
+Z_M[k]
+=
+\sum_{n=0}^{L-1}
+\left[
+\frac{1}{L}\sum_{r=0}^{L-1}
+X_L[r]e^{j2\pi rn/L}
+\right]
+e^{-j2\pi kn/M}.
+$$
+
+Interchange the two finite sums and combine the exponentials:
+
+$$
+\boxed{
+Z_M[k]
+=
+\frac{1}{L}\sum_{r=0}^{L-1}
+X_L[r]
+\sum_{n=0}^{L-1}
+e^{j2\pi n(r/L-k/M)}.
+}
+$$
+
+**This is the explicit interpolation sum.** It calculates each new coefficient $Z_M[k]$ directly from the original coefficients $X_L[r]$.
+
+We can make the interpolation weights more recognizable by defining
+
+$$
+K_L(\theta)=\frac{1}{L}\sum_{n=0}^{L-1}e^{jn\theta}.
+$$
+
+Using the geometric-sum formula,
+
+$$
+K_L(\theta)
+=
+\frac{1}{L}
+e^{j(L-1)\theta/2}
+\frac{\sin(L\theta/2)}{\sin(\theta/2)},
+$$
+
+with the limiting value $K_L(\theta)=1$ when $\theta$ is an integer multiple of $2\pi$.
+
+The interpolation formula becomes
+
+$$
+\boxed{
+Z_M[k]
+=
+\sum_{r=0}^{L-1}X_L[r]\,
+K_L\left[
+2\pi\left(\frac{r}{L}-\frac{k}{M}\right)
+\right].
+}
+$$
+
+Each original DFT coefficient contributes through a **complex interpolation weight**. This is exact interpolation of the complex spectrum; it is generally not linear interpolation of its magnitudes.
+
+To check the formula, suppose $M=qL$ and evaluate a padded bin $k=qs$ that coincides with an original bin:
+
+$$
+K_L\left[
+2\pi\left(\frac{r}{L}-\frac{qs}{qL}\right)
+\right]
+=
+\frac{1}{L}\sum_{n=0}^{L-1}
+e^{j2\pi n(r-s)/L}.
+$$
+
+DFT orthogonality makes this weight $1$ when $r=s$ and $0$ otherwise. Therefore,
+
+$$
+\boxed{Z_{qL}[qs]=X_L[s].}
+$$
+
+At frequencies between the original bins, several original coefficients contribute. Their weighted sum gives the additional spectral samples. Because every new coefficient is determined entirely by the original $L$ coefficients, **zero padding adds no independent information**.
+
+---------------------
+
+What does this mean: compare rectangular and periodic (as opposed to symmetric) Hann windows on a dens grid
+
+ChatGPT:
+
+It means: **apply each window to the same data record, then plot its spectrum at many closely spaced frequency points.** “Dens grid” is a typo for “dense grid.”
+
+For a record of length \(L\), compare these windows:
+
+| Window | Definition, \(0\le n<L\) |
+|---|---|
+| Rectangular | \(w_R[n]=1\) |
+| Periodic Hann | \(w_H[n]=\frac12-\frac12\cos\left(\frac{2\pi n}{L}\right)\) |
+| Symmetric Hann | \(w_S[n]=\frac12-\frac12\cos\left(\frac{2\pi n}{L-1}\right)\) |
+
+The **symmetric Hann** has two zero endpoints and satisfies \(w_S[n]=w_S[L-1-n]\). It is commonly used in FIR filter design.
+
+The **periodic Hann** uses \(L\) in the cosine denominator. It is designed so that the next sample, \(w_H[L]\), would equal \(w_H[0]\), completing one cosine period. Its last stored sample \(w_H[L-1]\) is therefore generally nonzero. It is commonly used for DFT spectral analysis. Equivalently, construct a symmetric Hann of length \(L+1\), then discard its last sample.
+
+A **dense frequency grid** means evaluating the finite-record spectrum at many more frequencies than the original \(L\)-point DFT provides. You can do this with a zero-padded FFT, for example with \(M=16L\):
+
+\[
+X_w[k]=\sum_{n=0}^{L-1}x[n]w[n]e^{-j2\pi kn/M},
+\qquad k=0,\ldots,M-1.
+\]
+
+The frequency spacing is \(f_s/M\). This makes the spectral shape easier to inspect; it does **not** add measurements or improve the ability to separate closely spaced tones.
+
+Here is how to make the comparison in Python:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal.windows import hann
+
+fs = 1024
+L = 64
+M = 16 * L
+n = np.arange(L)
+
+# Complex sinusoid: avoids an overlapping negative-frequency component.
+x = np.exp(1j * 2 * np.pi * 136 * n / fs)
+
+windows = {
+    "Rectangular": np.ones(L),
+    "Periodic Hann": hann(L, sym=False),
+}
+
+f = np.fft.fftshift(np.fft.fftfreq(M, d=1 / fs))
+
+for label, w in windows.items():
+    # Window-sum normalization accounts for coherent gain.
+    X = np.fft.fftshift(np.fft.fft(x * w, n=M)) / w.sum()
+    magnitude_db = 20 * np.log10(np.maximum(np.abs(X), 1e-12))
+    plt.plot(f, magnitude_db, label=label)
+
+plt.xlim(40, 230)
+plt.ylim(-80, 5)
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Normalized magnitude (dB)")
+plt.legend()
+plt.grid()
+plt.show()
+```
+
+You should observe that the **rectangular window has a narrower main lobe but higher sidelobes**, while the **Hann window has a wider main lobe but lower sidelobes**. The dense grid reveals that tradeoff clearly.
+
+------------------
+

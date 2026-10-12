@@ -1,0 +1,320 @@
+{
+  "A1": {
+    "L256_N256": {
+      "Tw_ms": 16.0,
+      "bin_Hz": 62.5,
+      "Th_ms": 4.0,
+      "transient_width_ms_at_minus10dB": 4.0000000000000036,
+      "tone_valley_dB_below_peaks": 0.0,
+      "chirp_spread_Hz_per_frame": 12.0
+    },
+    "L1024_N1024": {
+      "Tw_ms": 64.0,
+      "bin_Hz": 15.625,
+      "Th_ms": 16.0,
+      "transient_width_ms_at_minus10dB": 16.000000000000014,
+      "tone_valley_dB_below_peaks": 47.249854044140626,
+      "chirp_spread_Hz_per_frame": 48.0
+    },
+    "L4096_N4096": {
+      "Tw_ms": 256.0,
+      "bin_Hz": 3.90625,
+      "Th_ms": 64.0,
+      "transient_width_ms_at_minus10dB": 128.0,
+      "tone_valley_dB_below_peaks": 84.62628761071966,
+      "chirp_spread_Hz_per_frame": 192.0
+    },
+    "L1024_N4096": {
+      "Tw_ms": 64.0,
+      "bin_Hz": 3.90625,
+      "Th_ms": 16.0,
+      "transient_width_ms_at_minus10dB": 16.000000000000014,
+      "tone_valley_dB_below_peaks": 47.249854044140626,
+      "chirp_spread_Hz_per_frame": 48.0
+    }
+  },
+  "A2": {
+    "rect": {
+      "mainlobe_null_to_null_Hz": 31.25,
+      "highest_sidelobe_dB": -13.263647577714902,
+      "ENBW_Hz": 15.625,
+      "ENBW_bins": 1.0,
+      "strong_tone_leakage_at_1140_dB": -36.112768719049356,
+      "weak_tone_true_dB": -36.47817481888638,
+      "weak_tone_measured_dB": -31.30042799934853
+    },
+    "hann": {
+      "mainlobe_null_to_null_Hz": 62.5,
+      "highest_sidelobe_dB": -31.467626478524792,
+      "ENBW_Hz": 23.4375,
+      "ENBW_bins": 1.5,
+      "strong_tone_leakage_at_1140_dB": -73.44967206156183,
+      "weak_tone_true_dB": -36.47817481888638,
+      "weak_tone_measured_dB": -36.38403923526061
+    },
+    "hamming": {
+      "mainlobe_null_to_null_Hz": 62.5,
+      "highest_sidelobe_dB": -42.6743663692628,
+      "ENBW_Hz": 21.294152949245543,
+      "ENBW_bins": 1.3628257887517146,
+      "strong_tone_leakage_at_1140_dB": -53.40409375163131,
+      "weak_tone_true_dB": -36.47817481888638,
+      "weak_tone_measured_dB": -36.66199399785548
+    },
+    "blackman": {
+      "mainlobe_null_to_null_Hz": 93.75,
+      "highest_sidelobe_dB": -58.108843688179384,
+      "ENBW_Hz": 26.98058390022675,
+      "ENBW_bins": 1.726757369614512,
+      "strong_tone_leakage_at_1140_dB": -81.47049354087429,
+      "weak_tone_true_dB": -36.47817481888638,
+      "weak_tone_measured_dB": -36.44185659986781
+    }
+  },
+  "B1": {
+    "table": [
+      {
+        "window": "hann",
+        "overlap": 0,
+        "hop": 1024,
+        "status": "NOLA failure",
+        "message": "NOLA violated: min sum w^2 = 0 (window 'hann', L=1024, hop=1024); some samples are never (or barely) observed."
+      },
+      {
+        "window": "hann",
+        "overlap": 0.25,
+        "hop": 768,
+        "runtime_ms": 5.766981999997256,
+        "frames": 84,
+        "relerr": 4.2004388514883124e-16,
+        "den_min": 0.0428932188134525,
+        "den_max": 1.0
+      },
+      {
+        "window": "hann",
+        "overlap": 0.5,
+        "hop": 512,
+        "runtime_ms": 9.533984000000828,
+        "frames": 126,
+        "relerr": 2.4669228761169876e-16,
+        "den_min": 0.5,
+        "den_max": 1.0
+      },
+      {
+        "window": "hann",
+        "overlap": 0.75,
+        "hop": 256,
+        "runtime_ms": 18.577744999987544,
+        "frames": 253,
+        "relerr": 2.0749023591821255e-16,
+        "den_min": 1.4999999999999993,
+        "den_max": 1.5000000000000007
+      },
+      {
+        "window": "hann",
+        "overlap": 0.875,
+        "hop": 128,
+        "runtime_ms": 36.62324899998737,
+        "frames": 507,
+        "relerr": 1.9773912317432135e-16,
+        "den_min": 2.999999999999999,
+        "den_max": 3.0000000000000013
+      },
+      {
+        "window": "rect",
+        "overlap": 0,
+        "hop": 1024,
+        "runtime_ms": 4.247757999991109,
+        "frames": 63,
+        "relerr": 2.893260848631024e-16,
+        "den_min": 1.0,
+        "den_max": 1.0
+      }
+    ],
+    "wav_roundtrip_relerr": 2.4622463899909905e-08
+  },
+  "B2": [
+    {
+      "B": 128,
+      "nfft": 256,
+      "blocks": 500,
+      "relerr": 3.365626008207151e-16,
+      "len_ok": true
+    },
+    {
+      "B": 512,
+      "nfft": 1024,
+      "blocks": 125,
+      "relerr": 3.1344725153976276e-16,
+      "len_ok": true
+    },
+    {
+      "B": 2048,
+      "nfft": 4096,
+      "blocks": 32,
+      "relerr": 3.196717620570988e-16,
+      "len_ok": true
+    },
+    {
+      "demo": "nfft=B (too short)",
+      "relerr_vs_linear_first512": 0.4590118007918449
+    }
+  ],
+  "C1": {
+    "sweep": [
+      {
+        "L": 256,
+        "width_Hz": 30,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": -1.1250252015849396,
+        "snr_gain": 8.116865214936956,
+        "jammer_atten_dB": 8.116867980011488,
+        "desired_relerr_pct": 0.023743530564918423
+      },
+      {
+        "L": 256,
+        "width_Hz": 60,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 6.089865369141729,
+        "snr_gain": 15.331755785663624,
+        "jammer_atten_dB": 15.331759031810996,
+        "desired_relerr_pct": 0.03769152552982859
+      },
+      {
+        "L": 256,
+        "width_Hz": 120,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 13.621776209871886,
+        "snr_gain": 22.86366662639378,
+        "jammer_atten_dB": 22.86364999803547,
+        "desired_relerr_pct": 0.05642165797209919
+      },
+      {
+        "L": 1024,
+        "width_Hz": 30,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 12.993593060592556,
+        "snr_gain": 22.23548347711445,
+        "jammer_atten_dB": 22.235449411464487,
+        "desired_relerr_pct": 0.02810230240165951
+      },
+      {
+        "L": 1024,
+        "width_Hz": 60,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 17.90126956801887,
+        "snr_gain": 27.143159984540766,
+        "jammer_atten_dB": 27.143024081209887,
+        "desired_relerr_pct": 0.04045509487473019
+      },
+      {
+        "L": 1024,
+        "width_Hz": 120,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 20.04811670043251,
+        "snr_gain": 29.290007116954406,
+        "jammer_atten_dB": 29.289832684332573,
+        "desired_relerr_pct": 0.057564237816239434
+      },
+      {
+        "L": 4096,
+        "width_Hz": 30,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 10.30849702321969,
+        "snr_gain": 19.550387439741584,
+        "jammer_atten_dB": 19.550354658703526,
+        "desired_relerr_pct": 0.027869074200306907
+      },
+      {
+        "L": 4096,
+        "width_Hz": 60,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 16.52937967001108,
+        "snr_gain": 25.77127008653298,
+        "jammer_atten_dB": 25.77114922709608,
+        "desired_relerr_pct": 0.04036574875672642
+      },
+      {
+        "L": 4096,
+        "width_Hz": 120,
+        "stationary": null,
+        "snr_in": -9.241890416521896,
+        "snr_out": 19.60567147800872,
+        "snr_gain": 28.847561894530614,
+        "jammer_atten_dB": 28.847392521422005,
+        "desired_relerr_pct": 0.05753309509887029
+      },
+      {
+        "L": 1024,
+        "width_Hz": 30,
+        "stationary": 2400.0,
+        "snr_in": -9.241890416521896,
+        "snr_out": -8.871963128725847,
+        "snr_gain": 0.3699272877960489,
+        "jammer_atten_dB": 0.3699264102891797,
+        "desired_relerr_pct": 0.028615306607626737
+      },
+      {
+        "L": 1024,
+        "width_Hz": 60,
+        "stationary": 2400.0,
+        "snr_in": -9.241890416521896,
+        "snr_out": -8.481089473614823,
+        "snr_gain": 0.760800942907073,
+        "jammer_atten_dB": 0.7608010591192088,
+        "desired_relerr_pct": 0.04113954391756733
+      },
+      {
+        "L": 1024,
+        "width_Hz": 120,
+        "stationary": 2400.0,
+        "snr_in": -9.241890416521896,
+        "snr_out": -7.566937560357304,
+        "snr_gain": 1.6749528561645919,
+        "jammer_atten_dB": 1.6749559937236294,
+        "desired_relerr_pct": 0.058515181017980866
+      }
+    ],
+    "default": {
+      "L": 1024,
+      "width_Hz": 60,
+      "stationary": null,
+      "snr_in": -9.241890416521896,
+      "snr_out": 17.90126956801887,
+      "snr_gain": 27.143159984540766,
+      "jammer_atten_dB": 27.143024081209887,
+      "desired_relerr_pct": 0.04045509487473019
+    },
+    "ridge_max_err_vs_truth_Hz": 8.847267597888731
+  },
+  "C2": {
+    "original": {
+      "evm_percent": 0.9476616028269151,
+      "ber": 0.0,
+      "waveform_relerr": 0.0
+    },
+    "reconstructed": {
+      "evm_percent": 0.9476616028269151,
+      "ber": 0.0,
+      "waveform_relerr": 2.2602100155216034e-16
+    },
+    "magnitude_only": {
+      "evm_percent": 101.02894144350883,
+      "ber": 0.4990138067061144,
+      "waveform_relerr": 1.0103187240492069
+    },
+    "random_frame_phase": {
+      "evm_percent": 123.04643117986954,
+      "ber": 0.490138067061144,
+      "waveform_relerr": 1.228843485605849
+    }
+  }
+}
