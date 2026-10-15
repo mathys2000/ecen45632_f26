@@ -179,10 +179,71 @@ plt.tight_layout()
 plt.show()
 
 # %%
-an = 3/7*np.sinc(3/7*np.arange(5))
-print(an)
+# Spectrogram
+f4, tt4, Z4 = ss.stft(x4n, fs=fs4, window='hann', nperseg=256, noverlap=192, nfft=512, boundary=None)
+fig = plt.figure(figsize=(9,3))
+fig.canvas.toolbar_position = 'top'
+plt.pcolormesh(tt4, f4, 20*np.log10(np.abs(Z4)+1e-6), shading='auto')
+plt.ylim(0,4000)
+plt.xlabel('time (s)')
+plt.ylabel('Hz')
+plt.title('STFT / spectrogram view')
+plt.colorbar(label='dB');
+plt.tight_layout()
+plt.show()
+
 
 # %%
-print(32*an)
+# Play x4n signal
+ipd.Audio(x4n, rate=fs4)
+
+# %%
+# Chirp signal x5t
+fs5 = 4000     # sampling rate
+tlen5 = 1.2    # duration in seconds
+#tlen5 = 12    # duration in seconds
+tt5 = np.arange(np.round(tlen5*fs5))/fs5   # time axis
+x5t = ss.chirp(tt5, f0=150, f1=1500, t1=tt5[-1])     # linear chirp signal
+x5t = x5t + 0.1*np.random.default_rng(3).normal(size=len(tt5))  # add some Gaussian noise
+ff5 = np.fft.rfftfreq(len(x5t), 1/fs5);   # frequency axis
+PSD5 = np.abs(np.fft.rfft(x5t*np.hanning(len(x5t))))**2     # power spectral density
+#PSD5 = np.abs(np.fft.rfft(x5t*np.ones(len(x5t))))**2
+
+
+# %%
+print(ff5[0], ff5[-1])
+print(ff5[:20])
+
+# %%
+# Play x4n signal
+ipd.Audio(x5t, rate=fs5)
+
+# %%
+fig = plt.figure(figsize=(8,3))
+fig.canvas.toolbar_position = 'top'
+plt.semilogy(ff5, PSD5+1e-10)
+#plt.plot(ff5, PSD5+1e-10)
+plt.grid(alpha=0.5)
+plt.xlim(0,1800)
+plt.title('Global spectrum')
+plt.xlabel('Hz')
+plt.tight_layout()
+plt.show()
+
+
+# %%
+# Spectrogram
+f5, tt5, Z5 = ss.stft(x5t, fs=fs5, window='hann', nperseg=256, noverlap=192, nfft=512, boundary=None)
+fig = plt.figure(figsize=(8,3))
+fig.canvas.toolbar_position = 'top'
+plt.pcolormesh(tt5, f5, 20*np.log10(np.abs(Z5)+1e-6), shading='auto')
+plt.ylim(0,1800)
+plt.xlabel('time (s)')
+plt.ylabel('Hz')
+plt.title('STFT / spectrogram view')
+plt.colorbar(label='dB');
+plt.tight_layout()
+plt.show()
+
 
 # %%
