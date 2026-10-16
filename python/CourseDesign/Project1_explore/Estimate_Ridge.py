@@ -62,7 +62,7 @@ def estimate_ridge(X, meta, band=(1600, 3400), fs=Fs):
     if wl >=5:
         r = ss.savgol_filter(r, wl, 2, mode="interp")
     return r, raw, peak
-    
+
 
 # %% [markdown]
 # This function, `estimate_ridge()`, is designed to estimate the instantaneous frequency trajectory of a strong narrowband signal, such as a frequency-varying jammer, from the Short-Time Fourier Transform (STFT) of a signal.
