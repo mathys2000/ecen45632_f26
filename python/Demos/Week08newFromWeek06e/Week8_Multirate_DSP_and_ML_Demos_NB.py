@@ -7,18 +7,18 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.3
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python [conda env:ecen45632]
 #     language: python
-#     name: python3
+#     name: conda-env-ecen45632-py
 # ---
 
 # %% [markdown]
-# # Week 6: Multi-rate DSP and ML Demos
+# # Week 8: Multi-rate DSP and ML Demos
 #
 # Companion notebook for:
 #
-# - **Lecture 11:** Downsampling, Decimation, and CNN Strides
-# - **Lecture 12:** Upsampling, Interpolation, Rational Rate Changes, and Transposed Convolutions
+# - **Lecture 13:** Downsampling, Decimation, and CNN Strides
+# - **Lecture 14:** Upsampling, Interpolation, Rational Rate Changes, and Transposed Convolutions
 #
 # The notebook uses NumPy/SciPy for classical DSP and PyTorch for the ML connections. Each section is designed to be runnable live in class.
 
@@ -168,6 +168,7 @@ plt.show()
 # Make a deterministic kernel so the comparison is transparent.
 x_np = np.array([0., 1., 2., 1., 0., -1., -2., -1., 0., 1., 0.], dtype=np.float32)
 h_np = np.array([0.25, 0.5, 0.25], dtype=np.float32)
+#h_np = np.array([-0.25, 0, 0.25], dtype=np.float32)
 stride = 2
 
 # NumPy: correlation convention to match PyTorch Conv1d.
