@@ -26,7 +26,7 @@ import IPython.display as ipd
 # %%
 # Parameters
 Fs1 = 6000
-M = 2
+M = 3
 tlen = 1
 wa, wb = 0.18*np.pi, 0.46*np.pi
 
