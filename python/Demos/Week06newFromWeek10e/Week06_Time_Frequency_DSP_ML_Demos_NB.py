@@ -153,7 +153,7 @@ try:
     print('CNN logits:',logits.shape)
 except Exception as e:
     print('PyTorch demo skipped:',e)
-    
+
 
 # %%
 x.shape
