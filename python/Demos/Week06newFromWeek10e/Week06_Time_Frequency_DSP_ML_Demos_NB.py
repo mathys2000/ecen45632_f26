@@ -145,12 +145,18 @@ try:
     win=torch.hann_window(256)
     Zt=torch.stft(xt,n_fft=512,hop_length=64,win_length=256,window=win,return_complex=True)
     S=torch.log1p(torch.abs(Zt)**2).unsqueeze(1)
-    net=nn.Sequential(nn.Conv2d(1,8,3,padding=1),nn.ReLU(),nn.MaxPool2d(2),nn.Conv2d(8,16,3,padding=1),nn.ReLU(),nn.AdaptiveAvgPool2d((1,1)),nn.Flatten(),nn.Linear(16,3))
+    net=nn.Sequential(nn.Conv2d(1,8,3,padding=1),nn.ReLU(),nn.MaxPool2d(2),
+                      nn.Conv2d(8,16,3,padding=1),nn.ReLU(),nn.AdaptiveAvgPool2d((1,1)),
+                      nn.Flatten(),nn.Linear(16,3))
     logits=net(S)
     print('spectrogram tensor:',S.shape)
     print('CNN logits:',logits.shape)
 except Exception as e:
     print('PyTorch demo skipped:',e)
+    
+
+# %%
+x.shape
 
 # %% [markdown]
 # ## 7. Suggested experiments
