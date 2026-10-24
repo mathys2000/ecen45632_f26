@@ -7,9 +7,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.3
 #   kernelspec:
-#     display_name: ecen45632 [conda env:ecen45632]
+#     display_name: Python [conda env:ecen45632]
 #     language: python
-#     name: conda-env-ecen45632-ecen45632
+#     name: conda-env-ecen45632-py
 # ---
 
 # %% [markdown]
@@ -21,6 +21,11 @@
 import numpy as np
 import scipy.signal as ss
 import matplotlib.pyplot as plt
+
+# %%
+# %matplotlib widget
+fsz = (7,4)
+fsz2 = (fsz[0], 1.5*fsz[1]/2)
 
 # %%
 # ---------------- Problem 3 ----------------------------------------------------
@@ -155,7 +160,64 @@ X2ejw_win_dB = mag_dB(X2ejw_win, d_floor)
 # %%
 # Plot DTFT of rectangular and Hann windowed x2n (f2=136 Hz)
 plt.figure(7, figsize=(9, 4))
-plt.plot(ww*fs/(2*np.pi), X2ejw_dB, label=f'f={f1} Hz, Rectangular')
-plt.plot(ww*fs/(2*np.pi), X2ejw_win_dB, label=f'f={f1} Hz, Periodic Hann')
+plt.plot(ww*fs/(2*np.pi), X2ejw_dB, label=f'f={f2} Hz, Rectangular')
+plt.plot(ww*fs/(2*np.pi), X2ejw_win_dB, label=f'f={f2} Hz, Periodic Hann')
 plt.title(f'Main Lobe Width and Leakage for Different Windows, f2={f2} Hz, Lx={Lx}')
+plt.ylabel('dB normalized')
+plt.xlabel('Frequency [Hz]')
+plt.xlim([0, 250])
 plt.grid()
+plt.legend()
+plt.show()
+
+# %%
+# --------- Problem 5 ---------------------------------------------------
+
+# %%
+# Parameters
+fs5 = 2048
+f0 = 403.3
+#f0 = 512
+Lx5 = 128
+N51, N52, N53 = 128, 512, 4096
+d_floor = -60   # display floor in dB
+
+# %%
+# Generate sequence in time and frequency
+nn5 = np.arange(Lx5)
+x5n = np.exp(2j*np.pi*f0*nn5/fs5)   # x[n] with frequency f0
+X51k = np.fft.fft(x5n, n=N51)
+X51k_dB = mag_dB(X51k, d_floor, norm=False)
+X52k = np.fft.fft(x5n, n=N52)
+X52k_dB = mag_dB(X52k, d_floor, norm=False)
+X53k = np.fft.fft(x5n, n=N53)
+X53k_dB = mag_dB(X53k, d_floor, norm=False)
+ff51 = fs5*np.fft.fftfreq(N51)      # DFT frequencies in Hz for N51
+ix51_pos = np.where(ff51>=0)[0]
+ff52 = fs5*np.fft.fftfreq(N52)      # DFT frequencies in Hz for N52
+ix52_pos = np.where(ff52>=0)[0]
+ff53 = fs5*np.fft.fftfreq(N53)      # DFT frequencies in Hz for N53
+ix53_pos = np.where(ff53>=0)[0]
+
+
+# %%
+# Plot DFTs
+plt.figure(11, figsize=(9, 4))
+#plt.plot(ff53[ix53_pos], np.abs(X53k[ix53_pos])/Lx5, '--')
+plt.plot(ff51[ix51_pos], np.abs(X51k[ix51_pos])/Lx5, 'o', label=f'N={N51}')
+plt.plot(ff52[ix52_pos], np.abs(X52k[ix52_pos])/Lx5, '^', label=f'N={N52}')
+plt.plot(ff53[ix53_pos], np.abs(X53k[ix53_pos])/Lx5, '--', label=f'N={N53}')
+plt.title(f'DFTs of $x[n]=e^{{j2\\pi f_0 n/f_s}}$ with Padding, $f_0$={f0} Hz, $f_s$={fs5} samples/sec, Lx={Lx5}')
+plt.ylabel('|X[k]|')
+plt.xlabel('Frequency (k*fs/N) [Hz]')
+plt.xlim([350, 450])
+plt.grid()
+plt.legend()
+plt.show()
+
+# %%
+f_ix = np.argmax(np.abs(X51k))
+print(f_ix)
+print(ff51[f_ix])
+
+# %%
