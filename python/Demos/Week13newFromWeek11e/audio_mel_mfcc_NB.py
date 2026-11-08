@@ -1,0 +1,197 @@
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.3
+#   kernelspec:
+#     display_name: Python [conda env:ecen45632]
+#     language: python
+#     name: conda-env-ecen45632-py
+# ---
+
+# %% [markdown]
+# # audio_mel_mfcc_NB
+#
+# Notebook version of audio_mel_mfcc.py
+
+# %%
+"""
+audio_mel_mfcc.py
+
+Read a WAV file, calculate a Mel spectrogram and MFCCs,
+plot the results, and optionally save features.
+
+Usage:
+    python audio_mel_mfcc.py recording.wav
+
+    python audio_mel_mfcc.py recording.wav --save-dir results
+"""
+
+
+# %%
+import argparse
+from pathlib import Path
+
+import numpy as np
+import librosa
+import librosa.display
+import matplotlib.pyplot as plt
+
+
+# %%
+# Read .wav file, compute STFT, convert to Mel scale, compute MFCCs
+def extract_features(
+    filename,
+    target_sr=16000,
+    n_fft=512,
+    hop_length=160,
+    n_mels=64,
+    n_mfcc=13,
+):
+    # -------------------------------------------------
+    # 1. Load waveform and standardize sample rate
+    # -------------------------------------------------
+    x, sr = librosa.load(
+        filename,
+        sr=target_sr,
+        mono=True
+    )
+
+    if len(x) < n_fft:
+        raise ValueError(
+            f"Audio needs at least {n_fft} samples."
+        )
+
+    duration = len(x) / sr
+
+    print(f"File: {filename}")
+    print(f"Sample rate: {sr} Hz")
+    print(f"Samples: {len(x)}")
+    print(f"Duration: {duration:.3f} seconds")
+
+    # -------------------------------------------------
+    # 2. Short-Time Fourier Transform (STFT)
+    # -------------------------------------------------
+    X = librosa.stft(
+        x,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=n_fft,
+        window="hann",
+        center=False
+    )
+
+    # Power spectrogram
+    P = np.abs(X) ** 2
+
+    # -------------------------------------------------
+    # 3. Mel-frequency filter bank
+    # -------------------------------------------------
+    mel_power = librosa.feature.melspectrogram(
+        S=P,
+        sr=sr,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        n_mels=n_mels,
+        fmin=0,
+        fmax=sr / 2
+    )
+
+    # Convert Mel power to decibels
+    mel_db = librosa.power_to_db(
+        mel_power,
+        ref=np.max,
+        top_db=80.0
+    )
+
+    # -------------------------------------------------
+    # 4. Mel-Frequency Cepstral Coefficients
+    # -------------------------------------------------
+    # DCT-II of the log-Mel representation
+    mfcc = librosa.feature.mfcc(
+        S=mel_db,
+        n_mfcc=n_mfcc,
+        dct_type=2,
+        norm="ortho"
+    )
+
+    print(f"STFT shape: {X.shape}")
+    print(f"Mel spectrogram shape: {mel_db.shape}")
+    print(f"MFCC shape: {mfcc.shape}")
+
+    return x, sr, mel_db, mfcc
+
+
+
+# %%
+# Plot results
+def plot_features(x, sr, mel_db, mfcc, hop_length):
+    # -------------------------------------------------
+    # 5. Plot waveform, Mel spectrogram, and MFCCs
+    # -------------------------------------------------
+    fig, axes = plt.subplots(
+        3, 1,
+        figsize=(12, 10),
+        constrained_layout=True
+    )
+
+    # Waveform
+    t = np.arange(len(x)) / sr
+
+    axes[0].plot(t, x, linewidth=0.6)
+    axes[0].set_title("Original Audio Waveform")
+    axes[0].set_xlabel("Time (seconds)")
+    axes[0].set_ylabel("Amplitude")
+    axes[0].grid(True, alpha=0.3)
+
+    # Mel spectrogram
+    img1 = librosa.display.specshow(
+        mel_db,
+        sr=sr,
+        hop_length=hop_length,
+        x_axis="time",
+        y_axis="mel",
+        ax=axes[1],
+        cmap="magma"
+    )
+
+    axes[1].set_title("Log-Mel Power Spectrogram")
+    fig.colorbar(
+        img1, ax=axes[1], format="%+2.0f dB"
+    )
+
+    # MFCCs
+    img2 = librosa.display.specshow(
+        mfcc,
+        sr=sr,
+        hop_length=hop_length,
+        x_axis="time",
+        ax=axes[2],
+        cmap="coolwarm"
+    )
+
+    axes[2].set_title("MFCC Coefficients")
+    axes[2].set_ylabel("MFCC Index")
+    fig.colorbar(img2, ax=axes[2])
+
+    return fig
+
+
+
+# %%
+f_name = 'Zest_8000_mono.wav'
+#f_name = 'UrbanSoundSamples/100648-1-0-0_fold10_class1.wav'  #car horn
+#f_name = 'UrbanSoundSamples/100795-3-0-0_fold10_class3.wav'  #dog bark
+#f_name = 'UrbanSoundSamples/101382-2-0-10_fold10_class2.wav'  #children playing
+x, sr, mel_db, mfcc = extract_features(f_name)
+    
+
+# %%
+fig = plot_features(x, sr, mel_db, mfcc, hop_length=160)
+plt.show()
+
+
+# %%

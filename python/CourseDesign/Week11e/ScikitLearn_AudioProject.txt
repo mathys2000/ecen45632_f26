@@ -1,0 +1,182 @@
+Scikit Learn Audio Project
+
+Can I get a simple python scikit-learn project (with solution) that learns to classify audio signals using MFCC avg and MFCC std values as features?
+
+ChatGPT Medium:
+
+# Mini-project: Audio Classification Using MFCC Features and scikit-learn
+
+Level: Senior undergraduate / first-year graduate ECE\
+Suggested duration: 60–90 minutes\
+Tools: Python, librosa, NumPy, Matplotlib, scikit-learn
+
+## 1. Project objective
+
+Build a simple machine learning system that learns to recognize three types of audio signals using the mean and standard deviation of MFCC coefficients as features.
+
+The project deliberately uses a conventional machine learning classifier rather than a neural network. This helps students understand the complete pipeline from DSP feature extraction to classification.
+
+The processing chain is:
+
+WAV recordings
+
+Three classes of audio signals
+
+MFCC extraction
+
+13 coefficients × time frames
+
+MFCC means
+
+13 features
+
+MFCC standard deviations
+
+13 features
+
+26-dimensional feature vector
+
+StandardScaler → Support Vector Machine
+
+Predicted audio class
+
+## 2. Audio classification task
+
+We'll begin with three synthetic sound classes so students do not need to download a separate dataset.
+
+Class 1: Low-frequency tone
+
+A sinusoid with frequency randomly selected between 180 and 320 Hz.
+
+Class 2: High-frequency tone
+
+A sinusoid with frequency randomly selected between 1,200 and 1,700 Hz.
+
+Class 3: Rising chirp
+
+A sinusoidal signal whose frequency increases from approximately 250–450 Hz to 2,200–2,800 Hz.
+
+Each recording lasts one second. We generate 40 recordings per class, varying frequency, amplitude, phase, and background noise.
+
+This gives 120 labeled recordings. The class differences are intentionally pronounced so students can first demonstrate a working classifier.
+
+## 3. Mathematical background: MFCC mean and standard deviation
+
+Let the MFCC coefficients for recording \\(i\\) be
+
+\\[ c_r^{(i)}[m], \\]
+
+where \\(r=0,\ldots,12\\) identifies the cepstral coefficient and \\(m\\) identifies the time frame.
+
+For each coefficient, compute its time average:
+
+\\[ \boxed{ \mu_r^{(i)} = \frac{1}{T_i} \sum\_{m=0}^{T_i-1}c_r^{(i)}[m] } \\]
+
+and its standard deviation:
+
+\\[ \boxed{ \sigma_r^{(i)} = \sqrt{ \frac{1}{T_i} \sum\_{m=0}^{T_i-1} \left(c_r^{(i)}[m]-\mu_r^{(i)}\right)^2 } } \\]
+
+Then concatenate the two sets of statistics:
+
+\\[ \mathbf f_i= \begin{bmatrix} \mu_0^{(i)} & \cdots & \mu\_{12}^{(i)} & \sigma_0^{(i)} & \cdots & \sigma\_{12}^{(i)} \end{bmatrix}^{T}. \\]
+
+Each waveform is now represented by a feature vector
+
+\\[ \boxed{\mathbf f_i\in\mathbb R^{26}}. \\]
+
+The means summarize the average spectral-envelope characteristics of each recording, while the standard deviations summarize how those characteristics vary over time.
+
+Crucially, these statistics discard the ordering of the frames. That limitation becomes an interesting extension exercise.
+
+## 4. Student assignment
+
+Students should complete the following tasks:
+
+1. Generate 40 WAV recordings for each of the three classes, adding modest random noise.
+2. Calculate 13 MFCC coefficients for every recording and obtain a 26-element feature vector from their means and standard deviations.
+3. Divide the dataset into 75% training and 25% testing, keeping the class proportions equal.
+4. Train an SVM classifier with standardized features using scikit-learn.
+5. Report test accuracy, a classification report, and a confusion matrix.
+6. Compare the results using means only, standard deviations only, and both statistics.
+
+The final comparison is particularly instructive because it tests whether time variation in the cepstral coefficients improves classification beyond average spectral characteristics.
+
+## 5. Download the project and complete solution
+
+I've created and tested the project. It includes both a student starter program with exercises and a complete, runnable solution.
+
+Complete MFCC Classification Project
+
+ZIP containing starter code, worked solution, README, and sample results
+
+Download complete project
+
+Student starter script
+
+Complete Python solution
+
+Example confusion matrix
+
+### 6. Key part of the solution: Feature extraction
+
+This is the central DSP operation in the project:
+
+```
+def mfcc_summary(path):    x, sr = librosa.load(        path, sr=16000, mono=True    )    mfcc = librosa.feature.mfcc(        y=x,        sr=sr,        n_mfcc=13,        n_fft=512,        hop_length=160,        center=False    )    means = np.mean(mfcc, axis=1)    stds = np.std(mfcc, axis=1)    return np.concatenate([means, stds])
+```
+
+The `mfcc` matrix has shape `[13, T]`. Taking statistics along `axis=1` collapses the time dimension and produces a fixed-size vector, even when recordings contain different numbers of frames.
+
+The machine learning portion is deliberately short:
+
+```
+model = make_pipeline(    StandardScaler(),    SVC(kernel="rbf", C=3.0, gamma="scale"))model.fit(X_train, y_train)y_pred = model.predict(X_test)
+```
+
+Using a scikit-learn `Pipeline` ensures that the scaler is fitted only on training data, avoiding leakage from the test set.
+
+### 7. Results from running the solution
+
+I executed the complete script on the generated dataset.
+
+WAV recordings
+
+# 120
+
+Features per file
+
+# 26
+
+Test accuracy
+
+# 100%
+
+The confusion matrix was generated from the 30 held-out recordings.
+
+The classifier correctly identified all 30 held-out examples, ten from each class. This is expected for a deliberately simple, well-separated synthetic dataset. It is not evidence that the same approach would achieve 100% accuracy on real environmental audio.
+
+### 8. Suggested extension exercises with expected answers
+
+| Experiment               | What students should investigate | Expected insight                                                                                                              |
+| ------------------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Means only               | Use the first 13 features        | Average spectral-envelope information may be sufficient for distinguishing the tone classes                                   |
+| Standard deviations only | Use the last 13 features         | Temporal variation may distinguish chirps from stationary tones                                                               |
+| Means + stds             | Use all 26 features              | Combining average structure and temporal variability may improve classification                                               |
+| Increase noise           | Generate noisier recordings      | Classification can become less reliable as feature distributions overlap                                                      |
+| Add falling chirps       | Introduce a fourth class         | MFCC means and standard deviations discard frame order, making rising and falling chirps potentially difficult to distinguish |
+
+The last exercise is especially valuable for a DSP course.
+
+Why might a rising chirp and falling chirp be difficult to distinguish using MFCC means and standard deviations?
+
+If two signals traverse the same frequencies in opposite directions, their frame-level spectral distributions can be very similar. The mean and standard deviation of each MFCC coefficient do not retain the order in which those coefficient values occurred.
+
+Thus, the feature extraction can discard exactly the information needed to distinguish the two signals.
+
+This provides a natural connection back to Lecture 27: when temporal ordering matters, a full time-frequency representation processed by a CNN may be more appropriate than a fixed vector of summary statistics.
+
+My recommended classroom use: Have students first complete the seven TODO sections of the starter script, verify the classification results, and then add falling chirps as a fourth class. That last experiment encourages them to reason about the information lost through feature averaging, rather than treating machine learning as a black box.
+
+----------------
+
+

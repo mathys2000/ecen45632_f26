@@ -1,0 +1,6 @@
+Multiclass Logistic Regression
+
+scikit learn multiclass logistic regression
+
+Google:
+
