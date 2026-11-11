@@ -187,7 +187,7 @@ f_name = 'Zest_8000_mono.wav'
 #f_name = 'UrbanSoundSamples/100795-3-0-0_fold10_class3.wav'  #dog bark
 #f_name = 'UrbanSoundSamples/101382-2-0-10_fold10_class2.wav'  #children playing
 x, sr, mel_db, mfcc = extract_features(f_name)
-    
+
 
 # %%
 fig = plot_features(x, sr, mel_db, mfcc, hop_length=160)
