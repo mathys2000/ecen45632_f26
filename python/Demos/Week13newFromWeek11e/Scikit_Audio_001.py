@@ -39,10 +39,10 @@ MFCCsplit = False
 N_FFT = 512
 HOP = 160
 SEED = 42
-CLASSES = ('low_tone', 'high_tone', 'chirp')
-OUT = Path('mfcc_project_output')
-#CLASSES = ('low_tone', 'high_tone', 'chirp_up', 'chirp_down')
-#OUT = Path('mfcc_project_output2')
+#CLASSES = ('low_tone', 'high_tone', 'chirp')
+#OUT = Path('mfcc_project_output')
+CLASSES = ('low_tone', 'high_tone', 'chirp_up', 'chirp_down')
+OUT = Path('mfcc_project_output2')
 rng = np.random.default_rng(SEED)
 
 
@@ -123,3 +123,25 @@ print(f'Example file: {example}')
 print(f'Actual label: {y_test[ix]}; predicted: {predicted}')
 
 # %%
+
+# %%
+# Prepare train and test feature and label sets
+X = np.vstack([mfcc_summary(path, MFCCsplit=MFCCsplit) for path,_ in rows])
+y = np.array([label for _,label in rows])
+paths = np.array([str(path) for path,_ in rows])
+print(f'Dataset: {len(X)} WAV files; X shape={X.shape}; y shape={y.shape}')
+print(f'One feature vector: [MFCCmean ({N_MFCC}), MFCCstd ({N_MFCC})]')
+
+X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(
+    X, y, paths, test_size=0.25, stratify=y, random_state=SEED)
+
+
+# %%
+# Read features, labels, and train model
+model = make_pipeline(StandardScaler(), SVC(kernel='rbf', C=3.0, gamma='scale'))
+model.fit(X_train, y_train)
+
+
+# %%
+print(f'One feature vector: [MFCCmean ({X.shape[1]//2}), MFCCstd ({X.shape[1]//2})], MFCCsplit={MFCCsplit}')
+
