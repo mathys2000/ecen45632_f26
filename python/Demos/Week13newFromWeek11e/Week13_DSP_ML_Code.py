@@ -1,4 +1,4 @@
-"""Week 11: audio feature engineering + classical ML baseline."""
+"""Week 13: audio feature engineering + classical ML baseline."""
 from __future__ import annotations
 from pathlib import Path
 import numpy as np, pandas as pd, librosa

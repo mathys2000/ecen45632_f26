@@ -1,0 +1,21 @@
+Week13new ProblemSet
+Week13new Lectures 25 and 26 
+
+Can you give me a weekly problem set covering the topics in these two lectures.
+
+ClaudeAI Sonnet5.5 Medium:
+
+I'll start by reading both lecture decks.
+
+The Week 13 problem set is ready. You can edit it inline, comment, or share it, and it exports to Word or PDF.
+
+It totals 100 points plus a 5-point bonus:
+- **Part A (40 pts), Lecture 25:** Mel scale, filterbank as a matrix, log/dB, the MFCC pipeline, shape bookkeeping, waveform standardization, and choosing a representation.
+- **Part B (40 pts), Lecture 26:** the X/y contract, train/validation/test roles, source-level and preprocessing leakage, removing the time axis, and confusion-matrix metrics.
+- **Part C (20 pts):** a scikit-learn coding lab on UrbanSound8K with fold-based splits, RF vs. scaled SVM, a one-change ablation, and error analysis.
+
+It ends with an instructor answer key, which you can delete before distributing.
+
+Two typos in the decks: Lecture 25's learning outcomes say "By the end of Lecture 21," and Lecture 26's footer on a few slides says "Week 11."
+
+
