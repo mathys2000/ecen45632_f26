@@ -65,17 +65,24 @@
 # * Run the `BasicUrbanSound_001.ipynb` notebook to establish an initial baseline performance (expect something like a 20% accuracy).
 # * Visualize the spectrogram images that the CNN is processing and ask how they could be improved.
 # * Use your knowledge about `Mel Spectrograms` and `log Mel Spectrograms`.
-# * What parameters should you use for the `Mel Spectrograms` and why would you expect them to permorm better?
-# * Would an increase of the audio data taken in the time domain help improve classification accuracy?
+# * What parameters should you use for the `Mel Spectrograms` and why would you expect them to perform better?
+# * Could MFCCs be used, either on their own or in addition to the spectrograms?
+# * Would an increase of the length of the audio data taken in the time domain help improve classification accuracy?
 # * Would an increase of the frequency data/resolution help improve classification accuracy?
 # * Could you use more than one fold or different folds for training the CNN?
 # * What about reshuffling the data in the DataLoader?
 # * Write a program for testing specific audio files and check if there is a pattern to missclassifications.
 # * Use a different CNN architecture (e.g., AlexNet) and/or tinker with some setings of the CNN.
+# * Try to find the smallest (and least computationally expensive) CNN that yields acceptable results.
 #
 # Feel free to come up with your own questions. Some may be related to improving classification accuracy,
 # but some may just be directed towards learning about ML, CNNs, and AI in connection with digital signal
 # processing.
+#
+# ---
+
+# %% [markdown]
+# **A Good Starting Point:** Study the details of `BasicUrbanSound_001.ipynb` and try to understand as much detail as possible. Why does the program use training data and validation data, but not testing data. What would be the role of test data and how would you add that, perhaps in a separate follow-on program. How many learnable parameters are there in `BasicUrbanSound_001.ipynb` and how are they distributed to different layers? How and where are they initialized when the program is run? What would be some good visualizations to add to the program to better understand what happens at different stages? Plots of training and validation loss versus epochs would be a good example.
 #
 # ---
 
@@ -92,6 +99,8 @@
 # **Grading Criteria:** As a basis you should demonstrate a reasonable effort at exploring and documenting
 # your exploration of this topic. A well written presentation with labeled graphs and commented Python code
 # is expected. To obtain full points some creativity and asking good questions must be demonstrated. Overall the process of exploring and reasoning and its documentation is more important than the actual improvement in classification accuracy that you obtained.
+#
+# **The most important thing we are looking for is that you demonstrate understanding of what you are doing, that you document your results and findings and that you ask (and answer) questions relevant to the goal of classifying the different types of sound signals in the `UrbanSound8k` dataset.**
 #
 # **AI Help:** Use AI to help you with specific code constructions and explanations of what different code snippets do, but solutions that were mostly AI generated and don't show any clear reasoning on your part will not be accepted. Document and cite your use of AI by stating the AI agent(s) and the prompts that you used.
 #

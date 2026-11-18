@@ -164,14 +164,14 @@ train_dataset = UrbanSoundDataset(
     fold=1
 )
 
-# Create dataset for fold 10 (validating)
+# Create dataset for fold 9 (validating)
 val_dataset = UrbanSoundDataset(
     annotations_file=ANNOTATIONS_FILE,
     audio_dir=AUDIO_DIR,
     transformation=spectrogram_transform,
     target_sample_rate=SAMPLE_RATE,
     num_samples=NUM_SAMPLES,
-    fold=10
+    fold=9
 )
 
 # Create DataLoaders
@@ -354,12 +354,14 @@ print(f'\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}')
 
 # %%
 # Train the model
-train_losses, val_losses, train_accs, val_accs = train_model(model, train_loader, val_loader, device)
+train_losses, val_losses, train_accs, val_accs = train_model(model, train_loader, val_loader, device, epochs=20)
 
 # %%
 print(f"train_losses {train_losses}")
 print(f"val_losses {val_losses}")
 print(f"train_accs {train_accs}")
 print(f"val_accs {val_accs}")
+
+# %%
 
 # %%
