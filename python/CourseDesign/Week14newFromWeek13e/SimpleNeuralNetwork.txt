@@ -1,0 +1,60 @@
+Simple Neural Network
+
+I need a simple neural network in Pytorch to demonstrate in class one or two hidden layers and classification or three items, preferably with a context to audio signal classification
+
+ClaudeAI Sonnet 5.5 Medium:
+
+I'll build a self-contained script using synthetic audio (sine, square, and sawtooth waves) so it runs anywhere with no dataset download, then test it.
+
+I built `audio_classifier_demo.py`, a demo that classifies synthetic audio clips into three classes: **sine**, **square**, and **sawtooth** waves.
+
+**How it works**
+1. **Data:** Each clip is generated with a random pitch (100–400 Hz), random phase, and added noise. No dataset download is needed.
+2. **Features:** Each waveform becomes a 64-value log-magnitude FFT spectrum. This is a good moment in class to show that the network sees frequency content rather than raw samples.
+3. **Models:** Two networks are defined side by side.
+   - One hidden layer: `64 → 16 → 3`
+   - Two hidden layers: `64 → 32 → 16 → 3`
+4. **Training:** It uses `CrossEntropyLoss` and Adam, with the forward pass, `loss.backward()`, and `opt.step()` written out in a short loop. It prints loss, train and test accuracy, and predictions on fresh clips.
+5. **Plots (optional):** If matplotlib is installed, it shows the waveforms, their spectra, and a training-loss comparison of the two models.
+
+**Teaching points**
+- The timbres differ in their harmonics. Square waves have only odd harmonics, sawtooth waves have all of them, and a sine wave has just one peak.
+- Because the pitch is random, the harmonic peaks land in different places each time. This makes the problem non-linear: a plain linear classifier I tried on the same features only reached about 70%, so the hidden layers have something to improve on.
+- You can change the hidden sizes, `epochs`, or the noise level (`0.2 * np.random.randn`) live to show how they affect accuracy.
+
+**Run it with:** `pip install torch scipy numpy matplotlib`, then `python audio_classifier_demo.py`.
+
+I couldn't install PyTorch in my sandbox, so I only tested the audio generation and feature extraction (that's where the 70% linear baseline comes from). The PyTorch part is standard, but please run it once before class. If the two models score nearly the same, try more noise or a narrower pitch range to make the gap between one and two hidden layers more visible.
+
+--------------
+
+What does the linear (baseline) network look like in pytorch?
+
+ClaudeAI Sonnet 5.5 Medium:
+
+A linear baseline is just a single `nn.Linear` layer that maps the 64 spectrum features straight to 3 class scores, with no hidden layer and no activation function:
+
+```python
+linear = nn.Linear(N_BINS, 3)          # 64 -> 3
+# equivalent: nn.Sequential(nn.Linear(N_BINS, 3))
+```
+
+This is multinomial logistic (softmax) regression. `CrossEntropyLoss` applies the softmax for you, so the model itself outputs raw scores. You can drop it into the existing script and reuse the same `train` and `accuracy` functions:
+
+```python
+for name, model in [("linear (no hidden)", linear),
+                    ("1 hidden layer", one_hidden),
+                    ("2 hidden layers", two_hidden)]:
+    ...
+```
+
+The linear model has 64 × 3 + 3 = 195 parameters, versus 1,091 for the one-hidden-layer model (64 × 16 + 16 + 16 × 3 + 3). It can only draw straight-line decision boundaries in feature space.
+
+For class, this makes a nice point. Stacking `nn.Linear` layers without a `nn.ReLU()` between them collapses back into a single linear map, so a "two-layer" network without activations is no more powerful than this baseline. The non-linearity is what lets the hidden layers handle the random-pitch variation that the linear model struggles with. You can demonstrate this by temporarily removing the `ReLU` layers from `two_hidden` and watching the accuracy fall to the baseline level.
+
+My earlier 70% figure came from a NumPy softmax regression, which is the same model as this `nn.Linear` layer. The PyTorch version should land in a similar range, though I haven't run it.
+
+-----------------
+
+
+
